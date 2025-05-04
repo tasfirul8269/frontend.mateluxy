@@ -1,5 +1,5 @@
 // Simplified API constants with updated domain
-const API_URL = 'https://mateluxy-backend.onrender.com/api';
+const API_URL = 'https://backend-mateluxy.onrender.com/api';
 
 // Simple agent API service
 export const agentApi = {

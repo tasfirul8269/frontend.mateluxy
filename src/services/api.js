@@ -1,5 +1,5 @@
 // Simplified API constants with updated domain
-const API_URL = `${import.meta.env.VITE_API_URL}/api`;
+const API_URL = `https://backend-mateluxy.onrender.com/api`;
 
 // Simplified property API with consistent error handling pattern
 export const propertyApi = {
