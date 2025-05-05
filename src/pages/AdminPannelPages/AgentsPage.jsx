@@ -39,10 +39,10 @@ const AgentsPage = () => {
         const transformedAgents = data.map(agent => ({
           id: agent._id,
           name: agent.fullName,
+          profileImage: agent.profileImage || "https://via.placeholder.com/150",
           role: agent.position,
           email: agent.email,
           phone: agent.contactNumber,
-          avatarUrl: agent.profileImage || `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? "men" : "women"}/${Math.floor(Math.random() * 100)}.jpg`,
           listings: 0, // You might want to add this field to your backend model
         }));
         

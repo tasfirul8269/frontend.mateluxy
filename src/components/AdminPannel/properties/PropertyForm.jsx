@@ -517,7 +517,7 @@ export const PropertyForm = ({ category, onSubmit, onCancel }) => {
                       ) : (
                         agents.map((agent) => (
                           <SelectItem key={agent._id} value={agent._id}>
-                            {agent.name}
+                            {agent.fullName}
                           </SelectItem>
                         ))
                       )}

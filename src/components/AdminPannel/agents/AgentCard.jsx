@@ -6,7 +6,7 @@ export function AgentCard({ agent }) {
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
       <div className="p-5 flex items-center">
         <img 
-          src={agent.avatarUrl} 
+          src={agent.profileImage || "https://via.placeholder.com/150"} 
           alt={agent.name} 
           className="w-16 h-16 rounded-full object-cover mr-5"
         />
