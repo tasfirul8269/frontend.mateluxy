@@ -38,11 +38,11 @@ const AgentsPage = () => {
         // Transform data to match our frontend structure
         const transformedAgents = data.map(agent => ({
           id: agent._id,
-          name: agent.fullName,
+          fullName: agent.fullName,
           profileImage: agent.profileImage,
-          role: agent.position,
+          position: agent.position,
           email: agent.email,
-          phone: agent.contactNumber,
+          contactNumber: agent.contactNumber,
           listings: 0, // You might want to add this field to your backend model
         }));
         
@@ -78,10 +78,10 @@ const AgentsPage = () => {
       const lowercasedQuery = searchQuery.toLowerCase();
       const filtered = agents.filter(
         agent =>
-          agent.name.toLowerCase().includes(lowercasedQuery) ||
+          agent.fullName.toLowerCase().includes(lowercasedQuery) ||
           agent.email.toLowerCase().includes(lowercasedQuery) ||
-          agent.role.toLowerCase().includes(lowercasedQuery) ||
-          agent.phone.toLowerCase().includes(lowercasedQuery)
+          agent.position.toLowerCase().includes(lowercasedQuery) ||
+          agent.contactNumber.toLowerCase().includes(lowercasedQuery)
       );
       setFilteredAgents(filtered);
     }

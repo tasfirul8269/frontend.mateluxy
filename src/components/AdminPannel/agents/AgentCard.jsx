@@ -1,18 +1,23 @@
-import React from "react";
+import React, { useState } from "react";
 import { Edit, Trash2, Phone, Mail } from "lucide-react";
 
 export function AgentCard({ agent }) {
+  const [imgError, setImgError] = useState(false);
+  
+  const defaultImage = "https://ui-avatars.com/api/?name=" + encodeURIComponent(agent.fullName) + "&background=random";
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
       <div className="p-5 flex items-center">
         <img 
-          src={agent.profileImage || "https://via.placeholder.com/150"} 
-          alt={agent.name} 
+          src={imgError ? defaultImage : (agent.profileImage || defaultImage)}
+          alt={agent.fullName} 
           className="w-16 h-16 rounded-full object-cover mr-5"
+          onError={() => setImgError(true)}
         />
         <div className="flex-1">
-          <h3 className="font-semibold text-lg text-gray-800">{agent.name}</h3>
-          <p className="text-gray-500 text-sm">{agent.role}</p>
+          <h3 className="font-semibold text-lg text-gray-800">{agent.fullName}</h3>
+          <p className="text-gray-500 text-sm">{agent.position}</p>
           
           <div className="mt-3 flex items-center justify-between text-sm">
             <div className="flex flex-col space-y-1.5">
@@ -22,7 +27,7 @@ export function AgentCard({ agent }) {
               </div>
               <div className="flex items-center text-gray-600">
                 <Phone size={14} className="mr-2" />
-                <span>{agent.phone}</span>
+                <span>{agent.contactNumber}</span>
               </div>
             </div>
             

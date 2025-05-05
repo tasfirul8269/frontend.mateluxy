@@ -192,11 +192,11 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded }) {
 
       const newAgent = {
         id: data._id || `a${Date.now()}`,
-        name: values.fullName,
-        profileImage: values.profileImage || 'https://via.placeholder.com/150',
+        fullName: values.fullName,
+        profileImage: imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(values.fullName)}&background=random`,
         email: values.email,
-        phone: values.contactNumber,
-        role: values.position,
+        contactNumber: values.contactNumber,
+        position: values.position,
         listings: 0,
       };
 
