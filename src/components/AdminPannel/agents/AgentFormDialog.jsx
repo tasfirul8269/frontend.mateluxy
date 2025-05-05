@@ -161,7 +161,7 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded }) {
       // Prepare data to send to API
       const agentData = {
         ...values,
-        profileImage: imageUrl || "", // Use the uploaded image URL or empty string
+        profileImage: imageUrl || "",
       };
 
       const response = await fetch(

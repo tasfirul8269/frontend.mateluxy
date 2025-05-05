@@ -39,7 +39,7 @@ const AgentsPage = () => {
         const transformedAgents = data.map(agent => ({
           id: agent._id,
           name: agent.fullName,
-          profileImage: agent.profileImage || "https://via.placeholder.com/150",
+          profileImage: agent.profileImage,
           role: agent.position,
           email: agent.email,
           phone: agent.contactNumber,
