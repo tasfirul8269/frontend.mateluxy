@@ -38,11 +38,19 @@ const AgentsPage = () => {
         // Transform data to match our frontend structure
         const transformedAgents = data.map(agent => ({
           id: agent._id,
-          fullName: agent.name,
+          username: agent.username,
+          fullName: agent.fullName,
           profileImage: agent.profileImage,
           position: agent.position,
           email: agent.email,
           contactNumber: agent.contactNumber,
+          whatsapp: agent.whatsapp || "",
+          department: agent.department || "",
+          vcard: agent.vcard || "",
+          languages: agent.languages || [],
+          aboutMe: agent.aboutMe || "",
+          address: agent.address || "",
+          socialLinks: agent.socialLinks || [],
           listings: 0, // You might want to add this field to your backend model
         }));
         
@@ -126,7 +134,7 @@ const AgentsPage = () => {
     <div className="flex-1 min-h-screen bg-gray-50">
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-medium text-gray-800">All Agents ({filteredAgents.length})</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Real Estate Agents</h2>
         </div>
 
         {/* Loading State */}
@@ -136,9 +144,9 @@ const AgentsPage = () => {
           </div>
         )}
 
-        {/* Agents List */}
+        {/* Agents Grid */}
         {!isLoading && (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             <AnimatePresence mode="popLayout">
               {currentAgents.map((agent) => (
                 <motion.div 

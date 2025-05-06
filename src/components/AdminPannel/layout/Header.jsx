@@ -59,7 +59,6 @@ const ADMIN_SUGGESTIONS = [
   { id: "ad1", value: "John Admin", type: "name" },
   { id: "ad2", value: "Lisa Manager", type: "name" },
   { id: "ad3", value: "admin@realestate.com", type: "email" },
-  { id: "ad4", value: "Super Admin", type: "role" },
 ];
 
 export function Header({ title, searchPlaceholder, onSearch }) {

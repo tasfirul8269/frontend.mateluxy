@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { AdminCard } from "@/components/AdminPannel/admins/AdminCard";
 import { FloatingActionButton } from "@/components/AdminPannel/ui/UIComponents";
 import {
   Pagination,
@@ -12,6 +11,14 @@ import {
 import { AdminFormDialog } from "@/components/AdminPannel/admins/AdminFormDialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { MoreVertical, Edit, Trash2, X, Check } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/AdminPannel/ui/dropdown-menu";
+import { format, formatDistanceToNow, differenceInMinutes } from "date-fns";
 
 const AdminsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -20,7 +27,8 @@ const AdminsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const itemsPerPage = 4;
+  const [editingAdmin, setEditingAdmin] = useState(null);
+  const itemsPerPage = 10;
 
   // Fetch admins from API
   useEffect(() => {
@@ -42,6 +50,8 @@ const AdminsPage = () => {
           email: admin.email,
           username: admin.username,
           profileImage: admin.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(admin.fullName)}&background=random`,
+          createdAt: admin.createdAt ? new Date(admin.createdAt) : new Date(),
+          adminId: admin.adminId || `ADM${Math.floor(1000 + Math.random() * 9000)}`
         }));
         
         setAdmins(transformedAdmins);
@@ -49,6 +59,40 @@ const AdminsPage = () => {
       } catch (error) {
         console.error('Error fetching admins:', error);
         toast.error('Failed to load admins. Please try again later.');
+
+        // Use mock data for development
+        const mockAdmins = [
+          {
+            id: "1",
+            fullName: "John Smith",
+            email: "john.smith@realestate.com",
+            username: "johnsmith",
+            profileImage: `https://ui-avatars.com/api/?name=John+Smith&background=random`,
+            createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+            adminId: "ADM001"
+          },
+          {
+            id: "2",
+            fullName: "Jessica Lee",
+            email: "jessica.lee@realestate.com",
+            username: "jessicalee",
+            profileImage: `https://ui-avatars.com/api/?name=Jessica+Lee&background=random`,
+            createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 days ago
+            adminId: "ADM002"
+          },
+          {
+            id: "3",
+            fullName: "Robert Johnson",
+            email: "robert.j@realestate.com",
+            username: "robertj",
+            profileImage: `https://ui-avatars.com/api/?name=Robert+Johnson&background=random`,
+            createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago 
+            adminId: "ADM003"
+          },
+        ];
+        
+        setAdmins(mockAdmins);
+        setFilteredAdmins(mockAdmins);
       } finally {
         setIsLoading(false);
       }
@@ -78,7 +122,8 @@ const AdminsPage = () => {
         admin =>
           admin.fullName.toLowerCase().includes(lowercasedQuery) ||
           admin.email.toLowerCase().includes(lowercasedQuery) ||
-          admin.username.toLowerCase().includes(lowercasedQuery)
+          admin.username.toLowerCase().includes(lowercasedQuery) ||
+          admin.adminId.toLowerCase().includes(lowercasedQuery)
       );
       setFilteredAdmins(filtered);
     }
@@ -92,6 +137,12 @@ const AdminsPage = () => {
   );
 
   const handleAddAdmin = () => {
+    setEditingAdmin(null);
+    setIsFormOpen(true);
+  };
+
+  const handleEditAdmin = (admin) => {
+    setEditingAdmin(admin);
     setIsFormOpen(true);
   };
 
@@ -107,10 +158,27 @@ const AdminsPage = () => {
     );
   };
 
-  const handleAdminDeleted = (deletedAdminId) => {
-    setAdmins(prevAdmins => 
-      prevAdmins.filter(admin => admin.id !== deletedAdminId)
-    );
+  const handleAdminDeleted = async (adminId) => {
+    if (!window.confirm('Are you sure you want to delete this admin?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/${adminId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete admin');
+      }
+
+      toast.success('Admin deleted successfully');
+      setAdmins(prevAdmins => prevAdmins.filter(admin => admin.id !== adminId));
+    } catch (error) {
+      console.error('Error deleting admin:', error);
+      toast.error('Failed to delete admin');
+    }
   };
 
   const handlePageChange = (page) => {
@@ -119,11 +187,29 @@ const AdminsPage = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // Format date for display
+  const formatDate = (date) => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (date >= today) {
+      return `Today, ${format(date, 'h:mm a')}`;
+    } else if (date >= yesterday) {
+      return `Yesterday, ${format(date, 'h:mm a')}`;
+    } else if (now.getFullYear() === date.getFullYear()) {
+      return format(date, 'MMM d, h:mm a');
+    } else {
+      return format(date, 'MMM d, yyyy, h:mm a');
+    }
+  };
+
   return (
     <div className="flex-1 min-h-screen bg-gray-50">
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-medium text-gray-800">System Administrators ({filteredAdmins.length})</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Admin Users</h2>
         </div>
 
         {/* Loading State */}
@@ -133,84 +219,134 @@ const AdminsPage = () => {
           </div>
         )}
 
-        {/* Admins List */}
+        {/* Admin Table */}
         {!isLoading && (
-          <div className="space-y-4">
-            <AnimatePresence mode="popLayout">
-              {currentAdmins.map((admin) => (
-                <motion.div 
-                  key={admin.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.3 }}
-                  layout
-                >
-                  <AdminCard 
-                    admin={admin} 
-                    onAdminUpdated={handleAdminUpdated}
-                    onAdminDeleted={handleAdminDeleted}
-                  />
-                </motion.div>
-              ))}
-            </AnimatePresence>
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 text-left">
+                  <tr>
+                    <th className="px-6 py-4 text-sm font-medium text-gray-800">Admin</th>
+                    <th className="px-6 py-4 text-sm font-medium text-gray-800">Email</th>
+                    <th className="px-6 py-4 text-sm font-medium text-gray-800">Account Created</th>
+                    <th className="px-6 py-4 text-sm font-medium text-gray-800 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  <AnimatePresence mode="popLayout">
+                    {currentAdmins.map((admin) => (
+                      <motion.tr 
+                        key={admin.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="hover:bg-gray-50"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full overflow-hidden text-center flex items-center justify-center relative">
+                              {admin.profileImage ? (
+                                <img 
+                                  src={admin.profileImage} 
+                                  alt={admin.fullName}
+                                  className="h-10 w-10 object-cover" 
+                                />
+                              ) : (
+                                <span className="text-lg font-medium text-gray-600">
+                                  {admin.fullName.charAt(0)}
+                                </span>
+                              )}
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">{admin.fullName}</div>
+                              <div className="text-xs text-gray-500">ID: {admin.adminId}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700">{admin.email}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700">{formatDate(admin.createdAt)}</td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex justify-end space-x-2">
+                            <button 
+                              className="p-1.5 text-gray-500 hover:text-blue-600 rounded-full hover:bg-blue-50 transition-colors"
+                              onClick={() => handleEditAdmin(admin)}
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button 
+                              className="p-1.5 text-gray-500 hover:text-red-600 rounded-full hover:bg-red-50 transition-colors"
+                              onClick={() => handleAdminDeleted(admin.id)}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))}
+                  </AnimatePresence>
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Empty State */}
+            {currentAdmins.length === 0 && (
+              <div className="text-center py-12">
+                <h3 className="text-lg font-medium text-gray-700">No admins found</h3>
+                <p className="text-gray-500 mt-1">Try changing your search or add new admins.</p>
+              </div>
+            )}
+            
+            {/* Footer with Pagination */}
+            <div className="bg-gray-50 px-6 py-3 flex items-center justify-between">
+              <div className="text-sm text-gray-700">
+                Showing page {currentPage} of {Math.max(totalPages, 1)}
+              </div>
+              
+              {filteredAdmins.length > 0 && totalPages > 1 && (
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (currentPage > 1) handlePageChange(currentPage - 1);
+                        }}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handlePageChange(page);
+                          }}
+                          isActive={currentPage === page}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                    <PaginationItem>
+                      <PaginationNext
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (currentPage < totalPages) handlePageChange(currentPage + 1);
+                        }}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
+            </div>
           </div>
-        )}
-
-        {/* No results */}
-        {currentAdmins.length === 0 && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-100"
-          >
-            <h3 className="text-lg font-medium text-gray-700">No admins found</h3>
-            <p className="text-gray-500 mt-1">Try changing your search or add new admins.</p>
-          </motion.div>
-        )}
-
-        {/* Pagination */}
-        {filteredAdmins.length > 0 && totalPages > 1 && (
-          <Pagination className="mt-8">
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (currentPage > 1) handlePageChange(currentPage - 1);
-                  }}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-                />
-              </PaginationItem>
-
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <PaginationItem key={page}>
-                  <PaginationLink
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(page);
-                    }}
-                    isActive={currentPage === page}
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-
-              <PaginationItem>
-                <PaginationNext
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (currentPage < totalPages) handlePageChange(currentPage + 1);
-                  }}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
         )}
       </div>
 
@@ -218,6 +354,9 @@ const AdminsPage = () => {
         open={isFormOpen} 
         onOpenChange={setIsFormOpen}
         onAdminAdded={handleAdminAdded}
+        onAdminUpdated={handleAdminUpdated}
+        admin={editingAdmin}
+        isEditing={!!editingAdmin}
       />
 
       <FloatingActionButton

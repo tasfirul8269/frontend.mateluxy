@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { Edit, Trash2, Phone, Mail } from "lucide-react";
+import { Mail, Phone, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AgentFormDialog } from "./AgentFormDialog";
+import { AgentProfileDialog } from "./AgentProfileDialog";
 
 export function AgentCard({ agent, onAgentUpdated, onAgentDeleted }) {
   const [imgError, setImgError] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
   const defaultImage = `https://ui-avatars.com/api/?name=${encodeURIComponent(agent.fullName)}&background=random`;
@@ -42,56 +44,79 @@ export function AgentCard({ agent, onAgentUpdated, onAgentDeleted }) {
     }
   };
 
+  const handleViewProfile = () => {
+    setIsProfileDialogOpen(true);
+  };
+
   return (
     <>
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
-        <div className="p-5 flex items-center">
-          <img 
-            src={imgError ? defaultImage : (agent.profileImage || defaultImage)}
-            alt={agent.fullName} 
-            className="w-16 h-16 rounded-full object-cover mr-5"
-            onError={() => setImgError(true)}
-          />
-          <div className="flex-1">
-            <h3 className="font-semibold text-lg text-gray-800">{agent.fullName}</h3>
-            <p className="text-gray-500 text-sm">{agent.position}</p>
-            
-            <div className="mt-3 flex items-center justify-between text-sm">
-              <div className="flex flex-col space-y-1.5">
-                <div className="flex items-center text-gray-600">
-                  <Mail size={14} className="mr-2" />
-                  <span>{agent.email}</span>
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <Phone size={14} className="mr-2" />
-                  <span>{agent.contactNumber}</span>
-                </div>
-              </div>
-              
-              <div className="flex items-center">
-                <span className="bg-red-100 text-blue-800 px-2.5 py-0.5 rounded-full text-xs font-medium">
-                  {agent.listings} listings
-                </span>
-              </div>
+      <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden relative">
+        {/* Edit and Delete buttons */}
+        <div className="absolute top-2 right-2 flex space-x-1 z-10">
+          <button 
+            className="p-1.5 bg-white text-blue-600 rounded-full hover:bg-blue-50 transition-colors shadow-sm"
+            onClick={handleEdit}
+            disabled={isDeleting}
+            title="Edit Agent"
+          >
+            <Edit size={16} />
+          </button>
+          <button 
+            className="p-1.5 bg-white text-red-600 rounded-full hover:bg-red-50 transition-colors shadow-sm"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            title="Delete Agent"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+
+        {/* Card Content */}
+        <div className="flex flex-col items-center p-6">
+          {/* Profile Image */}
+          <div className="mb-4">
+            <div className="w-24 h-24 relative rounded-full overflow-hidden border-4 border-white shadow-sm">
+              <img 
+                src={imgError ? defaultImage : (agent.profileImage || defaultImage)}
+                alt={agent.fullName} 
+                className="w-full h-full object-cover"
+                onError={() => setImgError(true)}
+              />
             </div>
           </div>
           
-          <div className="ml-4 flex items-center space-x-2">
-            <button 
-              className="p-1.5 text-gray-500 hover:text-blue-600 rounded-full hover:bg-blue-50 transition-colors"
-              onClick={handleEdit}
-              disabled={isDeleting}
-            >
-              <Edit size={16} />
-            </button>
-            <button 
-              className="p-1.5 text-gray-500 hover:text-red-600 rounded-full hover:bg-red-50 transition-colors"
-              onClick={handleDelete}
-              disabled={isDeleting}
-            >
-              <Trash2 size={16} />
-            </button>
+          {/* Agent Name and Title */}
+          <div className="text-center mb-2">
+            <h3 className="text-xl font-bold text-gray-800">{agent.fullName}</h3>
+            <p className="text-gray-600">{agent.position || "Real Estate Agent"}</p>
           </div>
+          
+          {/* Property Count */}
+          <div className="mb-6">
+            <span className="bg-blue-100 text-blue-700 px-4 py-1 rounded-full text-sm font-medium">
+              {agent.listings || 0} Properties
+            </span>
+          </div>
+          
+          {/* Contact Information */}
+          <div className="w-full space-y-3 mb-5">
+            <div className="flex items-center justify-center text-gray-600 w-full px-4">
+              <Mail className="h-4 w-4 mr-2 flex-shrink-0 text-gray-500" />
+              <span className="text-sm truncate max-w-full overflow-hidden">{agent.email}</span>
+            </div>
+            <div className="flex items-center justify-center text-gray-600 w-full px-4">
+              <Phone className="h-4 w-4 mr-2 flex-shrink-0 text-gray-500" />
+              <span className="text-sm truncate">{agent.contactNumber || "+1 (555) 123-4567"}</span>
+            </div>
+          </div>
+          
+          {/* View Profile Button */}
+          <button 
+            onClick={handleViewProfile}
+            className="w-full text-center text-purple-600 hover:text-purple-800 font-medium py-2 transition-colors"
+          >
+            View Profile
+          </button>
         </div>
       </div>
 
@@ -101,6 +126,12 @@ export function AgentCard({ agent, onAgentUpdated, onAgentDeleted }) {
         agent={agent}
         onAgentUpdated={onAgentUpdated}
         isEditing={true}
+      />
+
+      <AgentProfileDialog
+        open={isProfileDialogOpen}
+        onOpenChange={setIsProfileDialogOpen}
+        agentId={agent.id}
       />
     </>
   );
