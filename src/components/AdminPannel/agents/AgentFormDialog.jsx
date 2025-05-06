@@ -554,7 +554,7 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
         languages: values.languages || [], // Ensure languages is always an array
         aboutMe: values.aboutMe || "",
         address: values.address || "",
-        socialLinks: socialLinks, // Send the complete objects with platform and url
+        socialLinks: socialLinks.map(link => link.url), // Convert to array of URL strings
       };
 
       if (values.password && values.password !== "********") {
@@ -564,6 +564,12 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
       const url = isEditing 
         ? `${import.meta.env.VITE_API_URL}/api/agents/${agent.id}`
         : `${import.meta.env.VITE_API_URL}/api/agents/add-agents`;
+
+      // Detailed logging of request data
+      console.log("Submitting to URL:", url);
+      console.log("Method:", isEditing ? 'PUT' : 'POST');
+      console.log("Request data:", JSON.stringify(agentData, null, 2));
+      console.log("Social links format:", JSON.stringify(agentData.socialLinks));
 
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
@@ -575,8 +581,18 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || (isEditing ? 'Failed to update agent' : 'Failed to add agent'));
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        
+        let errorMessage;
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || (isEditing ? 'Failed to update agent' : 'Failed to add agent');
+        } catch (e) {
+          errorMessage = `${isEditing ? 'Update' : 'Create'} failed: ${response.status} ${response.statusText}`;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
