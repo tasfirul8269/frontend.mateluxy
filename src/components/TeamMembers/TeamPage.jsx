@@ -11,19 +11,20 @@ const TeamPage = () => {
   const [selectedLanguage, setSelectedLanguage] = useState('All');
   const [filteredMembers, setFilteredMembers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [teamData, setTeamData] = useState({
-    teamMembers: [],
-    departments: [],
-    languages: []
-  });
+  const [teamData, setTeamData] = useState([]);
+
+  // These can be hardcoded since they're not in the API
+  const departments = ["All", "Sales", "Marketing", "Management", "Finance", "IT"];
+  const languages = ["All", "English", "Arabic", "French", "German", "Spanish", "Russian", "Chinese", "Korean", "Japanese", "Portuguese"];
 
   useEffect(() => {
     const fetchTeamData = async () => {
       try {
-        const response = await fetch('team-members.json');
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/agents`); // Replace with your actual API endpoint
         const data = await response.json();
+        console.log(data)
         setTeamData(data);
-        setFilteredMembers(data.teamMembers);
+        setFilteredMembers(data);
       } catch (error) {
         console.error('Error fetching team data:', error);
       }
@@ -33,14 +34,14 @@ const TeamPage = () => {
   }, []);
 
   useEffect(() => {
-    let filtered = teamData.teamMembers;
+    let filtered = teamData;
 
     if (searchTerm) {
       filtered = filtered.filter(
         (member) =>
-          member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          member.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          member.department.toLowerCase().includes(searchTerm.toLowerCase())
+          member.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          member.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          member.position.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -52,13 +53,13 @@ const TeamPage = () => {
 
     if (selectedLanguage !== 'All') {
       filtered = filtered.filter(
-        (member) => member.languages.includes(selectedLanguage)
+        (member) => member.languages && member.languages.includes(selectedLanguage)
       );
     }
 
     setFilteredMembers(filtered);
     setCurrentPage(1);
-  }, [searchTerm, selectedDepartment, selectedLanguage, teamData.teamMembers]);
+  }, [searchTerm, selectedDepartment, selectedLanguage, teamData]);
 
   const totalPages = Math.ceil(filteredMembers.length / ITEMS_PER_PAGE);
   const paginatedMembers = filteredMembers.slice(
@@ -88,16 +89,28 @@ const TeamPage = () => {
             setSelectedDepartment={setSelectedDepartment}
             selectedLanguage={selectedLanguage}
             setSelectedLanguage={setSelectedLanguage}
-            departments={teamData.departments}
-            languages={teamData.languages}
+            departments={departments}
+            languages={languages}
           />
 
-        
           {paginatedMembers.length > 0 ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-5">
                 {paginatedMembers.map((member) => (
-                  <TeamMember key={member.id} member={member} />
+                  <TeamMember 
+                    key={member._id} 
+                    member={{
+                      id: member._id,
+                      name: member.fullName,
+                      position: member.position,
+                      department: member.department || '',
+                      languages: member.languages || [],
+                      email: member.email,
+                      phone: member.contactNumber,
+                      profileImage: member.profileImage ,
+                      bio: member.aboutMe || ''
+                    }} 
+                  />
                 ))}
               </div>
               
@@ -142,8 +155,8 @@ const TeamPage = () => {
             </div>
           )}
 
-            {/* Why Choose Us Section */}
-            <div className="mt-12 bg-white rounded-[20px] border border-[#e6e6e6] p-8">
+          {/* Why Choose Us Section */}
+          <div className="mt-12 bg-white rounded-[20px] border border-[#e6e6e6] p-8">
             <h2 className="text-3xl font-bold text-center mb-15">Why Choose Us</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               <div className="text-center">
@@ -168,7 +181,6 @@ const TeamPage = () => {
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </div>

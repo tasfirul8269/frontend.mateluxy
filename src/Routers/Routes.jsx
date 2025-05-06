@@ -51,7 +51,20 @@ const router = createBrowserRouter([
                 element: <Contact></Contact>
             },
             {
-                path: "/agent",
+                path: "/agent/:id",
+                loading: async ({params}) => {
+                    try {
+                        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/agents/${params.id}`);
+                        if (!response.ok) {
+                            throw new Error(`Failed to fetch agent: ${response.status}`);
+                        }
+                        return await response.json();
+                    } catch (error) {
+                        // You might want to handle this error in your component
+                        console.error("Loader error:", error);
+                        throw error; // Re-throw to let the router handle it
+                    }
+                },
                 element: <AgentProfileCard></AgentProfileCard>
             },
             {
