@@ -13,15 +13,13 @@ const SignInForm = () => {
     password: '',
     rememberMe: false,
   };
-  const [formData, setFormData] = useState({initialFormData});
+  const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = () => {
-
-
     const newErrors = {};
 
     // Email validation
@@ -79,23 +77,33 @@ const SignInForm = () => {
         });
   
         const data = await res.json();
-        if (data.success == false) {
+        if (data.success === false) {
           setLoading(false);
-          isSubmitting(false);
-          setError("An error occurred while adding the agent. Please try again.");
+          setIsSubmitting(false);
+          setError(data.message || "Invalid email or password");
           return;
         }
+        
+        // Store admin data in localStorage for activity tracking
+        const adminData = {
+          id: data._id,
+          fullName: data.fullName,
+          email: data.email,
+          username: data.username,
+          role: data.role || "Admin"
+        };
+        localStorage.setItem('currentAdmin', JSON.stringify(adminData));
+        
         setLoading(false);
         setIsSubmitting(false); 
         setError(null);
         navigate('/admin-pannel'); 
         setFormData(initialFormData);
   
-  
       } catch (error) {
         setLoading(false);
         setIsSubmitting(false);
-        setError('An error occurred while adding the agent. Please try again.');
+        setError('Login failed. Please check your credentials and try again.');
       }
     }
   };

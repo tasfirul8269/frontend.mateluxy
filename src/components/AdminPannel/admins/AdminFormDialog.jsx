@@ -55,6 +55,7 @@ const formSchema = z.object({
     message: "Password must be at least 8 characters.",
   }).optional(),
   profileImage: z.any().optional(),
+  role: z.string().optional(),
 });
 
 export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdminUpdated, isEditing = false }) {
@@ -76,6 +77,7 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
       email: "",
       password: "",
       profileImage: "",
+      role: "Admin",
     },
   });
 
@@ -87,6 +89,7 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
         email: admin.email || "",
         password: "********",
         profileImage: admin.profileImage || "",
+        role: admin.role || "Admin",
       });
       
       // Set preview URL for profile image from the database
@@ -102,6 +105,7 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
         email: "",
         password: "",
         profileImage: "",
+        role: "Admin",
       });
       setPreviewUrl("");
     }
@@ -250,35 +254,36 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
           render={({ field }) => (
             <FormItem>
               <FormLabel>Username</FormLabel>
-              <FormControl>
-                <div className="relative">
+              <div className="relative">
+                <FormControl>
                   <Input 
                     placeholder="Enter username" 
                     {...field} 
                     onChange={handleUsernameChange}
-                    className="bg-gray-50 border-0" 
+                    disabled={isSubmitting}
                   />
-                  {isCheckingUsername && (
-                    <div className="absolute right-2 top-2.5">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
-                    </div>
-                  )}
-                  {!isCheckingUsername && isUsernameAvailable !== null && (
-                    <div className="absolute right-2 top-2.5">
-                      {isUsernameAvailable ? (
-                        <Check className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <X className="h-4 w-4 text-red-500" />
-                      )}
-                    </div>
-                  )}
-                </div>
-              </FormControl>
+                </FormControl>
+                {isCheckingUsername && (
+                  <div className="absolute right-3 top-2.5 animate-spin h-5 w-5 border-2 border-gray-300 rounded-full border-t-blue-600"></div>
+                )}
+                {!isCheckingUsername && isUsernameAvailable !== null && (
+                  <div className="absolute right-3 top-2.5">
+                    {isUsernameAvailable ? (
+                      <Check className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <X className="h-5 w-5 text-red-500" />
+                    )}
+                  </div>
+                )}
+              </div>
+              {!isCheckingUsername && isUsernameAvailable === false && (
+                <p className="text-sm text-red-500 mt-1">Username is already taken</p>
+              )}
               <FormMessage />
             </FormItem>
           )}
         />
-
+        
         <FormField
           control={form.control}
           name="fullName"
@@ -286,10 +291,10 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
             <FormItem>
               <FormLabel>Full Name</FormLabel>
               <FormControl>
-                <Input
-                  placeholder="Enter full name"
-                  {...field}
-                  className="bg-gray-50 border-0"
+                <Input 
+                  placeholder="Enter full name" 
+                  {...field} 
+                  disabled={isSubmitting}
                 />
               </FormControl>
               <FormMessage />
@@ -297,7 +302,7 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
           )}
         />
       </div>
-
+      
       {/* Row 2: Email and Password */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField
@@ -307,40 +312,69 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input
-                  type="email"
-                  placeholder="Enter email address"
-                  {...field}
-                  className="bg-gray-50 border-0"
+                <Input 
+                  type="email" 
+                  placeholder="Enter email address" 
+                  {...field} 
+                  disabled={isSubmitting}
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-
+        
         <FormField
           control={form.control}
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password {isEditing && "(Leave blank to keep current)"}</FormLabel>
+              <FormLabel>{isEditing ? "New Password (leave unchanged to keep current)" : "Password"}</FormLabel>
               <FormControl>
                 <Input 
                   type="password" 
                   placeholder={isEditing ? "••••••••" : "Enter password"} 
                   {...field} 
-                  className="bg-gray-50 border-0" 
-                  value={isEditing && field.value === "********" ? "" : field.value}
-                  onChange={(e) => {
-                    if (isEditing && e.target.value === "") {
-                      field.onChange("********");
-                    } else {
-                      field.onChange(e.target.value);
-                    }
-                  }}
+                  disabled={isSubmitting}
                 />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      {/* Row 3: Role */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <FormField
+          control={form.control}
+          name="role"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Role</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+                disabled={isSubmitting}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="Super Admin">Super Admin</SelectItem>
+                  <SelectItem value="Property Admin">Property Admin</SelectItem>
+                  <SelectItem value="Agent Admin">Agent Admin</SelectItem>
+                  <SelectItem value="Admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500 mt-1">
+                {field.value === "Super Admin" && "Super Admins have full access to all features, including admin management."}
+                {field.value === "Property Admin" && "Property Admins can add, edit, and manage properties only."}
+                {field.value === "Agent Admin" && "Agent Admins can add, edit, and manage agents only."}
+                {field.value === "Admin" && "Regular Admins have limited access to dashboard features."}
+              </p>
               <FormMessage />
             </FormItem>
           )}
@@ -389,93 +423,71 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
   );
 
   async function onSubmit(values) {
-    if (isUsernameAvailable === false) {
-      toast.error("Please choose a different username");
-      return;
-    }
-
-    // Check if any changes were made
-    if (isEditing) {
-      const hasChanges = 
-        values.username !== admin.username ||
-        values.fullName !== admin.fullName ||
-        values.email !== admin.email ||
-        (values.password && values.password !== "********") ||
-        values.profileImage !== admin.profileImage;
-
-      if (!hasChanges) {
-        toast.info("No changes were made");
-        onOpenChange(false);
-        return;
-      }
-    }
-
-    setIsSubmitting(true);
     try {
-      let imageUrl = values.profileImage;
+      setIsSubmitting(true);
+      
+      // If there's a new profile image selected, upload it
       if (selectedFile) {
         try {
-          toast.info("Uploading image...");
-          imageUrl = await uploadToCloudinary(selectedFile);
+          const imageUrl = await uploadToCloudinary(selectedFile);
+          values.profileImage = imageUrl;
         } catch (error) {
-          toast.error("Image upload failed. Using existing image.");
-          console.error("Image upload error:", error);
+          toast.error("Failed to upload profile image. Please try again.");
+          setIsSubmitting(false);
+          return;
         }
       }
-
-      const adminData = {
-        username: values.username,
-        fullName: values.fullName,
-        email: values.email,
-        profileImage: imageUrl,
-      };
-
-      if (values.password && values.password !== "********") {
-        adminData.password = values.password;
+      
+      // Don't send the password if it's the placeholder in edit mode
+      if (isEditing && values.password === "********") {
+        delete values.password;
       }
-
+      
       const url = isEditing 
         ? `${import.meta.env.VITE_API_URL}/api/${admin.id}`
-        : `${import.meta.env.VITE_API_URL}/api/admins/add-admins`;
-
+        : `${import.meta.env.VITE_API_URL}/api/admins`;
+      
+      const method = isEditing ? 'PUT' : 'POST';
+      
       const response = await fetch(url, {
-        method: isEditing ? 'PUT' : 'POST',
+        method: method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(adminData),
+        body: JSON.stringify(values),
         credentials: 'include',
       });
-
+      
       if (!response.ok) {
         throw new Error(isEditing ? 'Failed to update admin' : 'Failed to add admin');
       }
-
+      
       const data = await response.json();
-
-      const updatedAdmin = {
+      
+      toast.success(isEditing ? 'Admin updated successfully' : 'Admin added successfully');
+      
+      // Transform response to match frontend structure
+      const transformedAdmin = {
         id: data._id,
+        username: data.username,
         fullName: data.fullName,
         email: data.email,
-        username: data.username,
-        profileImage: data.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=random`,
+        profileImage: data.profileImage,
+        role: data.role || "Admin",
+        lastLogin: data.lastLogin ? new Date(data.lastLogin) : new Date(),
+        adminId: data.adminId || `ADM${Math.floor(1000 + Math.random() * 9000)}`
       };
-
+      
       if (isEditing && onAdminUpdated) {
-        onAdminUpdated(updatedAdmin);
-        toast.success("Admin updated successfully!");
+        onAdminUpdated(transformedAdmin);
       } else if (!isEditing && onAdminAdded) {
-        onAdminAdded(updatedAdmin);
-        toast.success("Admin added successfully!");
+        onAdminAdded(transformedAdmin);
       }
-
-      form.reset();
-      setSelectedFile(null);
-      setPreviewUrl("");
-      onOpenChange(false);
+      
+      handleCancel();
     } catch (error) {
-      console.error('Error:', error);
-      toast.error(error.message || "Operation failed. Please try again.");
+      console.error('Error submitting form:', error);
+      toast.error(isEditing ? 'Failed to update admin' : 'Failed to add admin');
     } finally {
       setIsSubmitting(false);
     }
