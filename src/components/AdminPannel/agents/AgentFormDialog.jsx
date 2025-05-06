@@ -30,7 +30,6 @@ import {
   SelectValue,
 } from "@/components/AdminPannel/ui/select";
 
-// Form validation schema
 const formSchema = z.object({
   username: z.string().min(3, {
     message: "Username must be at least 3 characters.",
@@ -56,7 +55,6 @@ const formSchema = z.object({
   socialLinks: z.array(z.string()).optional(),
 });
 
-// Social platforms for dropdown
 const SOCIAL_PLATFORMS = [
   { value: 'facebook', label: 'Facebook', icon: '📘' },
   { value: 'instagram', label: 'Instagram', icon: '📸' },
@@ -69,9 +67,6 @@ const SOCIAL_PLATFORMS = [
 ];
 
 export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAgentUpdated, isEditing = false }) {
-  // Add immediate logging for the agent prop 
-  console.log("AgentFormDialog received agent:", agent, "isEditing:", isEditing);
-  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -91,7 +86,6 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
   const [newSocialPlatform, setNewSocialPlatform] = useState("facebook");
   const [newSocialUrl, setNewSocialUrl] = useState("");
 
-  // Initialize form with resolver and default values
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -105,18 +99,15 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
       whatsapp: "",
       department: "",
       vcard: "",
-      languages: [],
+      languages: "",
       aboutMe: "",
       address: "",
-      socialLinks: [],
+      socialLinks: "",
     },
   });
 
-  // Load agent data when editing
   useEffect(() => {
     if (agent) {
-      console.log("Loading agent data for editing:", agent);
-      
       // Convert languages string to array if it's a string
       const initialLanguages = Array.isArray(agent.languages) 
         ? agent.languages 
@@ -126,19 +117,8 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
       
       setLanguages(initialLanguages);
       
-      // Parse social links if available
-      const initialSocialLinks = Array.isArray(agent.socialLinks) 
-        ? agent.socialLinks.map(url => {
-            // Detect platform from URL
-            const platform = detectPlatform(url);
-            return { platform, url };
-          })
-        : [];
-      
-      setSocialLinks(initialSocialLinks);
-      
       // Reset form with all agent data and set preview URL from agent profile image
-      const formValues = {
+      form.reset({
         username: agent.username || "",
         fullName: agent.fullName || "",
         email: agent.email || "",
@@ -152,11 +132,8 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
         languages: initialLanguages,
         aboutMe: agent.aboutMe || "",
         address: agent.address || "",
-        // Don't set socialLinks in form as we're managing it separately
-      };
-      
-      console.log("Setting form values:", formValues);
-      form.reset(formValues);
+        socialLinks: agent.socialLinks || [],
+      });
 
       // Set preview URL for profile image from the database
       if (agent.profileImage) {
@@ -170,9 +147,7 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
         checkUsernameAvailability(agent.username);
       }
     } else {
-      // Reset all state when not editing
       setLanguages([]);
-      setSocialLinks([]);
       form.reset({
         username: "",
         fullName: "",
@@ -187,31 +162,12 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
         languages: [],
         aboutMe: "",
         address: "",
-        // Don't set socialLinks in form as we're managing it separately
+        socialLinks: [],
       });
       setPreviewUrl("");
-      setIsUsernameAvailable(null);
     }
   }, [agent, form]);
 
-  // Helper function to detect platform from URL
-  const detectPlatform = (url) => {
-    if (!url) return 'website';
-    
-    const lowerUrl = url.toLowerCase();
-    
-    if (lowerUrl.includes('facebook.com')) return 'facebook';
-    if (lowerUrl.includes('instagram.com')) return 'instagram';
-    if (lowerUrl.includes('linkedin.com')) return 'linkedin';
-    if (lowerUrl.includes('twitter.com') || lowerUrl.includes('x.com')) return 'twitter';
-    if (lowerUrl.includes('youtube.com')) return 'youtube';
-    if (lowerUrl.includes('tiktok.com')) return 'tiktok';
-    if (lowerUrl.includes('pinterest.com')) return 'pinterest';
-    
-    return 'website'; // Default
-  };
-
-  // Handle drag events for image upload
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -222,7 +178,6 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
     }
   };
 
-  // Upload image to Cloudinary
   const uploadToCloudinary = async (file) => {
     try {
       const formData = new FormData();
@@ -249,7 +204,6 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
     }
   };
 
-  // Handle file drop for image upload
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -265,7 +219,6 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
     }
   };
 
-  // Handle file input change
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
@@ -277,7 +230,6 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
     }
   };
 
-  // Process selected image
   const handleImageSelection = (file) => {
     setSelectedFile(file);
     form.setValue("profileImage", file);
@@ -290,12 +242,10 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
     reader.readAsDataURL(file);
   };
 
-  // Trigger file input click
   const handleButtonClick = () => {
     fileInputRef.current.click();
   };
 
-  // Check if username is available
   const checkUsernameAvailability = async (username) => {
     if (!username || username.length < 3) {
       setIsUsernameAvailable(null);
@@ -325,7 +275,6 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
     }
   };
 
-  // Handle username input change
   const handleUsernameChange = (e) => {
     const username = e.target.value;
     form.setValue('username', username);
@@ -339,21 +288,12 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
     }, 500);
   };
 
-  // Add new social link
   const handleAddSocialLink = () => {
     if (addingSocialLink) {
       if (newSocialUrl.trim()) {
-        // Validate URL format
-        let url = newSocialUrl.trim();
-        
-        // Add https:// if not present
-        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-          url = 'https://' + url;
-        }
-        
-        const updatedLinks = [...socialLinks, { platform: newSocialPlatform, url }];
+        const updatedLinks = [...socialLinks, { platform: newSocialPlatform, url: newSocialUrl.trim() }];
         setSocialLinks(updatedLinks);
-        console.log("Social links updated:", updatedLinks);
+        form.setValue('socialLinks', updatedLinks);
         
         // Reset the new link form
         setNewSocialPlatform("facebook");
@@ -367,46 +307,25 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
     }
   };
 
-  // Remove social link
   const handleRemoveSocialLink = (index) => {
-    const updatedLinks = socialLinks.filter((_, i) => i !== index);
-    setSocialLinks(updatedLinks);
-    console.log("Social link removed. Updated links:", updatedLinks);
+    setSocialLinks(socialLinks.filter((_, i) => i !== index));
   };
 
-  // Update social link
-  const handleSocialLinkChange = (index, field, value) => {
-    const updatedLinks = [...socialLinks];
-    updatedLinks[index] = {
-      ...updatedLinks[index],
-      [field]: value
-    };
-    setSocialLinks(updatedLinks);
-  };
-
-  // Cancel adding social link
   const handleCancelAddSocialLink = () => {
     setAddingSocialLink(false);
     setNewSocialPlatform("facebook");
     setNewSocialUrl("");
   };
 
-  // Cancel form
   const handleCancel = () => {
-    if(!isEditing){
     setPreviewUrl("");
     setSelectedFile(null);
     setIsUsernameAvailable(null);
     setSocialLinks([]);
     form.reset();
     onOpenChange(false);
-  }else{
-    onOpenChange(false);
-
-  }
   };
 
-  // Add new language
   const handleAddLanguage = () => {
     if (newLanguage.trim()) {
       const updatedLanguages = [...languages, newLanguage.trim()];
@@ -416,14 +335,12 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
     }
   };
 
-  // Remove language
   const handleRemoveLanguage = (indexToRemove) => {
     const updatedLanguages = languages.filter((_, index) => index !== indexToRemove);
     setLanguages(updatedLanguages);
     form.setValue('languages', updatedLanguages);
   };
 
-  // Handle language input keypress
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -431,7 +348,6 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
     }
   };
 
-  // Handle vCard file selection
   const handleVCardFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
@@ -444,7 +360,6 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
     }
   };
 
-  // Upload vCard to Cloudinary
   const uploadVCardToCloudinary = async () => {
     if (!selectedVCardFile) {
       toast.error("Please select a PDF file first");
@@ -488,155 +403,66 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
     }
   };
 
-  // Form submission handler
-  async function onSubmit(values) {
-    if (isUsernameAvailable === false) {
-      toast.error("Please choose a different username");
-      return;
-    }
-
-    // Debugging what we have before submission
-    console.log("Form values:", values);
-    console.log("Languages state:", languages);
-    console.log("Social links state:", socialLinks);
-
-    // Check if any changes were made
-    if (isEditing) {
-      const hasChanges = 
-        values.username !== agent.username ||
-        values.fullName !== agent.fullName ||
-        values.email !== agent.email ||
-        (values.password && values.password !== "********") ||
-        values.profileImage !== agent.profileImage ||
-        values.contactNumber !== agent.contactNumber ||
-        values.position !== agent.position ||
-        values.whatsapp !== agent.whatsapp ||
-        values.department !== agent.department ||
-        values.vcard !== agent.vcard ||
-        JSON.stringify(values.languages) !== JSON.stringify(agent.languages) ||
-        values.aboutMe !== agent.aboutMe ||
-        values.address !== agent.address ||
-        JSON.stringify(socialLinks) !== JSON.stringify(agent.socialLinks);
-
-      if (!hasChanges) {
-        toast.info("No changes were made");
-        onOpenChange(false);
-        return;
-      }
-    }
-
-    setIsSubmitting(true);
-    try {
-      let imageUrl = values.profileImage;
-      if (selectedFile) {
-        try {
-          toast.info("Uploading image...");
-          imageUrl = await uploadToCloudinary(selectedFile);
-        } catch (error) {
-          toast.error("Image upload failed. Using existing image.");
-          console.error("Image upload error:", error);
-        }
-      }
-
-      // Prepare social links - format properly for the backend
-      const formattedSocialLinks = socialLinks.map(link => link.url);
+  const renderSocialLinks = () => (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Social Media Links</h3>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleAddSocialLink}
+          className="bg-white hover:bg-gray-50"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Link
+        </Button>
+      </div>
       
-      // Make sure languages is always an array
-      const formattedLanguages = Array.isArray(values.languages) 
-        ? values.languages 
-        : languages;
+      <div className="space-y-4">
+        {socialLinks.map((link, index) => (
+          <div key={index} className="flex items-center gap-4">
+            <Select
+              value={link.platform}
+              onValueChange={(value) => handleSocialLinkChange(index, 'platform', value)}
+            >
+              <SelectTrigger className="w-[180px] bg-white">
+                <SelectValue placeholder="Select platform" />
+              </SelectTrigger>
+              <SelectContent>
+                {SOCIAL_PLATFORMS.map((platform) => (
+                  <SelectItem key={platform.value} value={platform.value}>
+                    <span className="flex items-center gap-2">
+                      <span>{platform.icon}</span>
+                      <span>{platform.label}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Input
+              placeholder="Enter URL"
+              value={link.url}
+              onChange={(e) => handleSocialLinkChange(index, 'url', e.target.value)}
+              className="flex-1 bg-white"
+            />
+            
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => handleRemoveSocialLink(index)}
+              className="text-red-500 hover:text-red-600 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
-      const agentData = {
-        username: values.username,
-        fullName: values.fullName,
-        email: values.email,
-        contactNumber: values.contactNumber || "",
-        position: values.position || "",
-        profileImage: imageUrl || "",
-        whatsapp: values.whatsapp || "",
-        department: values.department || "",
-        vcard: values.vcard || "",
-        languages: formattedLanguages,
-        aboutMe: values.aboutMe || "",
-        address: values.address || "",
-        socialLinks: formattedSocialLinks
-      };
-
-      if (values.password && values.password !== "********") {
-        agentData.password = values.password;
-      }
-
-      console.log("Submitting agent data:", JSON.stringify(agentData));
-
-      const url = isEditing 
-        ? `${import.meta.env.VITE_API_URL}/api/agents/${agent.id}`
-        : `${import.meta.env.VITE_API_URL}/api/agents/add-agents`;
-
-      console.log("API URL:", url);
-      console.log("Method:", isEditing ? 'PUT' : 'POST');
-
-      const response = await fetch(url, {
-        method: isEditing ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(agentData),
-        credentials: 'include',
-      });
-
-      console.log("Response status:", response.status);
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("API error response:", errorData);
-        throw new Error(errorData.message || (isEditing ? 'Failed to update agent' : 'Failed to add agent'));
-      }
-
-      const data = await response.json();
-      console.log("API success response:", data);
-
-      // Create a normalized agent object from the API response
-      const updatedAgent = {
-        id: data._id,
-        fullName: data.fullName,
-        email: data.email,
-        username: data.username,
-        contactNumber: data.contactNumber || "",
-        position: data.position || "",
-        profileImage: data.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=random`,
-        whatsapp: data.whatsapp || "",
-        department: data.department || "",
-        vcard: data.vcard || "",
-        languages: data.languages || [],
-        aboutMe: data.aboutMe || "",
-        address: data.address || "",
-        socialLinks: data.socialLinks || [],
-      };
-
-      if (isEditing && onAgentUpdated) {
-        onAgentUpdated(updatedAgent);
-        toast.success("Agent updated successfully!");
-      } else if (!isEditing && onAgentAdded) {
-        onAgentAdded(updatedAgent);
-        toast.success("Agent added successfully!");
-      }
-
-      // Reset form and close dialog
-      form.reset();
-      setSelectedFile(null);
-      setPreviewUrl("");
-      setSocialLinks([]);
-      setLanguages([]);
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error(error.message || "Operation failed. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  // Render username field
   const renderUsernameField = () => (
     <FormField
       control={form.control}
@@ -646,7 +472,7 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
           <FormControl>
             <div className="relative">
               <Input 
-                placeholder="Enter username" 
+                placeholder={isEditing ? agent?.username : "Enter username"} 
                 {...field} 
                 onChange={handleUsernameChange}
                 className="text-center bg-gray-50 border-0" 
@@ -674,24 +500,21 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
     />
   );
 
-  // Render password field
   const renderPasswordField = () => (
     <FormField
       control={form.control}
       name="password"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>{isEditing ? "New Password" : "Password"} {isEditing && "(Leave blank to keep current)"}</FormLabel>
+          <FormLabel>Password {isEditing && "(Leave blank to keep current)"}</FormLabel>
           <FormControl>
             <Input 
               type="password" 
-              placeholder={isEditing ? "Enter new password" : "Enter password"} 
+              placeholder={isEditing ? "••••••••" : "Enter password"} 
               {...field} 
               className="bg-white" 
               value={isEditing && field.value === "********" ? "" : field.value}
               onChange={(e) => {
-                // For editing mode, if the field is empty, set it to the placeholder value
-                // This indicates we're not changing the password
                 if (isEditing && e.target.value === "") {
                   field.onChange("********");
                 } else {
@@ -706,7 +529,6 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
     />
   );
 
-  // Render languages field
   const renderLanguagesField = () => (
     <FormField
       control={form.control}
@@ -761,7 +583,6 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
     />
   );
 
-  // Render profile section
   const renderProfileSection = () => (
     <div className="flex flex-col items-center mb-8">
       {/* Profile Image */}
@@ -802,9 +623,9 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
       {/* Profile Info */}
       {isEditing && !isEditingProfile ? (
         <div className="text-center space-y-1">
-          <h3 className="text-xl font-semibold">{agent?.fullName || ''}</h3>
-          <p className="text-gray-500">@{agent?.username || ''}</p>
-          <p className="text-gray-500">{agent?.email || ''}</p>
+          <h3 className="text-xl font-semibold">{agent?.fullName}</h3>
+          <p className="text-gray-500">@{agent?.username}</p>
+          <p className="text-gray-500">{agent?.email}</p>
           <Button 
             type="button" 
             onClick={() => setIsEditingProfile(true)}
@@ -869,6 +690,127 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
       )}
     </div>
   );
+
+  async function onSubmit(values) {
+    if (isUsernameAvailable === false) {
+      toast.error("Please choose a different username");
+      return;
+    }
+
+    // Check if any changes were made
+    if (isEditing) {
+      const hasChanges = 
+        values.username !== agent.username ||
+        values.fullName !== agent.fullName ||
+        values.email !== agent.email ||
+        (values.password && values.password !== "********") ||
+        values.profileImage !== agent.profileImage ||
+        values.contactNumber !== agent.contactNumber ||
+        values.position !== agent.position ||
+        values.whatsapp !== agent.whatsapp ||
+        values.department !== agent.department ||
+        values.vcard !== agent.vcard ||
+        JSON.stringify(values.languages) !== JSON.stringify(agent.languages) ||
+        values.aboutMe !== agent.aboutMe ||
+        values.address !== agent.address ||
+        JSON.stringify(socialLinks) !== JSON.stringify(agent.socialLinks);
+
+      if (!hasChanges) {
+        toast.info("No changes were made");
+        onOpenChange(false);
+        return;
+      }
+    }
+
+    setIsSubmitting(true);
+    try {
+      let imageUrl = values.profileImage;
+      if (selectedFile) {
+        try {
+          toast.info("Uploading image...");
+          imageUrl = await uploadToCloudinary(selectedFile);
+        } catch (error) {
+          toast.error("Image upload failed. Using existing image.");
+          console.error("Image upload error:", error);
+        }
+      }
+
+      const agentData = {
+        username: values.username,
+        fullName: values.fullName,
+        email: values.email,
+        contactNumber: values.contactNumber,
+        position: values.position,
+        profileImage: imageUrl,
+        whatsapp: values.whatsapp,
+        department: values.department,
+        vcard: values.vcard,
+        languages: values.languages || [], // Ensure languages is always an array
+        aboutMe: values.aboutMe,
+        address: values.address,
+        socialLinks: socialLinks.map(link => link.url),
+      };
+
+      if (values.password && values.password !== "********") {
+        agentData.password = values.password;
+      }
+
+      const url = isEditing 
+        ? `${import.meta.env.VITE_API_URL}/api/agents/${agent.id}`
+        : `${import.meta.env.VITE_API_URL}/api/agents/add-agents`;
+
+      const response = await fetch(url, {
+        method: isEditing ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(agentData),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error(isEditing ? 'Failed to update agent' : 'Failed to add agent');
+      }
+
+      const data = await response.json();
+
+      const updatedAgent = {
+        id: data._id,
+        fullName: data.fullName,
+        email: data.email,
+        username: data.username,
+        contactNumber: data.contactNumber,
+        position: data.position,
+        profileImage: data.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=random`,
+        listings: data.listings || 0,
+        whatsapp: data.whatsapp || "",
+        department: data.department || "",
+        vcard: data.vcard || "",
+        languages: data.languages || [], // Ensure languages is always an array
+        aboutMe: data.aboutMe || "",
+        address: data.address || "",
+        socialLinks: data.socialLinks || [],
+      };
+
+      if (isEditing && onAgentUpdated) {
+        onAgentUpdated(updatedAgent);
+        toast.success("Agent updated successfully!");
+      } else if (!isEditing && onAgentAdded) {
+        onAgentAdded(updatedAgent);
+        toast.success("Agent added successfully!");
+      }
+
+      form.reset();
+      setSelectedFile(null);
+      setPreviewUrl("");
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error(error.message || "Operation failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1235,4 +1177,4 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
       </DialogContent>
     </Dialog>
   );
-} 
+}

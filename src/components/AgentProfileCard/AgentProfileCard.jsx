@@ -1,4 +1,6 @@
-import React from "react";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { useLoaderData, useParams } from "react-router-dom";
 
 const AgentProfileCard = ({
   name,
@@ -8,24 +10,54 @@ const AgentProfileCard = ({
   longDescription,
   contactInfo,
 }) => {
-  const handleDownloadVCard = () => {
-    // Create vCard content
-    const vCardData = `
-BEGIN:VCARD
-VERSION:3.0
-FN:${name}
-TITLE:${position}
-TEL;TYPE=CELL:${contactInfo.phone}
-EMAIL:${contactInfo.email}
-END:VCARD
-    `.trim();
 
-    // Create a Blob and download link
-    const blob = new Blob([vCardData], { type: "text/vcard" });
+  const [agentData, setAgentData] = useState([]);
+
+
+  const {id} = useParams();
+
+  useEffect(()=> {
+    axios.get(`${import.meta.env.VITE_API_URL}/api/agents/${id}`)
+    .then(res => {
+      setAgentData(res.data)
+    })
+    .catch(err => console.log(err))
+  } , [])
+  
+
+  const handleDownloadVCard = () => {
+    // Validate required fields
+    if (!agentData?.fullName) {
+      console.error("Full name is required to generate a vCard.");
+      return;
+    }
+  
+    // Sanitize inputs (remove line breaks, trim whitespace)
+    const sanitize = (str) => (str || "").toString().replace(/\n/g, " ").trim();
+  
+    // Construct minimal vCard
+    const vCardData = [
+      "BEGIN:VCARD",
+      "VERSION:3.0",
+      `FN:${sanitize(agentData.fullName)}`,
+      position && `TITLE:${sanitize(position)}`,
+      agentData?.contactNumber && `TEL;TYPE=CELL:${sanitize(agentData.contactNumber)}`,
+      agentData?.email && `EMAIL:${sanitize(agentData.email)}`,
+      "END:VCARD",
+    ]
+      .filter(Boolean) // Remove empty lines
+      .join("\n");
+  
+    // Generate filename (sanitize special chars)
+    const fileName = `${agentData.fullName.replace(/[^\w\s]/gi, "_")}.vcf`;
+  
+    // Trigger download
+    const blob = new Blob([vCardData], { type: "text/vcard;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${name.replace(/\s+/g, "_")}.vcf`;
+    link.download = fileName;
+    link.style.display = "none";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -38,17 +70,17 @@ END:VCARD
         {/* Left side content */}
         <div className="p-8 lg:p-12 bg-white lg:w-1/2 flex flex-col justify-center">
           <h1 className="text-4xl md:text-5xl font-bold text-[#0a3b1d] mb-2 tracking-tight">
-            Luke Remington
+            {agentData?.fullName}
           </h1>
           <p className="text-xl text-gray-600 mb-6">
-            Position: Managing director
+            Position: {agentData?.position}
           </p>
 
           {/* Contact buttons */}
           <div className="flex flex-wrap gap-4 mb-8">
             <a
               href={`https://wa.me/${
-                contactInfo?.whatsapp ? contactInfo.whatsapp : "1234567890"
+                agentData?.whatsapp ? agentData?.whatsapp : "1234567890"
               }`}
               className="flex items-center gap-2 bg-[#20c997] text-white px-6 py-3 rounded-full transition-transform hover:scale-105 active:scale-95"
             >
@@ -69,7 +101,7 @@ END:VCARD
             </a>
             <a
               href={`mailto:${
-                contactInfo?.email ? contactInfo.email : "default@example.com"
+                agentData?.email ? agentData.email : "default@example.com"
               }`}
               className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-full transition-transform hover:scale-105 active:scale-95"
             >
@@ -91,7 +123,7 @@ END:VCARD
             </a>
             <a
               href={`tel:${
-                contactInfo?.phone?.replace(/\D/g, "") || "1234567890"
+                agentData?.contactNumber?.replace(/\D/g, "") || "1234567890"
               }`}
               className="flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-full transition-transform hover:scale-105 active:scale-95"
             >
@@ -115,7 +147,7 @@ END:VCARD
           {/* vCard */}
           <button
             onClick={handleDownloadVCard}
-            className="flex items-center text-[#0a3b1d] font-medium mb-8 hover:text-[#20c997] transition-colors group w-fit"
+            className="flex items-center text-[#0a3b1d] cursor-pointer font-medium mb-8 hover:text-[#20c997] transition-colors group w-fit"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -140,10 +172,7 @@ END:VCARD
 
           {/* Description */}
           <p className="text-gray-800 mb-4 font-medium leading-relaxed">
-            Originally from The Heart of England, Luke has over 20 years'
-            experience in the property market. During this time he was
-            instrumental in the company being recognized as 'The Best
-            Independent Estate Agent in The UK' by The Sunday Times.
+            {agentData?.aboutMe}
           </p>
           <p className="text-gray-600 leading-relaxed">{longDescription}</p>
         </div>
@@ -151,8 +180,8 @@ END:VCARD
         {/* Right side image */}
         <div className="lg:w-1/2 min-h-[300px] lg:min-h-full">
           <img
-            src="https://ggfx-handh3.s3.eu-west-2.amazonaws.com/x/600ct520/Luke_Remington_DXB_21_dabda4e681.webp"
-            alt={name}
+            src={agentData?.profileImage}
+            alt={agentData?.fullName}
             className="w-full h-full object-cover"
           />
         </div>
@@ -174,44 +203,7 @@ END:VCARD
             team into one of Dubai's most reputable agencies.
           </p>
         </div>
-        <div className="grid md:grid-cols-2 gap-6 w-full mt-10 md:mt-0 text-center">
-          <iframe
-            className="rounded-md w-full"
-            src="https://www.youtube.com/embed/rfS5hOmNT_s"
-            title="আজকের আন্তর্জাতিক সংবাদ | International News | Ekattor TV"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerpolicy="strict-origin-when-cross-origin"
-            allowfullscreen
-          ></iframe>
-          <iframe
-            className="rounded-md w-full"
-            src="https://www.youtube.com/embed/rfS5hOmNT_s"
-            title="আজকের আন্তর্জাতিক সংবাদ | International News | Ekattor TV"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerpolicy="strict-origin-when-cross-origin"
-            allowfullscreen
-          ></iframe>
-          <iframe
-            className="rounded-md w-full"
-            src="https://www.youtube.com/embed/rfS5hOmNT_s"
-            title="আজকের আন্তর্জাতিক সংবাদ | International News | Ekattor TV"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerpolicy="strict-origin-when-cross-origin"
-            allowfullscreen
-          ></iframe>
-          <iframe
-            className="rounded-md w-full"
-            src="https://www.youtube.com/embed/rfS5hOmNT_s"
-            title="আজকের আন্তর্জাতিক সংবাদ | International News | Ekattor TV"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerpolicy="strict-origin-when-cross-origin"
-            allowfullscreen
-          ></iframe>
-        </div>
+     
       </div>
     </div>
   );
