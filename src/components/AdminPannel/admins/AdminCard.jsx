@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Edit, Trash2, ShieldCheck } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminFormDialog } from "./AdminFormDialog";
 
@@ -53,9 +53,6 @@ export function AdminCard({ admin, onAdminUpdated, onAdminDeleted }) {
               className="w-14 h-14 rounded-full object-cover"
               onError={() => setImgError(true)}
             />
-            <div className="absolute -bottom-1 -right-1 bg-white p-0.5 rounded-full">
-              <ShieldCheck className="w-5 h-5 text-red-600" />
-            </div>
           </div>
           
           <div className="ml-4 flex-1">
