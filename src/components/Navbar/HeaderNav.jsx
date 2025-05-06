@@ -23,7 +23,7 @@ const navigation = [
     ],
   },
   { label: 'Contact', path: '/contact' },
-  { label: 'Team', path: '/team' },
+  { label: 'Team', path: '/our-team' },
 ];
 
 const HeaderNav = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
