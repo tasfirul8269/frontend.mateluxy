@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,13 +21,6 @@ import {
 import { Input } from "@/components/AdminPannel/ui/input";
 import { Button } from "@/components/AdminPannel/ui/button";
 import { toast } from "@/components/AdminPannel/ui/sonner";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/AdminPannel/ui/select";
 
 const formSchema = z.object({
   username: z.string().min(3, {
@@ -39,28 +32,122 @@ const formSchema = z.object({
   email: z.string().email({
     message: "Please enter a valid email address.",
   }),
-  role: z.string({
-    required_error: "Please select a role.",
-  }),
   password: z.string().min(8, {
     message: "Password must be at least 8 characters.",
   }),
+  profileImage: z.any().optional(),
 });
 
 export function AdminFormDialog({ open, onOpenChange, onAdminAdded }) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const fileInputRef = useRef(null);
+
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       username: "",
       fullname: "",
       email: "",
-      role: "",
       password: "",
+      profileImage: "",
     },
   });
 
-  async function onSubmit(values) {
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const uploadToCloudinary = async (file) => {
     try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+      
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error("Image upload failed");
+      }
+      
+      const data = await response.json();
+      return data.secure_url;
+    } catch (error) {
+      console.error("Upload error:", error);
+      throw new Error("Failed to upload image");
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith("image/")) {
+        handleImageSelection(file);
+      } else {
+        toast.error("Please select an image file");
+      }
+    }
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      if (file.type.startsWith("image/")) {
+        handleImageSelection(file);
+      } else {
+        toast.error("Please select an image file");
+      }
+    }
+  };
+
+  const handleImageSelection = (file) => {
+    setSelectedFile(file);
+    form.setValue("profileImage", file);
+    
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleButtonClick = () => {
+    fileInputRef.current.click();
+  };
+
+  async function onSubmit(values) {
+    setIsSubmitting(true);
+    try {
+      // Upload image to Cloudinary if selected
+      let imageUrl = "";
+      if (selectedFile) {
+        try {
+          toast.info("Uploading image...");
+          imageUrl = await uploadToCloudinary(selectedFile);
+        } catch (error) {
+          toast.error("Image upload failed. Using default image.");
+          console.error("Image upload error:", error);
+        }
+      }
+
       const response = await fetch(`${import.meta.env.VITE_API_URL}/add-admins`, {
         method: 'POST',
         headers: {
@@ -71,6 +158,7 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded }) {
           fullName: values.fullname,
           email: values.email,
           password: values.password,
+          profileImage: imageUrl,
         }),
       });
 
@@ -84,8 +172,7 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded }) {
         id: data._id || `ad${Date.now()}`,
         name: values.fullname,
         email: values.email,
-        role: values.role,
-        avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(values.fullname)}&background=random`,
+        avatarUrl: imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(values.fullname)}&background=random`,
         lastActive: "Just now",
       };
 
@@ -95,16 +182,20 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded }) {
 
       toast.success("Admin added successfully!");
       form.reset();
+      setSelectedFile(null);
+      setPreviewUrl("");
       onOpenChange(false);
     } catch (error) {
       console.error('Error adding admin:', error);
       toast.error("Failed to add admin. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] bg-white">
         <DialogHeader>
           <DialogTitle className="text-xl">Add New Admin</DialogTitle>
           <DialogDescription>
@@ -116,17 +207,77 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="username"
+                name="profileImage"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
+                  <FormItem className="col-span-2">
+                    <FormLabel>Profile Image</FormLabel>
                     <FormControl>
-                      <Input placeholder="admin_username" {...field} />
+                      <div 
+                        className="relative"
+                        onDragEnter={handleDrag}
+                      >
+                        {previewUrl ? (
+                          <div className="flex flex-col items-center gap-2">
+                            <img
+                              src={previewUrl}
+                              alt="Profile preview"
+                              className="h-32 w-32 rounded-full object-cover border-2 border-gray-200"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={handleButtonClick}
+                              disabled={isSubmitting}
+                              className="bg-white hover:bg-gray-50"
+                            >
+                              Change Image
+                            </Button>
+                          </div>
+                        ) : (
+                          <div 
+                            className={`h-32 w-full flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg p-4 transition-colors bg-white
+                            ${dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300"}`}
+                            onDragEnter={handleDrag}
+                            onDragLeave={handleDrag}
+                            onDragOver={handleDrag}
+                            onDrop={handleDrop}
+                            onClick={handleButtonClick}
+                          >
+                            <span>Drag and drop an image here or click to browse</span>
+                            <span className="text-sm text-gray-500">
+                              Recommended size: 500x500px
+                            </span>
+                          </div>
+                        )}
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          disabled={isSubmitting}
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input placeholder="admin_username" {...field} className="bg-white" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="fullname"
@@ -134,12 +285,13 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded }) {
                   <FormItem>
                     <FormLabel>Full Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Jane Smith" {...field} />
+                      <Input placeholder="Jane Smith" {...field} className="bg-white" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="email"
@@ -147,54 +299,46 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded }) {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="admin@estatecompass.com" {...field} />
+                      <Input type="email" placeholder="admin@estatecompass.com" {...field} className="bg-white" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Role</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a role" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Super Admin">Super Admin</SelectItem>
-                        <SelectItem value="Content Admin">Content Admin</SelectItem>
-                        <SelectItem value="Property Admin">Property Admin</SelectItem>
-                        <SelectItem value="Agent Admin">Agent Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
               <FormField
                 control={form.control}
                 name="password"
                 render={({ field }) => (
-                  <FormItem className="md:col-span-2">
+                  <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <Input type="password" placeholder="••••••••" {...field} className="bg-white" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
+
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setPreviewUrl("");
+                  setSelectedFile(null);
+                  form.reset();
+                  onOpenChange(false);
+                }}
+                disabled={isSubmitting}
+                className="bg-white hover:bg-gray-50"
+              >
                 Cancel
               </Button>
-              <Button type="submit">Add Admin</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Adding..." : "Add Admin"}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

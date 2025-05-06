@@ -1,15 +1,20 @@
-import React from "react";
+import React, { useState } from "react";
 import { Edit, Trash2, ShieldCheck } from "lucide-react";
 
 export function AdminCard({ admin }) {
+  const [imgError, setImgError] = useState(false);
+  
+  const defaultImage = `https://ui-avatars.com/api/?name=${encodeURIComponent(admin.name)}&background=random`;
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
       <div className="p-5 flex items-center">
         <div className="relative">
           <img 
-            src={admin.avatarUrl} 
+            src={imgError ? defaultImage : (admin.avatarUrl || defaultImage)}
             alt={admin.name} 
             className="w-14 h-14 rounded-full object-cover"
+            onError={() => setImgError(true)}
           />
           <div className="absolute -bottom-1 -right-1 bg-white p-0.5 rounded-full">
             <ShieldCheck className="w-5 h-5 text-red-600" />
@@ -32,9 +37,6 @@ export function AdminCard({ admin }) {
           <p className="text-gray-500 text-sm mt-1">{admin.email}</p>
           
           <div className="flex items-center justify-between mt-2 text-sm">
-            <span className="bg-gray-100 text-gray-800 px-2.5 py-0.5 rounded-full text-xs font-medium">
-              {admin.role}
-            </span>
             <span className="text-xs text-gray-500">
               Last active: {admin.lastActive}
             </span>
