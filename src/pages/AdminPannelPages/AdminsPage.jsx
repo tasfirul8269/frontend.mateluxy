@@ -27,7 +27,7 @@ const AdminsPage = () => {
     const fetchAdmins = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/admins`);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch admins');
@@ -38,11 +38,10 @@ const AdminsPage = () => {
         // Transform data to match our frontend structure
         const transformedAdmins = data.map(admin => ({
           id: admin._id,
-          name: admin.fullName,
+          fullName: admin.fullName,
           email: admin.email,
-          role: "Admin", // You might want to add this field to your backend model
-          avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(admin.fullName)}&background=random`,
-          lastActive: "Just now",
+          username: admin.username,
+          profileImage: admin.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(admin.fullName)}&background=random`,
         }));
         
         setAdmins(transformedAdmins);
@@ -77,9 +76,9 @@ const AdminsPage = () => {
       const lowercasedQuery = searchQuery.toLowerCase();
       const filtered = admins.filter(
         admin =>
-          admin.name.toLowerCase().includes(lowercasedQuery) ||
+          admin.fullName.toLowerCase().includes(lowercasedQuery) ||
           admin.email.toLowerCase().includes(lowercasedQuery) ||
-          admin.role.toLowerCase().includes(lowercasedQuery)
+          admin.username.toLowerCase().includes(lowercasedQuery)
       );
       setFilteredAdmins(filtered);
     }

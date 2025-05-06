@@ -148,7 +148,7 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded }) {
         }
       }
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/add-admins`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admins/add-admins`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

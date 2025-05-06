@@ -4,15 +4,15 @@ import { Edit, Trash2, ShieldCheck } from "lucide-react";
 export function AdminCard({ admin }) {
   const [imgError, setImgError] = useState(false);
   
-  const defaultImage = `https://ui-avatars.com/api/?name=${encodeURIComponent(admin.name)}&background=random`;
+  const defaultImage = `https://ui-avatars.com/api/?name=${encodeURIComponent(admin.fullName)}&background=random`;
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-300">
       <div className="p-5 flex items-center">
         <div className="relative">
           <img 
-            src={imgError ? defaultImage : (admin.avatarUrl || defaultImage)}
-            alt={admin.name} 
+            src={imgError ? defaultImage : (admin.profileImage || defaultImage)}
+            alt={admin.fullName} 
             className="w-14 h-14 rounded-full object-cover"
             onError={() => setImgError(true)}
           />
@@ -23,7 +23,7 @@ export function AdminCard({ admin }) {
         
         <div className="ml-4 flex-1">
           <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-gray-800">{admin.name}</h3>
+            <h3 className="font-semibold text-gray-800">{admin.fullName}</h3>
             <div className="flex items-center space-x-2">
               <button className="p-1.5 text-gray-500 hover:text-blue-600 rounded-full hover:bg-blue-50 transition-colors">
                 <Edit size={16} />
@@ -38,7 +38,7 @@ export function AdminCard({ admin }) {
           
           <div className="flex items-center justify-between mt-2 text-sm">
             <span className="text-xs text-gray-500">
-              Last active: {admin.lastActive}
+              Username: {admin.username}
             </span>
           </div>
         </div>
