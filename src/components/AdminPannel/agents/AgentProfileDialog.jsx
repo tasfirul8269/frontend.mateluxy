@@ -10,7 +10,7 @@ import { Mail, Phone, MapPin, Languages, Facebook, Twitter, Instagram, Linkedin,
 import { toast } from "sonner";
 import { AgentFormDialog } from "./AgentFormDialog";
 
-export function AgentProfileDialog({ open, onOpenChange, agentId, onAgentUpdated }) {
+export function AgentProfileDialog({ open, onOpenChange, agentId }) {
   const [agent, setAgent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [imgError, setImgError] = useState(false);
@@ -85,15 +85,8 @@ export function AgentProfileDialog({ open, onOpenChange, agentId, onAgentUpdated
 
       toast.success('Agent deleted successfully');
       onOpenChange(false); // Close the dialog
-      
-      // If we have an onAgentDeleted prop, call it
-      if (onAgentUpdated) {
-        // We're using onAgentUpdated as a callback with null to signal deletion
-        onAgentUpdated(null, agent.id);
-      } else {
-        // Fallback to reload if no callback provided
-        window.location.reload();
-      }
+      // We should refresh the agents list or notify the parent component
+      window.location.reload();
     } catch (error) {
       console.error('Error deleting agent:', error);
       toast.error('Failed to delete agent');
@@ -104,12 +97,6 @@ export function AgentProfileDialog({ open, onOpenChange, agentId, onAgentUpdated
 
   const handleAgentUpdated = (updatedAgent) => {
     setAgent(updatedAgent);
-    
-    // Also notify parent component if callback provided
-    if (onAgentUpdated) {
-      onAgentUpdated(updatedAgent);
-    }
-    
     fetchAgentDetails(); // Refresh data after update
   };
 
@@ -333,4 +320,4 @@ export function AgentProfileDialog({ open, onOpenChange, agentId, onAgentUpdated
       />
     </>
   );
-}
+} 

@@ -53,14 +53,14 @@ export function AgentCard({ agent, onAgentUpdated, onAgentDeleted }) {
       <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden relative">
         {/* Edit and Delete buttons */}
         <div className="absolute top-2 right-2 flex space-x-1 z-10">
-          {/* <button 
+          <button 
             className="p-1.5 bg-white text-blue-600 rounded-full hover:bg-blue-50 transition-colors shadow-sm"
             onClick={handleEdit}
             disabled={isDeleting}
             title="Edit Agent"
           >
             <Edit size={16} />
-          </button> */}
+          </button>
           <button 
             className="p-1.5 bg-white text-red-600 rounded-full hover:bg-red-50 transition-colors shadow-sm"
             onClick={handleDelete}
@@ -132,7 +132,6 @@ export function AgentCard({ agent, onAgentUpdated, onAgentDeleted }) {
         open={isProfileDialogOpen}
         onOpenChange={setIsProfileDialogOpen}
         agentId={agent.id}
-        onAgentUpdated={onAgentUpdated}
       />
     </>
   );
