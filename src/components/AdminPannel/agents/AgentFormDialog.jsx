@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -44,7 +44,7 @@ const formSchema = z.object({
   profileImage: z.any().optional(),
 });
 
-export function AgentFormDialog({ open, onOpenChange, onAgentAdded }) {
+export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAgentUpdated, isEditing = false }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -54,15 +54,30 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded }) {
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
-      fullName: "",
-      profileImage: "",
-      email: "",
-      contactNumber: "",
-      position: "",
+      username: agent?.username || "",
+      fullName: agent?.fullName || "",
+      email: agent?.email || "",
+      contactNumber: agent?.contactNumber || "",
+      position: agent?.position || "",
       password: "",
+      profileImage: agent?.profileImage || "",
     },
   });
+
+  useEffect(() => {
+    if (agent) {
+      form.reset({
+        username: agent.username,
+        fullName: agent.fullName,
+        email: agent.email,
+        contactNumber: agent.contactNumber,
+        position: agent.position,
+        password: "",
+        profileImage: agent.profileImage,
+      });
+      setPreviewUrl(agent.profileImage || "");
+    }
+  }, [agent, form]);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -144,74 +159,78 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded }) {
 
   async function onSubmit(values) {
     setIsSubmitting(true);
-
     try {
-      // Only upload the image when form is submitted
-      let imageUrl = "";
+      // Upload image to Cloudinary if selected
+      let imageUrl = values.profileImage;
       if (selectedFile) {
         try {
           toast.info("Uploading image...");
           imageUrl = await uploadToCloudinary(selectedFile);
         } catch (error) {
-          toast.error("Image upload failed. Using default image.");
+          toast.error("Image upload failed. Using existing image.");
           console.error("Image upload error:", error);
         }
       }
 
-      // Prepare data to send to API
       const agentData = {
-        ...values,
-        profileImage: imageUrl || "",
+        username: values.username,
+        fullName: values.fullName,
+        email: values.email,
+        contactNumber: values.contactNumber,
+        position: values.position,
+        profileImage: imageUrl,
       };
 
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/agents/add-agents`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(agentData),
-        }
-      );
+      // Only include password if it's provided
+      if (values.password) {
+        agentData.password = values.password;
+      }
+
+      const url = isEditing 
+        ? `${import.meta.env.VITE_API_URL}/api/agents/${agent.id}`
+        : `${import.meta.env.VITE_API_URL}/api/agents/add-agents`;
+
+      const response = await fetch(url, {
+        method: isEditing ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(agentData),
+        credentials: 'include',
+      });
 
       if (!response.ok) {
-        const contentType = response.headers.get("content-type");
-        if (contentType?.includes("application/json")) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to add agent");
-        } else {
-          const errorText = await response.text();
-          console.error("Server responded with non-JSON:", errorText);
-          throw new Error(`Server error: ${response.status}`);
-        }
+        throw new Error(isEditing ? 'Failed to update agent' : 'Failed to add agent');
       }
 
       const data = await response.json();
 
-      const newAgent = {
-        id: data._id || `a${Date.now()}`,
-        fullName: values.fullName,
-        profileImage: imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(values.fullName)}&background=random`,
-        email: values.email,
-        contactNumber: values.contactNumber,
-        position: values.position,
-        listings: 0,
+      const updatedAgent = {
+        id: data._id,
+        fullName: data.fullName,
+        email: data.email,
+        username: data.username,
+        contactNumber: data.contactNumber,
+        position: data.position,
+        profileImage: data.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=random`,
+        listings: data.listings || 0,
       };
 
-      if (onAgentAdded) {
-        onAgentAdded(newAgent);
+      if (isEditing && onAgentUpdated) {
+        onAgentUpdated(updatedAgent);
+        toast.success("Agent updated successfully!");
+      } else if (!isEditing && onAgentAdded) {
+        onAgentAdded(updatedAgent);
+        toast.success("Agent added successfully!");
       }
 
-      toast.success("Agent added successfully!");
       form.reset();
       setSelectedFile(null);
       setPreviewUrl("");
       onOpenChange(false);
     } catch (error) {
-      toast.error(error.message || "Failed to add agent");
-      console.error("Error adding agent:", error);
+      console.error('Error:', error);
+      toast.error(error.message || "Operation failed. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -221,9 +240,13 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-white sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="text-xl">Add New Agent</DialogTitle>
+          <DialogTitle className="text-xl">
+            {isEditing ? "Edit Agent" : "Add New Agent"}
+          </DialogTitle>
           <DialogDescription>
-            Fill in the details to create a new agent account.
+            {isEditing 
+              ? "Update the agent's information below."
+              : "Fill in the details to create a new agent account."}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -395,7 +418,9 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded }) {
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Adding..." : "Add Agent"}
+                {isSubmitting 
+                  ? (isEditing ? "Updating..." : "Adding...") 
+                  : (isEditing ? "Update Agent" : "Add Agent")}
               </Button>
             </DialogFooter>
           </form>

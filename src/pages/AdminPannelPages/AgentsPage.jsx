@@ -102,6 +102,20 @@ const AgentsPage = () => {
     setAgents(prevAgents => [newAgent, ...prevAgents]);
   };
 
+  const handleAgentUpdated = (updatedAgent) => {
+    setAgents(prevAgents => 
+      prevAgents.map(agent => 
+        agent.id === updatedAgent.id ? updatedAgent : agent
+      )
+    );
+  };
+
+  const handleAgentDeleted = (deletedAgentId) => {
+    setAgents(prevAgents => 
+      prevAgents.filter(agent => agent.id !== deletedAgentId)
+    );
+  };
+
   const handlePageChange = (page) => {
     setCurrentPage(page);
     // Scroll to top
@@ -135,7 +149,11 @@ const AgentsPage = () => {
                   transition={{ duration: 0.3 }}
                   layout
                 >
-                  <AgentCard agent={agent} />
+                  <AgentCard 
+                    agent={agent} 
+                    onAgentUpdated={handleAgentUpdated}
+                    onAgentDeleted={handleAgentDeleted}
+                  />
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -201,7 +219,7 @@ const AgentsPage = () => {
 
       <AgentFormDialog 
         open={isFormOpen} 
-        onOpenChange={setIsFormOpen} 
+        onOpenChange={setIsFormOpen}
         onAgentAdded={handleAgentAdded}
       />
 
