@@ -17,7 +17,7 @@ const Rent = () => {
 
   useEffect(() => {
     axios
-      .get("properties.json")
+      .get(`${import.meta.env.VITE_API_URL}/api/properties`)
       .then((res) => {
         setProperties(res.data);
         setFilteredProperties(res.data);
