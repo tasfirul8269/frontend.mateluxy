@@ -20,13 +20,32 @@ import {
 } from "@/components/AdminPannel/ui/form";
 import { Input } from "@/components/AdminPannel/ui/input";
 import { Button } from "@/components/AdminPannel/ui/button";
-import { toast } from "@/components/AdminPannel/ui/sonner";
+import { toast } from "sonner";
+import { Check, X, User, Info, Phone, Lock, Plus, Trash2, XCircle, FileText, Link } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/AdminPannel/ui/select";
+
+const SOCIAL_PLATFORMS = [
+  { value: 'facebook', label: 'Facebook', icon: '📘' },
+  { value: 'instagram', label: 'Instagram', icon: '📸' },
+  { value: 'linkedin', label: 'LinkedIn', icon: '💼' },
+  { value: 'twitter', label: 'Twitter', icon: '🐦' },
+  { value: 'youtube', label: 'YouTube', icon: '🎥' },
+  { value: 'tiktok', label: 'TikTok', icon: '🎵' },
+  { value: 'pinterest', label: 'Pinterest', icon: '📌' },
+  { value: 'website', label: 'Website', icon: '🌐' },
+];
 
 const formSchema = z.object({
   username: z.string().min(3, {
     message: "Username must be at least 3 characters.",
   }),
-  fullname: z.string().min(2, {
+  fullName: z.string().min(2, {
     message: "Full name must be at least 2 characters.",
   }),
   email: z.string().email({
@@ -34,7 +53,7 @@ const formSchema = z.object({
   }),
   password: z.string().min(8, {
     message: "Password must be at least 8 characters.",
-  }),
+  }).optional(),
   profileImage: z.any().optional(),
 });
 
@@ -43,31 +62,98 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [isUsernameAvailable, setIsUsernameAvailable] = useState(null);
+  
   const fileInputRef = useRef(null);
+  const usernameCheckTimeout = useRef(null);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: admin?.username || "",
-      fullname: admin?.fullName || "",
-      email: admin?.email || "",
+      username: "",
+      fullName: "",
+      email: "",
       password: "",
-      profileImage: admin?.profileImage || "",
+      profileImage: "",
     },
   });
 
   useEffect(() => {
     if (admin) {
       form.reset({
-        username: admin.username,
-        fullname: admin.fullName,
-        email: admin.email,
-        password: "",
-        profileImage: admin.profileImage,
+        username: admin.username || "",
+        fullName: admin.fullName || "",
+        email: admin.email || "",
+        password: "********",
+        profileImage: admin.profileImage || "",
       });
-      setPreviewUrl(admin.profileImage || "");
+      
+      // Set preview URL for profile image from the database
+      if (admin.profileImage) {
+        setPreviewUrl(admin.profileImage);
+      } else {
+        setPreviewUrl("");
+      }
+    } else {
+      form.reset({
+        username: "",
+        fullName: "",
+        email: "",
+        password: "",
+        profileImage: "",
+      });
+      setPreviewUrl("");
     }
   }, [admin, form]);
+
+  const checkUsernameAvailability = async (username) => {
+    // If we're editing and the username hasn't changed, it's available
+    if (isEditing && admin && username === admin.username) {
+      setIsUsernameAvailable(true);
+      return;
+    }
+    
+    if (!username || username.length < 3) {
+      setIsUsernameAvailable(null);
+      return;
+    }
+    
+    try {
+      setIsCheckingUsername(true);
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/check-username?username=${encodeURIComponent(username)}${admin ? `&currentId=${admin.id}` : ''}`,
+        {
+          credentials: 'include',
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to check username');
+      }
+      
+      const data = await response.json();
+      setIsUsernameAvailable(data.available);
+    } catch (error) {
+      console.error('Error checking username:', error);
+      setIsUsernameAvailable(null);
+    } finally {
+      setIsCheckingUsername(false);
+    }
+  };
+
+  const handleUsernameChange = (e) => {
+    const username = e.target.value;
+    form.setValue('username', username);
+    
+    if (usernameCheckTimeout.current) {
+      clearTimeout(usernameCheckTimeout.current);
+    }
+    
+    usernameCheckTimeout.current = setTimeout(() => {
+      checkUsernameAvailability(username);
+    }, 500);
+  };
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -146,7 +232,184 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
     fileInputRef.current.click();
   };
 
+  const handleCancel = () => {
+    setPreviewUrl("");
+    setSelectedFile(null);
+    setIsUsernameAvailable(null);
+    form.reset();
+    onOpenChange(false);
+  };
+
+  const renderFormFields = () => (
+    <div className="space-y-6 w-full">
+      {/* Row 1: Username and Full Name */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Username</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Input 
+                    placeholder="Enter username" 
+                    {...field} 
+                    onChange={handleUsernameChange}
+                    className="bg-gray-50 border-0" 
+                  />
+                  {isCheckingUsername && (
+                    <div className="absolute right-2 top-2.5">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                    </div>
+                  )}
+                  {!isCheckingUsername && isUsernameAvailable !== null && (
+                    <div className="absolute right-2 top-2.5">
+                      {isUsernameAvailable ? (
+                        <Check className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <X className="h-4 w-4 text-red-500" />
+                      )}
+                    </div>
+                  )}
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="fullName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Full Name</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Enter full name"
+                  {...field}
+                  className="bg-gray-50 border-0"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      {/* Row 2: Email and Password */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input
+                  type="email"
+                  placeholder="Enter email address"
+                  {...field}
+                  className="bg-gray-50 border-0"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password {isEditing && "(Leave blank to keep current)"}</FormLabel>
+              <FormControl>
+                <Input 
+                  type="password" 
+                  placeholder={isEditing ? "••••••••" : "Enter password"} 
+                  {...field} 
+                  className="bg-gray-50 border-0" 
+                  value={isEditing && field.value === "********" ? "" : field.value}
+                  onChange={(e) => {
+                    if (isEditing && e.target.value === "") {
+                      field.onChange("********");
+                    } else {
+                      field.onChange(e.target.value);
+                    }
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+    </div>
+  );
+
+  const renderProfileSection = () => (
+    <div className="flex flex-col items-center mb-8">
+      {/* Profile Image */}
+      <div className="relative mb-4">
+        <div 
+          className={`h-28 w-28 flex items-center justify-center rounded-full overflow-hidden border-2 
+          ${dragActive ? "border-blue-500" : "border-gray-200"}`}
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
+          onDrop={handleDrop}
+          onClick={handleButtonClick}
+        >
+          {previewUrl ? (
+            <img
+              src={previewUrl}
+              alt="Profile"
+              className="h-full w-full object-cover"
+              onError={() => setPreviewUrl("")}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center text-gray-400 text-sm">
+              <Plus className="h-6 w-6 mb-1" />
+              <span>Upload Photo</span>
+            </div>
+          )}
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          accept="image/*"
+          onChange={handleFileChange}
+          disabled={isSubmitting}
+        />
+      </div>
+    </div>
+  );
+
   async function onSubmit(values) {
+    if (isUsernameAvailable === false) {
+      toast.error("Please choose a different username");
+      return;
+    }
+
+    // Check if any changes were made
+    if (isEditing) {
+      const hasChanges = 
+        values.username !== admin.username ||
+        values.fullName !== admin.fullName ||
+        values.email !== admin.email ||
+        (values.password && values.password !== "********") ||
+        values.profileImage !== admin.profileImage;
+
+      if (!hasChanges) {
+        toast.info("No changes were made");
+        onOpenChange(false);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
       let imageUrl = values.profileImage;
@@ -162,12 +425,12 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
 
       const adminData = {
         username: values.username,
-        fullName: values.fullname,
+        fullName: values.fullName,
         email: values.email,
         profileImage: imageUrl,
       };
 
-      if (values.password) {
+      if (values.password && values.password !== "********") {
         adminData.password = values.password;
       }
 
@@ -220,8 +483,8 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-white">
-        <DialogHeader>
+      <DialogContent className="bg-white sm:max-w-[600px] max-h-[90vh] overflow-hidden flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle className="text-xl">
             {isEditing ? "Edit Admin" : "Add New Admin"}
           </DialogTitle>
@@ -231,144 +494,35 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
               : "Fill in the details to create a new admin account."}
           </DialogDescription>
         </DialogHeader>
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="profileImage"
-                render={({ field }) => (
-                  <FormItem className="col-span-2">
-                    <FormLabel>Profile Image</FormLabel>
-                    <FormControl>
-                      <div 
-                        className="relative"
-                        onDragEnter={handleDrag}
-                      >
-                        {previewUrl ? (
-                          <div className="flex flex-col items-center gap-2">
-                            <img
-                              src={previewUrl}
-                              alt="Profile preview"
-                              className="h-32 w-32 rounded-full object-cover border-2 border-gray-200"
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={handleButtonClick}
-                              disabled={isSubmitting}
-                              className="bg-white hover:bg-gray-50"
-                            >
-                              Change Image
-                            </Button>
-                          </div>
-                        ) : (
-                          <div 
-                            className={`h-32 w-full flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg p-4 transition-colors bg-white
-                            ${dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300"}`}
-                            onDragEnter={handleDrag}
-                            onDragLeave={handleDrag}
-                            onDragOver={handleDrag}
-                            onDrop={handleDrop}
-                            onClick={handleButtonClick}
-                          >
-                            <span>Drag and drop an image here or click to browse</span>
-                            <span className="text-sm text-gray-500">
-                              Recommended size: 500x500px
-                            </span>
-                          </div>
-                        )}
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          className="hidden"
-                          accept="image/*"
-                          onChange={handleFileChange}
-                          disabled={isSubmitting}
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-hidden flex flex-col">
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              {/* Profile Section */}
+              {renderProfileSection()}
 
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input placeholder="admin_username" {...field} className="bg-white" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="fullname"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Jane Smith" {...field} className="bg-white" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input type="email" placeholder="admin@estatecompass.com" {...field} className="bg-white" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} className="bg-white" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Form Fields */}
+              {renderFormFields()}
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="px-6 py-4 border-t">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => {
-                  setPreviewUrl("");
-                  setSelectedFile(null);
-                  form.reset();
-                  onOpenChange(false);
-                }}
+                onClick={handleCancel}
                 disabled={isSubmitting}
                 className="bg-white hover:bg-gray-50"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting} 
+                className="bg-red-600 hover:bg-red-700 text-white font-semibold"
+              >
                 {isSubmitting 
                   ? (isEditing ? "Updating..." : "Adding...") 
-                  : (isEditing ? "Update Admin" : "Add Admin")}
+                  : (isEditing ? "Update" : "Add Admin")}
               </Button>
             </DialogFooter>
           </form>

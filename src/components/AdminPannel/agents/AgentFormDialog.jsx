@@ -21,6 +21,14 @@ import {
 import { Input } from "@/components/AdminPannel/ui/input";
 import { Button } from "@/components/AdminPannel/ui/button";
 import { toast } from "sonner";
+import { User, Info, Phone, Lock, Globe, Languages, Check, X, Plus, Trash2, XCircle, FileText, Link } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/AdminPannel/ui/select";
 
 const formSchema = z.object({
   username: z.string().min(3, {
@@ -32,17 +40,31 @@ const formSchema = z.object({
   email: z.string().email({
     message: "Please enter a valid email address.",
   }),
-  contactNumber: z.string().min(5, {
-    message: "Please enter a valid phone number.",
-  }),
-  position: z.string().min(2, {
-    message: "Position must be at least 2 characters.",
-  }),
-  password: z.string().min(6, {
-    message: "Password must be at least 6 characters.",
-  }),
+  password: z.string().min(8, {
+    message: "Password must be at least 8 characters.",
+  }).optional(),
   profileImage: z.any().optional(),
+  contactNumber: z.string().optional(),
+  position: z.string().optional(),
+  whatsapp: z.string().optional(),
+  department: z.string().optional(),
+  vcard: z.string().optional(),
+  languages: z.array(z.string()).optional(),
+  aboutMe: z.string().optional(),
+  address: z.string().optional(),
+  socialLinks: z.array(z.string()).optional(),
 });
+
+const SOCIAL_PLATFORMS = [
+  { value: 'facebook', label: 'Facebook', icon: '📘' },
+  { value: 'instagram', label: 'Instagram', icon: '📸' },
+  { value: 'linkedin', label: 'LinkedIn', icon: '💼' },
+  { value: 'twitter', label: 'Twitter', icon: '🐦' },
+  { value: 'youtube', label: 'YouTube', icon: '🎥' },
+  { value: 'tiktok', label: 'TikTok', icon: '🎵' },
+  { value: 'pinterest', label: 'Pinterest', icon: '📌' },
+  { value: 'website', label: 'Website', icon: '🌐' },
+];
 
 export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAgentUpdated, isEditing = false }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,32 +72,99 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const fileInputRef = useRef(null);
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [isUsernameAvailable, setIsUsernameAvailable] = useState(null);
+  const usernameCheckTimeout = useRef(null);
+  const [socialLinks, setSocialLinks] = useState([]);
+  const [languages, setLanguages] = useState([]);
+  const [newLanguage, setNewLanguage] = useState("");
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [selectedVCardFile, setSelectedVCardFile] = useState(null);
+  const [isUploadingVCard, setIsUploadingVCard] = useState(false);
+  const vcardInputRef = useRef(null);
+  const [addingSocialLink, setAddingSocialLink] = useState(false);
+  const [newSocialPlatform, setNewSocialPlatform] = useState("facebook");
+  const [newSocialUrl, setNewSocialUrl] = useState("");
 
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: agent?.username || "",
-      fullName: agent?.fullName || "",
-      email: agent?.email || "",
-      contactNumber: agent?.contactNumber || "",
-      position: agent?.position || "",
+      username: "",
+      fullName: "",
+      email: "",
       password: "",
-      profileImage: agent?.profileImage || "",
+      profileImage: "",
+      contactNumber: "",
+      position: "",
+      whatsapp: "",
+      department: "",
+      vcard: "",
+      languages: "",
+      aboutMe: "",
+      address: "",
+      socialLinks: "",
     },
   });
 
   useEffect(() => {
     if (agent) {
+      // Convert languages string to array if it's a string
+      const initialLanguages = Array.isArray(agent.languages) 
+        ? agent.languages 
+        : agent.languages 
+          ? agent.languages.split(',').map(lang => lang.trim())
+          : [];
+      
+      setLanguages(initialLanguages);
+      
+      // Reset form with all agent data and set preview URL from agent profile image
       form.reset({
-        username: agent.username,
-        fullName: agent.fullName,
-        email: agent.email,
-        contactNumber: agent.contactNumber,
-        position: agent.position,
-        password: "",
-        profileImage: agent.profileImage,
+        username: agent.username || "",
+        fullName: agent.fullName || "",
+        email: agent.email || "",
+        password: "********", // Set a placeholder for password
+        profileImage: agent.profileImage || "",
+        contactNumber: agent.contactNumber || "",
+        position: agent.position || "",
+        whatsapp: agent.whatsapp || "",
+        department: agent.department || "",
+        vcard: agent.vcard || "",
+        languages: initialLanguages,
+        aboutMe: agent.aboutMe || "",
+        address: agent.address || "",
+        socialLinks: agent.socialLinks || [],
       });
-      setPreviewUrl(agent.profileImage || "");
+
+      // Set preview URL for profile image from the database
+      if (agent.profileImage) {
+        setPreviewUrl(agent.profileImage);
+      } else {
+        setPreviewUrl("");
+      }
+
+      // Check username availability for the current username
+      if (agent.username) {
+        checkUsernameAvailability(agent.username);
+      }
+    } else {
+      setLanguages([]);
+      form.reset({
+        username: "",
+        fullName: "",
+        email: "",
+        password: "",
+        profileImage: "",
+        contactNumber: "",
+        position: "",
+        whatsapp: "",
+        department: "",
+        vcard: "",
+        languages: [],
+        aboutMe: "",
+        address: "",
+        socialLinks: [],
+      });
+      setPreviewUrl("");
     }
   }, [agent, form]);
 
@@ -157,10 +246,484 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
     fileInputRef.current.click();
   };
 
+  const checkUsernameAvailability = async (username) => {
+    if (!username || username.length < 3) {
+      setIsUsernameAvailable(null);
+      return;
+    }
+    
+    try {
+      setIsCheckingUsername(true);
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/check-username?username=${encodeURIComponent(username)}${agent ? `&currentId=${agent.id}` : ''}`,
+        {
+          credentials: 'include',
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Failed to check username');
+      }
+      
+      const data = await response.json();
+      setIsUsernameAvailable(data.available);
+    } catch (error) {
+      console.error('Error checking username:', error);
+      setIsUsernameAvailable(null);
+    } finally {
+      setIsCheckingUsername(false);
+    }
+  };
+
+  const handleUsernameChange = (e) => {
+    const username = e.target.value;
+    form.setValue('username', username);
+    
+    if (usernameCheckTimeout.current) {
+      clearTimeout(usernameCheckTimeout.current);
+    }
+    
+    usernameCheckTimeout.current = setTimeout(() => {
+      checkUsernameAvailability(username);
+    }, 500);
+  };
+
+  const handleAddSocialLink = () => {
+    if (addingSocialLink) {
+      if (newSocialUrl.trim()) {
+        const updatedLinks = [...socialLinks, { platform: newSocialPlatform, url: newSocialUrl.trim() }];
+        setSocialLinks(updatedLinks);
+        form.setValue('socialLinks', updatedLinks);
+        
+        // Reset the new link form
+        setNewSocialPlatform("facebook");
+        setNewSocialUrl("");
+        setAddingSocialLink(false);
+      } else {
+        toast.error("Please enter a URL for the social link");
+      }
+    } else {
+      setAddingSocialLink(true);
+    }
+  };
+
+  const handleRemoveSocialLink = (index) => {
+    setSocialLinks(socialLinks.filter((_, i) => i !== index));
+  };
+
+  const handleCancelAddSocialLink = () => {
+    setAddingSocialLink(false);
+    setNewSocialPlatform("facebook");
+    setNewSocialUrl("");
+  };
+
+  const handleCancel = () => {
+    setPreviewUrl("");
+    setSelectedFile(null);
+    setIsUsernameAvailable(null);
+    setSocialLinks([]);
+    form.reset();
+    onOpenChange(false);
+  };
+
+  const handleAddLanguage = () => {
+    if (newLanguage.trim()) {
+      const updatedLanguages = [...languages, newLanguage.trim()];
+      setLanguages(updatedLanguages);
+      form.setValue('languages', updatedLanguages);
+      setNewLanguage("");
+    }
+  };
+
+  const handleRemoveLanguage = (indexToRemove) => {
+    const updatedLanguages = languages.filter((_, index) => index !== indexToRemove);
+    setLanguages(updatedLanguages);
+    form.setValue('languages', updatedLanguages);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddLanguage();
+    }
+  };
+
+  const handleVCardFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      if (file.type === "application/pdf") {
+        setSelectedVCardFile(file);
+        toast.info("PDF selected. Click 'Upload' to upload the file.");
+      } else {
+        toast.error("Please select a PDF file");
+      }
+    }
+  };
+
+  const uploadVCardToCloudinary = async () => {
+    if (!selectedVCardFile) {
+      toast.error("Please select a PDF file first");
+      return;
+    }
+
+    try {
+      setIsUploadingVCard(true);
+      const formData = new FormData();
+      formData.append("file", selectedVCardFile);
+      formData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
+      
+      toast.info("Uploading vCard...");
+      
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error("vCard upload failed");
+      }
+      
+      const data = await response.json();
+      const vCardUrl = data.secure_url;
+      
+      // Set the vCard URL in the form
+      form.setValue("vcard", vCardUrl);
+      
+      toast.success("vCard uploaded successfully!");
+      return vCardUrl;
+    } catch (error) {
+      console.error("vCard upload error:", error);
+      toast.error("Failed to upload vCard");
+    } finally {
+      setIsUploadingVCard(false);
+      setSelectedVCardFile(null);
+    }
+  };
+
+  const renderSocialLinks = () => (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Social Media Links</h3>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleAddSocialLink}
+          className="bg-white hover:bg-gray-50"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Link
+        </Button>
+      </div>
+      
+      <div className="space-y-4">
+        {socialLinks.map((link, index) => (
+          <div key={index} className="flex items-center gap-4">
+            <Select
+              value={link.platform}
+              onValueChange={(value) => handleSocialLinkChange(index, 'platform', value)}
+            >
+              <SelectTrigger className="w-[180px] bg-white">
+                <SelectValue placeholder="Select platform" />
+              </SelectTrigger>
+              <SelectContent>
+                {SOCIAL_PLATFORMS.map((platform) => (
+                  <SelectItem key={platform.value} value={platform.value}>
+                    <span className="flex items-center gap-2">
+                      <span>{platform.icon}</span>
+                      <span>{platform.label}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Input
+              placeholder="Enter URL"
+              value={link.url}
+              onChange={(e) => handleSocialLinkChange(index, 'url', e.target.value)}
+              className="flex-1 bg-white"
+            />
+            
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => handleRemoveSocialLink(index)}
+              className="text-red-500 hover:text-red-600 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderUsernameField = () => (
+    <FormField
+      control={form.control}
+      name="username"
+      render={({ field }) => (
+        <FormItem>
+          <FormControl>
+            <div className="relative">
+              <Input 
+                placeholder={isEditing ? agent?.username : "Enter username"} 
+                {...field} 
+                onChange={handleUsernameChange}
+                className="text-center bg-gray-50 border-0" 
+                disabled={isEditing && !isEditingProfile}
+              />
+              {isCheckingUsername && (
+                <div className="absolute right-2 top-2.5">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900"></div>
+                </div>
+              )}
+              {!isCheckingUsername && isUsernameAvailable !== null && (
+                <div className="absolute right-2 top-2.5">
+                  {isUsernameAvailable ? (
+                    <Check className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <X className="h-4 w-4 text-red-500" />
+                  )}
+                </div>
+              )}
+            </div>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+
+  const renderPasswordField = () => (
+    <FormField
+      control={form.control}
+      name="password"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Password {isEditing && "(Leave blank to keep current)"}</FormLabel>
+          <FormControl>
+            <Input 
+              type="password" 
+              placeholder={isEditing ? "••••••••" : "Enter password"} 
+              {...field} 
+              className="bg-white" 
+              value={isEditing && field.value === "********" ? "" : field.value}
+              onChange={(e) => {
+                if (isEditing && e.target.value === "") {
+                  field.onChange("********");
+                } else {
+                  field.onChange(e.target.value);
+                }
+              }}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+
+  const renderLanguagesField = () => (
+    <FormField
+      control={form.control}
+      name="languages"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Languages</FormLabel>
+          <FormControl>
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <Input 
+                  placeholder="Add a language"
+                  value={newLanguage}
+                  onChange={(e) => setNewLanguage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  className="bg-white"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleAddLanguage}
+                  className="bg-white hover:bg-gray-50"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {languages.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {languages.map((language, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-1 bg-gray-100 px-3 py-1 rounded-full text-sm"
+                    >
+                      <span>{language}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLanguage(index)}
+                        className="text-gray-500 hover:text-red-500"
+                      >
+                        <XCircle className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+
+  const renderProfileSection = () => (
+    <div className="flex flex-col items-center mb-8">
+      {/* Profile Image */}
+      <div className="relative mb-4">
+        <div 
+          className={`h-28 w-28 flex items-center justify-center rounded-full overflow-hidden border-2 
+          ${dragActive ? "border-blue-500" : "border-gray-200"}`}
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
+          onDrop={handleDrop}
+          onClick={handleButtonClick}
+        >
+          {previewUrl ? (
+            <img
+              src={previewUrl}
+              alt="Profile"
+              className="h-full w-full object-cover"
+              onError={() => setPreviewUrl("")}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center text-gray-400 text-sm">
+              <Plus className="h-6 w-6 mb-1" />
+              <span>Upload Photo</span>
+            </div>
+          )}
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="hidden"
+          accept="image/*"
+          onChange={handleFileChange}
+          disabled={isSubmitting}
+        />
+      </div>
+
+      {/* Profile Info */}
+      {isEditing && !isEditingProfile ? (
+        <div className="text-center space-y-1">
+          <h3 className="text-xl font-semibold">{agent?.fullName}</h3>
+          <p className="text-gray-500">@{agent?.username}</p>
+          <p className="text-gray-500">{agent?.email}</p>
+          <Button 
+            type="button" 
+            onClick={() => setIsEditingProfile(true)}
+            className="mt-3 bg-red-600 hover:bg-red-700 text-white"
+            size="sm"
+          >
+            Edit
+          </Button>
+        </div>
+      ) : (
+        <div className="w-full max-w-md space-y-4">
+          <FormField
+            control={form.control}
+            name="fullName"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input
+                    placeholder="Full Name"
+                    {...field}
+                    className="text-center font-medium text-lg bg-gray-50 border-0"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {renderUsernameField()}
+
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="Email Address"
+                    {...field}
+                    className="text-center bg-gray-50 border-0"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {isEditing && (
+            <div className="text-center">
+              <Button 
+                type="button" 
+                onClick={() => setIsEditingProfile(false)} 
+                className="bg-red-600 hover:bg-red-700 text-white"
+                size="sm"
+              >
+                Done
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
   async function onSubmit(values) {
+    if (isUsernameAvailable === false) {
+      toast.error("Please choose a different username");
+      return;
+    }
+
+    // Check if any changes were made
+    if (isEditing) {
+      const hasChanges = 
+        values.username !== agent.username ||
+        values.fullName !== agent.fullName ||
+        values.email !== agent.email ||
+        (values.password && values.password !== "********") ||
+        values.profileImage !== agent.profileImage ||
+        values.contactNumber !== agent.contactNumber ||
+        values.position !== agent.position ||
+        values.whatsapp !== agent.whatsapp ||
+        values.department !== agent.department ||
+        values.vcard !== agent.vcard ||
+        JSON.stringify(values.languages) !== JSON.stringify(agent.languages) ||
+        values.aboutMe !== agent.aboutMe ||
+        values.address !== agent.address ||
+        JSON.stringify(socialLinks) !== JSON.stringify(agent.socialLinks);
+
+      if (!hasChanges) {
+        toast.info("No changes were made");
+        onOpenChange(false);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
-      // Upload image to Cloudinary if selected
       let imageUrl = values.profileImage;
       if (selectedFile) {
         try {
@@ -179,10 +742,16 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
         contactNumber: values.contactNumber,
         position: values.position,
         profileImage: imageUrl,
+        whatsapp: values.whatsapp,
+        department: values.department,
+        vcard: values.vcard,
+        languages: values.languages || [], // Ensure languages is always an array
+        aboutMe: values.aboutMe,
+        address: values.address,
+        socialLinks: socialLinks.map(link => link.url),
       };
 
-      // Only include password if it's provided
-      if (values.password) {
+      if (values.password && values.password !== "********") {
         agentData.password = values.password;
       }
 
@@ -214,6 +783,13 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
         position: data.position,
         profileImage: data.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=random`,
         listings: data.listings || 0,
+        whatsapp: data.whatsapp || "",
+        department: data.department || "",
+        vcard: data.vcard || "",
+        languages: data.languages || [], // Ensure languages is always an array
+        aboutMe: data.aboutMe || "",
+        address: data.address || "",
+        socialLinks: data.socialLinks || [],
       };
 
       if (isEditing && onAgentUpdated) {
@@ -238,8 +814,8 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-white sm:max-w-[500px]">
-        <DialogHeader>
+      <DialogContent className="bg-white sm:max-w-[800px] max-h-[90vh] overflow-hidden flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle className="text-xl">
             {isEditing ? "Edit Agent" : "Add New Agent"}
           </DialogTitle>
@@ -249,178 +825,351 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
               : "Fill in the details to create a new agent account."}
           </DialogDescription>
         </DialogHeader>
+
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="profileImage"
-                render={({ field }) => (
-                  <FormItem className="col-span-2">
-                    <FormLabel>Profile Image</FormLabel>
-                    <FormControl>
-                      <div 
-                        className="relative"
-                        onDragEnter={handleDrag}
-                      >
-                        {previewUrl ? (
-                          <div className="flex flex-col items-center gap-2">
-                            <img
-                              src={previewUrl}
-                              alt="Profile preview"
-                              className="h-32 w-32 rounded-full object-cover border-2 border-gray-200"
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-hidden flex flex-col">
+            <div className="flex-1 overflow-y-auto pt-4 px-6">
+              {/* Profile Section */}
+              {renderProfileSection()}
+
+              {/* Main Form - Two Column Layout */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                {/* Left Column */}
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-base font-medium text-gray-900 mb-2">Position</h3>
+                    <FormField
+                      control={form.control}
+                      name="position"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input 
+                              placeholder="eg. Managing Director" 
+                              {...field} 
+                              className="bg-gray-50 border-0" 
                             />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={handleButtonClick}
-                              disabled={isSubmitting}
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div>
+                    <h3 className="text-base font-medium text-gray-900 mb-2">Departments</h3>
+                    <FormField
+                      control={form.control}
+                      name="department"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
                             >
-                              Change Image
-                            </Button>
-                          </div>
-                        ) : (
-                          <div 
-                            className={`h-32 w-full flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg p-4 transition-colors
-                            ${dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300"}`}
-                            onDragEnter={handleDrag}
-                            onDragLeave={handleDrag}
-                            onDragOver={handleDrag}
-                            onDrop={handleDrop}
-                            onClick={handleButtonClick}
-                          >
-                            <span>Drag and drop an image here or click to browse</span>
-                            <span className="text-sm text-gray-500">
-                              Recommended size: 500x500px
-                            </span>
-                          </div>
-                        )}
+                              <SelectTrigger className="bg-gray-50 border-0">
+                                <SelectValue placeholder="Select your department" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="sales">Sales</SelectItem>
+                                <SelectItem value="marketing">Marketing</SelectItem>
+                                <SelectItem value="operations">Operations</SelectItem>
+                                <SelectItem value="finance">Finance</SelectItem>
+                                <SelectItem value="hr">Human Resources</SelectItem>
+                                <SelectItem value="it">IT</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div>
+                    <h3 className="text-base font-medium text-gray-900 mb-2 flex items-center">
+                      Vcard
+                      <div className="flex gap-2 ml-2">
                         <input
-                          ref={fileInputRef}
+                          ref={vcardInputRef}
                           type="file"
                           className="hidden"
-                          accept="image/*"
-                          onChange={handleFileChange}
-                          disabled={isSubmitting}
+                          accept="application/pdf"
+                          onChange={handleVCardFileChange}
+                          disabled={isSubmitting || isUploadingVCard}
                         />
+                        <Button
+                          type="button"
+                          variant="ghost" 
+                          className="h-6 text-xs px-2 text-blue-500 hover:text-blue-700"
+                          onClick={() => vcardInputRef.current?.click()}
+                          disabled={isUploadingVCard}
+                        >
+                          <FileText className="h-3 w-3 mr-1" />
+                          Select PDF
+                        </Button>
+                        {selectedVCardFile && (
+                          <Button
+                            type="button"
+                            variant="ghost" 
+                            className="h-6 text-xs px-2 text-green-500 hover:text-green-700"
+                            onClick={uploadVCardToCloudinary}
+                            disabled={isUploadingVCard}
+                          >
+                            {isUploadingVCard ? (
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-green-700 mr-1"></div>
+                            ) : (
+                              <Link className="h-3 w-3 mr-1" />
+                            )}
+                            Upload
+                          </Button>
+                        )}
                       </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                    </h3>
+                    <FormField
+                      control={form.control}
+                      name="vcard"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input 
+                              placeholder="Upload PDF or enter vCard URL" 
+                              {...field} 
+                              className="bg-gray-50 border-0" 
+                            />
+                          </FormControl>
+                          {field.value && (
+                            <div className="mt-1">
+                              <a 
+                                href={field.value} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-xs text-blue-500 hover:underline flex items-center"
+                              >
+                                <FileText className="h-3 w-3 mr-1" />
+                                View vCard
+                              </a>
+                            </div>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input placeholder="agent_username" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <div>
+                    <h3 className="text-base font-medium text-gray-900 mb-2">About me</h3>
+                    <FormField
+                      control={form.control}
+                      name="aboutMe"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <textarea
+                              placeholder="Describe yourself"
+                              className="w-full min-h-[120px] p-3 rounded-md bg-gray-50 border-0 focus:ring-2 focus:ring-blue-500 outline-none"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
 
-              <FormField
-                control={form.control}
-                name="fullName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="John Smith" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                {/* Right Column */}
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-base font-medium text-gray-900 mb-2">WhatsApp</h3>
+                    <FormField
+                      control={form.control}
+                      name="whatsapp"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input 
+                              placeholder="Your WhatsApp number" 
+                              {...field} 
+                              className="bg-gray-50 border-0" 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="agent@estatecompass.com"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <div>
+                    <h3 className="text-base font-medium text-gray-900 mb-2">Contact Number</h3>
+                    <FormField
+                      control={form.control}
+                      name="contactNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input 
+                              placeholder="+880171-XXXXXX" 
+                              {...field} 
+                              className="bg-gray-50 border-0" 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-              <FormField
-                control={form.control}
-                name="contactNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone</FormLabel>
-                    <FormControl>
-                      <Input placeholder="+1 (555) 123-4567" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <div>
+                    <h3 className="text-base font-medium text-gray-900 mb-2">Language</h3>
+                    {renderLanguagesField()}
+                  </div>
 
-              <FormField
-                control={form.control}
-                name="position"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Role</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Senior Agent" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <div>
+                    <h3 className="text-base font-medium text-gray-900 mb-2">Address</h3>
+                    <FormField
+                      control={form.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input 
+                              placeholder="Your address" 
+                              {...field} 
+                              className="bg-gray-50 border-0" 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </div>
 
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="••••••••"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+              {/* Social Links */}
+              <div className="mt-8 mb-6">
+                <h3 className="text-base font-medium text-gray-900 mb-3">Social Links</h3>
+                <div className="mb-2 space-y-2">
+                  {socialLinks.map((link, index) => (
+                    <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
+                      <div className="w-8 h-8 flex items-center justify-center bg-gray-200 rounded-full">
+                        {SOCIAL_PLATFORMS.find(p => p.value === link.platform)?.icon || '🌐'}
+                      </div>
+                      <div className="flex-1 overflow-hidden">
+                        <div className="text-sm font-medium">
+                          {SOCIAL_PLATFORMS.find(p => p.value === link.platform)?.label || 'Website'}
+                        </div>
+                        <div className="text-xs text-gray-500 truncate">{link.url}</div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-red-500 hover:bg-red-50"
+                        onClick={() => handleRemoveSocialLink(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+
+                  {addingSocialLink && (
+                    <div className="p-3 border border-dashed border-gray-300 rounded-md bg-white">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3">
+                        <div className="md:col-span-1">
+                          <Select
+                            value={newSocialPlatform}
+                            onValueChange={setNewSocialPlatform}
+                          >
+                            <SelectTrigger className="bg-gray-50 border-0">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {SOCIAL_PLATFORMS.map((platform) => (
+                                <SelectItem key={platform.value} value={platform.value}>
+                                  <div className="flex items-center gap-2">
+                                    <span>{platform.icon}</span>
+                                    <span>{platform.label}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="md:col-span-3">
+                          <Input
+                            placeholder="Enter URL (e.g. https://facebook.com/username)"
+                            value={newSocialUrl}
+                            onChange={(e) => setNewSocialUrl(e.target.value)}
+                            className="bg-gray-50 border-0"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleCancelAddSocialLink}
+                          className="bg-white"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={handleAddSocialLink}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          Add
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {!addingSocialLink && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleAddSocialLink}
+                    className="bg-white border-dashed border-gray-300 text-gray-700 hover:bg-gray-50"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Social Link
+                  </Button>
                 )}
-              />
+              </div>
+
+              {/* Hide password in edit mode unless profile editing is enabled */}
+              {(!isEditing || isEditingProfile) && (
+                <div className="mb-6 p-4 border border-gray-100 rounded-md bg-gray-50/50">
+                  <h3 className="text-base font-medium text-gray-900 mb-3">Password</h3>
+                  {renderPasswordField()}
+                </div>
+              )}
             </div>
 
-            <DialogFooter>
+            <DialogFooter className="px-6 py-4 border-t">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => {
-                  setPreviewUrl("");
-                  setSelectedFile(null);
-                  form.reset();
-                  onOpenChange(false);
-                }}
-                disabled={isSubmitting}
+                onClick={handleCancel}
+                disabled={isSubmitting || isUploadingVCard}
+                className="bg-white hover:bg-gray-50"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting || isUploadingVCard} 
+                className="bg-red-600 hover:bg-red-700 text-white font-semibold"
+              >
                 {isSubmitting 
                   ? (isEditing ? "Updating..." : "Adding...") 
-                  : (isEditing ? "Update Agent" : "Add Agent")}
+                  : (isEditing ? "Update" : "Add Agent")}
               </Button>
             </DialogFooter>
           </form>
