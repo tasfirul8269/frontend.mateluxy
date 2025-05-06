@@ -19,7 +19,7 @@ import { LuMapPin } from "react-icons/lu";
 import { MdDone } from "react-icons/md";
 import SimpleMap from "../../components/SimpleMap/SimpleMap";
 import { RiInformationLine } from "react-icons/ri";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import Swal from "sweetalert2";
 
 const PropertyDetails = () => {
@@ -27,10 +27,13 @@ const PropertyDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const {id} = useParams();
+
   useEffect(() => {
     axios
-      .get("property1.json")
+      .get(`${import.meta.env.VITE_API_URL}/api/properties/${id}`)
       .then((res) => {
+        console.log(res.data)
         setPropertyDetails(res.data);
         setLoading(false);
       })
@@ -38,7 +41,7 @@ const PropertyDetails = () => {
         setError(err.message);
         setLoading(false);
       });
-  }, []);
+  }, [id]);
 
   if (loading) {
     return (
@@ -72,7 +75,7 @@ const PropertyDetails = () => {
           {/* Main Image Column */}
           <div className="h-full relative rounded-lg overflow-hidden">
             <img
-              src={propertyDetails.mainImage}
+              src={propertyDetails.propertyFeaturedImage}
               alt="Main Property"
               className="w-full h-full object-cover"
               style={{ aspectRatio: "3/2" }}
@@ -82,7 +85,7 @@ const PropertyDetails = () => {
 
           {/* Gallery Grid Column - Hidden on mobile */}
           <div className="h-full w-full hidden md:grid grid-cols-2 gap-1">
-            {propertyDetails.galleryImages.slice(0, 4).map((image, index) => (
+            {propertyDetails.media.slice(0, 4).map((image, index) => (
               <div
                 key={index}
                 className="relative h-[100%] w-[100%] aspect-square"
@@ -98,14 +101,14 @@ const PropertyDetails = () => {
           </div>
         </div>
 
-        {/* Media buttons - positioned differently on mobile */}
+        {/* Media buttons */}
         <div
           className="md:absolute left-0 z-10 p-4 flex gap-2 flex-wrap justify-center md:justify-start mt-4 md:mt-0"
           style={{ top: "calc(100% + 2rem)" }}
         >
           <button className="btn bg-white/90 text-gray-800 text-sm md:text-base btn-sm px-3 md:px-4 py-2 rounded-xl shadow-md flex items-center gap-2 cursor-pointer">
             <IoMdPhotos className="text-lg" />
-            Photos {propertyDetails.galleryImages.length}
+            Photos {propertyDetails.media.length}
           </button>
           <button className="btn bg-white/90 text-gray-800 text-sm md:text-base btn-sm px-3 md:px-4 py-2 rounded-xl shadow-md flex items-center gap-2 cursor-pointer">
             <LuMapPin className="text-lg" />
@@ -123,34 +126,34 @@ const PropertyDetails = () => {
         {/* Left content (60%) */}
         <div className="p-4 md:p-10 space-y-4 w-full md:flex-[3]">
           <h3 className="text-xl md:text-2xl font-bold">
-            {propertyDetails.price}
+            AED {propertyDetails.propertyPrice}
           </h3>
           <p className="text-sm font-semibold text-gray-600">
-            {propertyDetails.title}
+            {propertyDetails.propertyTitle}
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2">
             <p className="text-sm font-medium flex items-center gap-2 py-3">
               <AiOutlineFullscreen /> <span className="font-light">BAU: </span>
-              {propertyDetails.area} sq.ft
+              {propertyDetails.propertySize} sq.ft
             </p>
             <p className="text-sm font-medium flex items-center gap-2 py-3">
               <IoBedOutline />
               <span className="font-light">Bedrooms: </span>
-              {propertyDetails.bedrooms}
+              {propertyDetails.propertyBedrooms}
             </p>
             <p className="text-sm font-medium flex items-center gap-2 py-3">
               <LiaBathSolid /> <span className="font-light">Bathrooms: </span>
-              {propertyDetails.bathrooms}
+              {propertyDetails.propertyBathrooms}
             </p>
             <p className="text-sm font-medium flex items-center gap-2 py-3">
               <FaRegQuestionCircle />
-              <span className="font-light">Completion Status: </span>
-              {propertyDetails.type}
+              <span className="font-light">Property Type: </span>
+              {propertyDetails.propertyType}
             </p>
           </div>
           <p className="text-sm font-light text-gray-600">
-            {propertyDetails.description}
+            {propertyDetails.propertyDescription}
           </p>
 
           {/* divider */}
@@ -162,7 +165,7 @@ const PropertyDetails = () => {
             <div className="text-sm font-medium grid grid-cols-1 md:grid-cols-2 gap-2">
               {propertyDetails.features.map((feature, index) => (
                 <span className="flex items-center gap-2 py-3" key={index}>
-                  <GoDotFill /> {feature},
+                  <GoDotFill /> {feature}
                 </span>
               ))}
             </div>
@@ -175,9 +178,9 @@ const PropertyDetails = () => {
           <div>
             <h3 className="text-md font-bold">Amenities</h3>
             <div className="text-sm grid grid-cols-1 md:grid-cols-2 gap-2 font-medium">
-              {propertyDetails.amenities.map((amenities, index) => (
+              {propertyDetails.amenities.map((amenity, index) => (
                 <span className="flex items-center gap-2 py-3" key={index}>
-                  <MdDone /> {amenities},
+                  <MdDone /> {amenity}
                 </span>
               ))}
             </div>
@@ -190,11 +193,12 @@ const PropertyDetails = () => {
           <div>
             <h3 className="text-md font-bold">Location</h3>
             <p className="text-sm flex items-center gap-2 my-3 font-medium">
-              <CiLocationOn /> {propertyDetails.location.address}
+              <CiLocationOn /> {propertyDetails.propertyAddress}
             </p>
           </div>
           <SimpleMap
-            coordinates={propertyDetails.location.coordinates}
+            latitude={propertyDetails.latitude}
+            longitude={propertyDetails.longitude}
           ></SimpleMap>
 
           {/* divider */}
@@ -203,7 +207,7 @@ const PropertyDetails = () => {
           {/* Dld permit information */}
           <div className="flex flex-col md:flex-row items-center gap-4 bg-[#d4d4d4] p-5">
             <img
-              src={propertyDetails.dldPermitInfo.permitQrCode}
+              src={propertyDetails.dldQrCode}
               className="w-16"
               alt="DLD Permit QR Code"
             />
@@ -218,7 +222,7 @@ const PropertyDetails = () => {
                 </button>
               </h3>
               <p className="text-sm font-medium">
-                {propertyDetails.dldPermitInfo.permitNumber}
+                {propertyDetails.dldPermitNumber}
               </p>
               <p className="text-sm font-light text-gray-600">
                 This property listing has been reviewed and verified by Dubai
@@ -233,26 +237,16 @@ const PropertyDetails = () => {
           <div className="sticky top-4">
             <div className="border border-0.5 border-gray-200 p-6 md:p-10 shadow-md">
               <div className="flex flex-col md:flex-row items-center gap-4">
-                <img
-                  className="w-20 h-20 rounded-md"
-                  src="https://ggfx-handh3.s3.eu-west-2.amazonaws.com/x/170ct200/Musa_Sanusi_hausandhaus_2023_ES_5bc1e962b3.webp"
-                  alt="Agent Image"
-                />
+                <div className="w-20 h-20 rounded-md bg-gray-200 flex items-center justify-center">
+                  <span className="text-gray-500">Agent</span>
+                </div>
 
                 <div className="space-y-2 text-center md:text-left">
                   <h3 className="text-md font-bold">
-                    {propertyDetails.agent.name}
+                    {propertyDetails.agent || "Agent"}
                   </h3>
                   <p className="text-sm text-gray-500">
-                    {propertyDetails.agent.role}
-                  </p>
-                  <p className="text-sm font-semibold text-gray-500 flex flex-wrap items-center justify-center md:justify-start gap-2">
-                    Speaks:
-                    {propertyDetails.agent.languages.map((lang, index) => (
-                      <span className="font-medium" key={index}>
-                        {lang},
-                      </span>
-                    ))}
+                    Real Estate Agent
                   </p>
                 </div>
               </div>
@@ -393,10 +387,8 @@ const PropertyDetails = () => {
       </div>
 
       <div>
-
-<h3 className="text-sm text-start md:text-md font-semibold">Other properties that might interest y ou</h3>
-
-</div>
+        <h3 className="text-sm text-start md:text-md font-semibold">Other properties that might interest you</h3>
+      </div>
     </div>
   );
 };
