@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,7 +38,7 @@ const formSchema = z.object({
   profileImage: z.any().optional(),
 });
 
-export function AdminFormDialog({ open, onOpenChange, onAdminAdded }) {
+export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdminUpdated, isEditing = false }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -48,13 +48,26 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded }) {
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: "",
-      fullname: "",
-      email: "",
+      username: admin?.username || "",
+      fullname: admin?.fullName || "",
+      email: admin?.email || "",
       password: "",
-      profileImage: "",
+      profileImage: admin?.profileImage || "",
     },
   });
+
+  useEffect(() => {
+    if (admin) {
+      form.reset({
+        username: admin.username,
+        fullname: admin.fullName,
+        email: admin.email,
+        password: "",
+        profileImage: admin.profileImage,
+      });
+      setPreviewUrl(admin.profileImage || "");
+    }
+  }, [admin, form]);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -136,58 +149,70 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded }) {
   async function onSubmit(values) {
     setIsSubmitting(true);
     try {
-      // Upload image to Cloudinary if selected
-      let imageUrl = "";
+      let imageUrl = values.profileImage;
       if (selectedFile) {
         try {
           toast.info("Uploading image...");
           imageUrl = await uploadToCloudinary(selectedFile);
         } catch (error) {
-          toast.error("Image upload failed. Using default image.");
+          toast.error("Image upload failed. Using existing image.");
           console.error("Image upload error:", error);
         }
       }
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admins/add-admins`, {
-        method: 'POST',
+      const adminData = {
+        username: values.username,
+        fullName: values.fullname,
+        email: values.email,
+        profileImage: imageUrl,
+      };
+
+      if (values.password) {
+        adminData.password = values.password;
+      }
+
+      const url = isEditing 
+        ? `${import.meta.env.VITE_API_URL}/api/${admin.id}`
+        : `${import.meta.env.VITE_API_URL}/api/admins/add-admins`;
+
+      const response = await fetch(url, {
+        method: isEditing ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          username: values.username,
-          fullName: values.fullname,
-          email: values.email,
-          password: values.password,
-          profileImage: imageUrl,
-        }),
+        body: JSON.stringify(adminData),
+        credentials: 'include',
       });
 
       if (!response.ok) {
-        throw new Error('Failed to add admin');
+        throw new Error(isEditing ? 'Failed to update admin' : 'Failed to add admin');
       }
 
       const data = await response.json();
 
-      const newAdmin = {
-        id: data._id || `ad${Date.now()}`,
-        name: values.fullname,
-        email: values.email,
-        avatarUrl: imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(values.fullname)}&background=random`,
-        lastActive: "Just now",
+      const updatedAdmin = {
+        id: data._id,
+        fullName: data.fullName,
+        email: data.email,
+        username: data.username,
+        profileImage: data.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=random`,
       };
 
-      if (onAdminAdded) {
-        onAdminAdded(newAdmin);
+      if (isEditing && onAdminUpdated) {
+        onAdminUpdated(updatedAdmin);
+        toast.success("Admin updated successfully!");
+      } else if (!isEditing && onAdminAdded) {
+        onAdminAdded(updatedAdmin);
+        toast.success("Admin added successfully!");
       }
 
-      toast.success("Admin added successfully!");
       form.reset();
       setSelectedFile(null);
       setPreviewUrl("");
       onOpenChange(false);
     } catch (error) {
-      console.error('Error adding admin:', error);
-      toast.error("Failed to add admin. Please try again.");
+      console.error('Error:', error);
+      toast.error(error.message || "Operation failed. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -197,9 +222,13 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] bg-white">
         <DialogHeader>
-          <DialogTitle className="text-xl">Add New Admin</DialogTitle>
+          <DialogTitle className="text-xl">
+            {isEditing ? "Edit Admin" : "Add New Admin"}
+          </DialogTitle>
           <DialogDescription>
-            Fill in the details to create a new admin account.
+            {isEditing 
+              ? "Update the admin's information below."
+              : "Fill in the details to create a new admin account."}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -337,7 +366,9 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded }) {
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Adding..." : "Add Admin"}
+                {isSubmitting 
+                  ? (isEditing ? "Updating..." : "Adding...") 
+                  : (isEditing ? "Update Admin" : "Add Admin")}
               </Button>
             </DialogFooter>
           </form>

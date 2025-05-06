@@ -99,6 +99,20 @@ const AdminsPage = () => {
     setAdmins(prevAdmins => [newAdmin, ...prevAdmins]);
   };
 
+  const handleAdminUpdated = (updatedAdmin) => {
+    setAdmins(prevAdmins => 
+      prevAdmins.map(admin => 
+        admin.id === updatedAdmin.id ? updatedAdmin : admin
+      )
+    );
+  };
+
+  const handleAdminDeleted = (deletedAdminId) => {
+    setAdmins(prevAdmins => 
+      prevAdmins.filter(admin => admin.id !== deletedAdminId)
+    );
+  };
+
   const handlePageChange = (page) => {
     setCurrentPage(page);
     // Scroll to top
@@ -132,7 +146,11 @@ const AdminsPage = () => {
                   transition={{ duration: 0.3 }}
                   layout
                 >
-                  <AdminCard admin={admin} />
+                  <AdminCard 
+                    admin={admin} 
+                    onAdminUpdated={handleAdminUpdated}
+                    onAdminDeleted={handleAdminDeleted}
+                  />
                 </motion.div>
               ))}
             </AnimatePresence>
