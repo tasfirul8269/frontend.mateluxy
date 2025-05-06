@@ -459,6 +459,8 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
         email: data.email,
         username: data.username,
         profileImage: data.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=random`,
+        lastLogin: data.lastLogin ? new Date(data.lastLogin) : new Date(),
+        adminId: data.adminId || `ADM${Math.floor(1000 + Math.random() * 9000)}`
       };
 
       if (isEditing && onAdminUpdated) {

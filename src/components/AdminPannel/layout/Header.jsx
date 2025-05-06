@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Search, Bell, User, LogOut, Settings, X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -64,13 +63,11 @@ const ADMIN_SUGGESTIONS = [
 ];
 
 export function Header({ title, searchPlaceholder, onSearch }) {
-  const navigate = useNavigate();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState(NOTIFICATIONS);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [currentAdmin, setCurrentAdmin] = useState(null);
   const searchInputRef = useRef(null);
   const location = useLocation();
   
@@ -140,41 +137,6 @@ export function Header({ title, searchPlaceholder, onSearch }) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
-
-  useEffect(() => {
-    const storedAdmin = localStorage.getItem('currentAdmin');
-    if (storedAdmin) {
-      setCurrentAdmin(JSON.parse(storedAdmin));
-    }
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      const adminData = JSON.parse(localStorage.getItem('currentAdmin') || '{}');
-      const adminId = adminData?.id;
-      
-      if (adminId) {
-        await fetch(`${import.meta.env.VITE_API_URL}/api/${adminId}/offline`, {
-          method: 'PUT',
-          credentials: 'include'
-        });
-      }
-      
-      localStorage.removeItem('currentAdmin');
-      
-      document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      
-      toast.success("Logged out successfully");
-      
-      navigate('/admin-signin');
-    } catch (error) {
-      console.error("Logout error:", error);
-      toast.error("Failed to logout properly");
-      
-      localStorage.removeItem('currentAdmin');
-      navigate('/admin-signin');
-    }
-  };
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 py-3 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
@@ -314,11 +276,9 @@ export function Header({ title, searchPlaceholder, onSearch }) {
           <DropdownMenuTrigger asChild>
             <button className="flex items-center space-x-3 hover:bg-gray-100 p-1 px-2 rounded-full transition-colors">
               <div className="h-8 w-8 bg-red-600 rounded-full text-white flex items-center justify-center text-sm font-medium">
-                {currentAdmin?.fullName ? currentAdmin.fullName.charAt(0) : "U"}
+                JD
               </div>
-              <span className="text-sm font-medium text-gray-700 hidden md:inline">
-                {currentAdmin?.fullName || "User"}
-              </span>
+              <span className="text-sm font-medium text-gray-700 hidden md:inline">John Doe</span>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
@@ -333,7 +293,7 @@ export function Header({ title, searchPlaceholder, onSearch }) {
             <DropdownMenuSeparator />
             <DropdownMenuItem 
               className="cursor-pointer text-red-600 focus:text-red-600"
-              onClick={handleLogout}
+              onClick={() => toast.success("Logout successful!")}
             >
               <LogOut className="mr-2 h-4 w-4" />
               <span>Logout</span>

@@ -1,33 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
 import { BottomNav } from "./BottomNav";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLocation } from "react-router-dom";
-import { initActivityTracking, cleanupActivityTracking } from "@/utils/activityTracker";
 
 export function MainLayout({ children }) {
   const [searchQuery, setSearchQuery] = useState("");
   const isMobile = useIsMobile();
   const location = useLocation();
-
-  // Initialize activity tracking when the main layout mounts
-  useEffect(() => {
-    // Get current admin ID from localStorage or context
-    const adminData = JSON.parse(localStorage.getItem('currentAdmin') || '{}');
-    const adminId = adminData?.id;
-    
-    if (adminId) {
-      initActivityTracking(adminId);
-    }
-    
-    // Clean up when component unmounts
-    return () => {
-      if (adminId) {
-        cleanupActivityTracking(adminId);
-      }
-    };
-  }, []);
 
   const handleSearch = (query) => {
     setSearchQuery(query);

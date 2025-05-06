@@ -50,10 +50,7 @@ const AdminsPage = () => {
           email: admin.email,
           username: admin.username,
           profileImage: admin.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(admin.fullName)}&background=random`,
-          role: admin.role || "Admin",
-          isOnline: admin.isOnline || false,
-          lastActivity: admin.lastActivity ? new Date(admin.lastActivity) : new Date(),
-          lastLogin: admin.lastLogin ? new Date(admin.lastLogin) : new Date(),
+          createdAt: admin.createdAt ? new Date(admin.createdAt) : new Date(),
           adminId: admin.adminId || `ADM${Math.floor(1000 + Math.random() * 9000)}`
         }));
         
@@ -71,10 +68,7 @@ const AdminsPage = () => {
             email: "john.smith@realestate.com",
             username: "johnsmith",
             profileImage: `https://ui-avatars.com/api/?name=John+Smith&background=random`,
-            role: "Super Admin",
-            isOnline: true,
-            lastActivity: new Date(),
-            lastLogin: new Date(),
+            createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
             adminId: "ADM001"
           },
           {
@@ -83,10 +77,7 @@ const AdminsPage = () => {
             email: "jessica.lee@realestate.com",
             username: "jessicalee",
             profileImage: `https://ui-avatars.com/api/?name=Jessica+Lee&background=random`,
-            role: "Admin",
-            isOnline: true,
-            lastActivity: new Date(Date.now() - 15 * 60 * 1000), // 15 minutes ago
-            lastLogin: new Date(Date.now() - 24 * 60 * 60 * 1000),
+            createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 days ago
             adminId: "ADM002"
           },
           {
@@ -95,36 +86,9 @@ const AdminsPage = () => {
             email: "robert.j@realestate.com",
             username: "robertj",
             profileImage: `https://ui-avatars.com/api/?name=Robert+Johnson&background=random`,
-            role: "Agent Admin",
-            isOnline: false,
-            lastActivity: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-            lastLogin: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+            createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago 
             adminId: "ADM003"
           },
-          {
-            id: "4",
-            fullName: "Samantha Williams",
-            email: "samantha.w@realestate.com",
-            username: "samanthaw",
-            profileImage: `https://ui-avatars.com/api/?name=Samantha+Williams&background=random`,
-            role: "Content Editor",
-            isOnline: false,
-            lastActivity: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-            lastLogin: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
-            adminId: "ADM004"
-          },
-          {
-            id: "5",
-            fullName: "Daniel Brown",
-            email: "daniel.b@realestate.com",
-            username: "danielb",
-            profileImage: `https://ui-avatars.com/api/?name=Daniel+Brown&background=random`,
-            role: "Admin",
-            isOnline: true,
-            lastActivity: new Date(Date.now() - 5 * 60 * 1000), // 5 minutes ago
-            lastLogin: new Date(),
-            adminId: "ADM005"
-          }
         ];
         
         setAdmins(mockAdmins);
@@ -159,7 +123,6 @@ const AdminsPage = () => {
           admin.fullName.toLowerCase().includes(lowercasedQuery) ||
           admin.email.toLowerCase().includes(lowercasedQuery) ||
           admin.username.toLowerCase().includes(lowercasedQuery) ||
-          admin.role.toLowerCase().includes(lowercasedQuery) ||
           admin.adminId.toLowerCase().includes(lowercasedQuery)
       );
       setFilteredAdmins(filtered);
@@ -242,27 +205,6 @@ const AdminsPage = () => {
     }
   };
 
-  // Check if user is online based on activity
-  const getOnlineStatus = (admin) => {
-    // Consider a user online if they were active in the last 30 minutes
-    const minutesSinceLastActivity = differenceInMinutes(new Date(), admin.lastActivity);
-    return minutesSinceLastActivity < 30;
-  };
-
-  // Format last activity time
-  const formatLastActivity = (lastActivity) => {
-    const now = new Date();
-    const minutesAgo = differenceInMinutes(now, lastActivity);
-    
-    if (minutesAgo < 1) {
-      return 'Just now';
-    } else if (minutesAgo < 60) {
-      return `${minutesAgo} minute${minutesAgo === 1 ? '' : 's'} ago`;
-    } else {
-      return formatDistanceToNow(lastActivity, { addSuffix: true });
-    }
-  };
-
   return (
     <div className="flex-1 min-h-screen bg-gray-50">
       <div className="p-6">
@@ -285,99 +227,63 @@ const AdminsPage = () => {
                 <thead className="bg-gray-50 text-left">
                   <tr>
                     <th className="px-6 py-4 text-sm font-medium text-gray-800">Admin</th>
-                    <th className="px-6 py-4 text-sm font-medium text-gray-800">Role</th>
                     <th className="px-6 py-4 text-sm font-medium text-gray-800">Email</th>
-                    <th className="px-6 py-4 text-sm font-medium text-gray-800">Status</th>
-                    <th className="px-6 py-4 text-sm font-medium text-gray-800">Last Login</th>
+                    <th className="px-6 py-4 text-sm font-medium text-gray-800">Account Created</th>
                     <th className="px-6 py-4 text-sm font-medium text-gray-800 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   <AnimatePresence mode="popLayout">
-                    {currentAdmins.map((admin) => {
-                      const isOnline = getOnlineStatus(admin);
-                      return (
-                        <motion.tr 
-                          key={admin.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="hover:bg-gray-50"
-                        >
-                          <td className="px-6 py-4">
-                            <div className="flex items-center">
-                              <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full overflow-hidden text-center flex items-center justify-center relative">
-                                {admin.profileImage ? (
-                                  <img 
-                                    src={admin.profileImage} 
-                                    alt={admin.fullName}
-                                    className="h-10 w-10 object-cover" 
-                                  />
-                                ) : (
-                                  <span className="text-lg font-medium text-gray-600">
-                                    {admin.fullName.charAt(0)}
-                                  </span>
-                                )}
-                                {isOnline && (
-                                  <div className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-white"></div>
-                                )}
-                              </div>
-                              <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">{admin.fullName}</div>
-                                <div className="text-xs text-gray-500">ID: {admin.adminId}</div>
-                              </div>
+                    {currentAdmins.map((admin) => (
+                      <motion.tr 
+                        key={admin.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="hover:bg-gray-50"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full overflow-hidden text-center flex items-center justify-center relative">
+                              {admin.profileImage ? (
+                                <img 
+                                  src={admin.profileImage} 
+                                  alt={admin.fullName}
+                                  className="h-10 w-10 object-cover" 
+                                />
+                              ) : (
+                                <span className="text-lg font-medium text-gray-600">
+                                  {admin.fullName.charAt(0)}
+                                </span>
+                              )}
                             </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="inline-flex px-3 py-1 rounded-full text-xs font-medium" 
-                              style={{
-                                backgroundColor: 
-                                  admin.role === 'Super Admin' ? '#e0f2fe' :
-                                  admin.role === 'Property Admin' ? '#f0fdf4' :
-                                  admin.role === 'Agent Admin' ? '#fef3c7' : '#f3f4f6',
-                                color: 
-                                  admin.role === 'Super Admin' ? '#0369a1' :
-                                  admin.role === 'Property Admin' ? '#166534' :
-                                  admin.role === 'Agent Admin' ? '#92400e' : '#4b5563'
-                              }}
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">{admin.fullName}</div>
+                              <div className="text-xs text-gray-500">ID: {admin.adminId}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700">{admin.email}</td>
+                        <td className="px-6 py-4 text-sm text-gray-700">{formatDate(admin.createdAt)}</td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex justify-end space-x-2">
+                            <button 
+                              className="p-1.5 text-gray-500 hover:text-blue-600 rounded-full hover:bg-blue-50 transition-colors"
+                              onClick={() => handleEditAdmin(admin)}
                             >
-                              {admin.role}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">{admin.email}</td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center">
-                              <div className={`h-2.5 w-2.5 rounded-full mr-2 ${isOnline ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                              <span className="text-sm text-gray-700">{isOnline ? 'Online' : 'Offline'}</span>
-                              <span className="text-xs text-gray-500 ml-2">
-                                {isOnline ? '' : `Last active ${formatLastActivity(admin.lastActivity)}`}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">{formatDate(admin.lastLogin)}</td>
-                          <td className="px-6 py-4 text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <button className="rounded-full p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100">
-                                  <MoreVertical className="h-5 w-5" />
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem onClick={() => handleEditAdmin(admin)} className="cursor-pointer">
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  <span>Edit</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleAdminDeleted(admin.id)} className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50">
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  <span>Delete</span>
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </td>
-                        </motion.tr>
-                      );
-                    })}
+                              <Edit size={16} />
+                            </button>
+                            <button 
+                              className="p-1.5 text-gray-500 hover:text-red-600 rounded-full hover:bg-red-50 transition-colors"
+                              onClick={() => handleAdminDeleted(admin.id)}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </motion.tr>
+                    ))}
                   </AnimatePresence>
                 </tbody>
               </table>
