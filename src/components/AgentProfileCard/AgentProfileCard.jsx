@@ -1,15 +1,8 @@
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import { useLoaderData, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
-const AgentProfileCard = ({
-  name,
-  position,
-  imageUrl,
-  shortDescription,
-  longDescription,
-  contactInfo,
-}) => {
+const AgentProfileCard = () => {
 
   const [agentData, setAgentData] = useState([]);
 
@@ -39,8 +32,8 @@ const AgentProfileCard = ({
     const vCardData = [
       "BEGIN:VCARD",
       "VERSION:3.0",
-      `FN:${sanitize(agentData.fullName)}`,
-      position && `TITLE:${sanitize(position)}`,
+      `FN:${sanitize(agentData?.fullName)}`,
+      agentData?.position && `TITLE:${sanitize(agentData?.position)}`,
       agentData?.contactNumber && `TEL;TYPE=CELL:${sanitize(agentData.contactNumber)}`,
       agentData?.email && `EMAIL:${sanitize(agentData.email)}`,
       "END:VCARD",
@@ -171,10 +164,8 @@ const AgentProfileCard = ({
           </button>
 
           {/* Description */}
-          <p className="text-gray-800 mb-4 font-medium leading-relaxed">
-            {agentData?.aboutMe}
-          </p>
-          <p className="text-gray-600 leading-relaxed">{longDescription}</p>
+         
+          <p className="text-gray-600 leading-relaxed">{agentData?.aboutMe}</p>
         </div>
 
         {/* Right side image */}
@@ -190,18 +181,7 @@ const AgentProfileCard = ({
       {/* --------------------------------------------------------- */}
       <div className="flex flex-col md:flex-row gap-8 w-full justify-center md:justify-around items-center my-16">
         <div className="w-full">
-          <p className="text-[#083819]">
-            His genuine passion for property has seen him visit The USA for 5
-            separate property awards and also successfully manage multi-million
-            pound developments within the West Wales region. In early 2012 Luke
-            decided to challenge himself with a Worldwide market and joined one
-            of Dubai’s largest and most respected brokers, becoming a senior
-            sales consultant and the companies’ best newcomer at the annual
-            awards. In August 2013 along with his business partners, Luke formed
-            haus &amp; haus. His in depth managerial knowledge, roll your
-            sleeves up attitude and hands on leadership have turned the haus
-            team into one of Dubai's most reputable agencies.
-          </p>
+         
         </div>
      
       </div>

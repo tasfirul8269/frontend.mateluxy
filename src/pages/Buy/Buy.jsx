@@ -17,8 +17,9 @@ const Buy = () => {
 
   useEffect(() => {
     axios
-      .get("properties.json")
+      .get(`${import.meta.env.VITE_API_URL}/api/properties`)
       .then((res) => {
+        console.log(res.data)
         setProperties(res.data);
         setFilteredProperties(res.data);
         setLoading(false);
@@ -180,7 +181,7 @@ const Buy = () => {
         <div className="container mx-auto p-4 md:px-0">
           {filteredProperties.map((property) => (
             <PropertyCard
-              key={property.id}
+              key={property._id}
               property={property}
               loading={loading}
               error={error}
