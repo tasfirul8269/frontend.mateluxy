@@ -19,8 +19,10 @@ const Rent = () => {
     axios
       .get(`${import.meta.env.VITE_API_URL}/api/properties`)
       .then((res) => {
-        setProperties(res.data);
-        setFilteredProperties(res.data);
+        // Filter by Rent category immediately after fetch
+        const rentProperties = res.data.filter(property => property.category === 'Rent');
+        setProperties(rentProperties);
+        setFilteredProperties(rentProperties);
         setLoading(false);
       })
       .catch((err) => {
@@ -34,58 +36,55 @@ const Rent = () => {
 
     const queryParams = new URLSearchParams(location.search);
     const filtered = properties.filter(property => {
-      // Location filter (case insensitive)
+      // Location filter (using propertyAddress)
       if (queryParams.get('location')) {
-        const locationRegex = new RegExp(queryParams.get('location'), 'i');
-        if (!locationRegex.test(property.location)) return false;
+        const searchLocation = queryParams.get('location').toLowerCase();
+        if (!property.propertyAddress.toLowerCase().includes(searchLocation)) {
+          return false;
+        }
       }
       
-      // Property type filter
+      // Property type filter (using propertyType)
       if (queryParams.get('propertyType') && 
-          property.type !== queryParams.get('propertyType')) {
+          property.propertyType !== queryParams.get('propertyType')) {
         return false;
       }
       
       // Price range filter
-      const minPrice = extractPriceValue(queryParams.get('minPrice'));
-      const maxPrice = extractPriceValue(queryParams.get('maxPrice'));
-      const propertyPrice = extractPriceValue(property.price);
+      const minPrice = queryParams.get('minPrice') ? Number(queryParams.get('minPrice')) : null;
+      const maxPrice = queryParams.get('maxPrice') ? Number(queryParams.get('maxPrice')) : null;
       
-      if (minPrice && propertyPrice < minPrice) return false;
-      if (maxPrice && propertyPrice > maxPrice) return false;
+      if (minPrice !== null && property.propertyPrice < minPrice) return false;
+      if (maxPrice !== null && property.propertyPrice > maxPrice) return false;
       
-      // Beds filter
+      // Beds filter (using propertyBedrooms)
       if (queryParams.get('beds')) {
         const bedsFilter = queryParams.get('beds');
-        if (bedsFilter === 'All') {
-          // Include all
-        } else if (bedsFilter === 'Studio') {
-          if (property.bedrooms !== 0) return false;
+        if (bedsFilter === 'Studio') {
+          if (property.propertyBedrooms !== 0) return false;
         } else if (bedsFilter.endsWith('+')) {
           const minBeds = parseInt(bedsFilter, 10);
-          if (property.bedrooms < minBeds) return false;
-        } else {
-          if (property.bedrooms !== parseInt(bedsFilter, 10)) return false;
+          if (property.propertyBedrooms < minBeds) return false;
+        } else if (bedsFilter !== 'All') {
+          if (property.propertyBedrooms !== parseInt(bedsFilter, 10)) return false;
         }
       }
       
-      // Baths filter
+      // Baths filter (using propertyBathrooms)
       if (queryParams.get('baths')) {
         const bathsFilter = queryParams.get('baths');
-        if (bathsFilter === 'All') {
-          // Include all
-        } else if (bathsFilter.endsWith('+')) {
+        if (bathsFilter.endsWith('+')) {
           const minBaths = parseInt(bathsFilter, 10);
-          if (property.bathrooms < minBaths) return false;
-        } else {
-          if (property.bathrooms !== parseInt(bathsFilter, 10)) return false;
+          if (property.propertyBathrooms < minBaths) return false;
+        } else if (bathsFilter !== 'All') {
+          if (property.propertyBathrooms !== parseInt(bathsFilter, 10)) return false;
         }
       }
       
       return true;
     });
     
-    // Apply sorting based on URL params
+    // Apply sorting
     const sortParam = queryParams.get('sort');
     const sortedProperties = sortProperties([...filtered], sortParam);
     setFilteredProperties(sortedProperties);
@@ -94,50 +93,39 @@ const Rent = () => {
   const sortProperties = (propertiesToSort, sortParam) => {
     if (!sortParam) return propertiesToSort;
 
-    switch (sortParam) {
-      case 'price-desc':
-        return propertiesToSort.sort((a, b) => extractPriceValue(b.price) - extractPriceValue(a.price));
-      case 'price-asc':
-        return propertiesToSort.sort((a, b) => extractPriceValue(a.price) - extractPriceValue(b.price));
-      case 'bedrooms-desc':
-        return propertiesToSort.sort((a, b) => b.bedrooms - a.bedrooms);
-      case 'bedrooms-asc':
-        return propertiesToSort.sort((a, b) => a.bedrooms - b.bedrooms);
-      case 'recent':
-      default:
-        // Assuming there's a dateAdded field, otherwise keep original order
-        if (propertiesToSort[0]?.dateAdded) {
-          return propertiesToSort.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
-        }
-        return propertiesToSort;
-    }
+    return [...propertiesToSort].sort((a, b) => {
+      switch (sortParam) {
+        case 'price-desc':
+          return b.propertyPrice - a.propertyPrice;
+        case 'price-asc':
+          return a.propertyPrice - b.propertyPrice;
+        case 'bedrooms-desc':
+          return b.propertyBedrooms - a.propertyBedrooms;
+        case 'bedrooms-asc':
+          return a.propertyBedrooms - b.propertyBedrooms;
+        case 'recent':
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        default:
+          return 0;
+      }
+    });
   };
 
   const handleCommunityClick = (communityName) => {
-    const regex = new RegExp(communityName, 'i');
-    
+    const searchTerm = communityName.toLowerCase();
     const filtered = properties.filter(property => 
-      regex.test(property.location) || 
-      regex.test(property.community) || 
-      regex.test(property.neighborhood)
+      property.propertyAddress.toLowerCase().includes(searchTerm) || 
+      (property.community && property.community.toLowerCase().includes(searchTerm)) ||
+      (property.neighborhood && property.neighborhood.toLowerCase().includes(searchTerm))
     );
-    
     setFilteredProperties(filtered);
-  };
-
-  const extractPriceValue = (priceStr) => {
-    if (!priceStr) return 0;
-    const match = priceStr.toString().replace(/,/g, '').match(/\d+/);
-    return match ? parseInt(match[0], 10) : 0;
   };
 
   const handleFilterChange = (filterValue) => {
     const queryParams = new URLSearchParams(location.search);
     queryParams.set('sort', filterValue);
     window.history.pushState({}, '', `${location.pathname}?${queryParams.toString()}`);
-    
-    // Trigger the useEffect that handles filtering and sorting
-    setFilteredProperties(prev => [...prev]);
+    setFilteredProperties(prev => [...prev]); // Trigger re-render
   };
 
   return (
@@ -150,7 +138,7 @@ const Rent = () => {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6 md:mb-8">
             <div className="w-full md:w-auto">
               <h3 className="text-xl text-green-900 font-bold text-center md:text-left px-4 md:pl-[5%]">
-                Properties for sell in Dubai
+                Properties for rent in Dubai
               </h3>
               <p className="text-center md:text-left text-gray-500 font-light mt-2 md:mt-0 px-4 md:pl-[5%]">
                 Results: {filteredProperties.length}
@@ -180,7 +168,7 @@ const Rent = () => {
         <div className="container mx-auto p-4 md:px-0">
           {filteredProperties.map((property) => (
             <PropertyCard
-              key={property.id}
+              key={property._id}
               property={property}
               loading={loading}
               error={error}

@@ -38,7 +38,8 @@ const router = createBrowserRouter([
                 element: <Rent></Rent>
             },
             {
-                path: "/property-details",
+                path: "/property-details/:id",
+                loader: ({params}) => fetch(`${import.meta.env.VITE_API_URL}/api/properties/${params.id}`),
                 element: <PropertyDetails></PropertyDetails>
             },
             {
