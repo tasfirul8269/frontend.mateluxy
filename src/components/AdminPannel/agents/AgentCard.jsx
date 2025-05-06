@@ -7,11 +7,49 @@ export function AgentCard({ agent, onAgentUpdated, onAgentDeleted }) {
   const [imgError, setImgError] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [completeAgent, setCompleteAgent] = useState(null);
   
   const defaultImage = `https://ui-avatars.com/api/?name=${encodeURIComponent(agent.fullName)}&background=random`;
 
-  const handleEdit = () => {
-    setIsEditDialogOpen(true);
+  const handleEdit = async () => {
+    try {
+      // Fetch complete agent data before editing
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/agents/${agent.id}`, {
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch agent details');
+      }
+      
+      const completeAgentData = await response.json();
+      
+      // Transform the data to match expected format
+      const fullAgent = {
+        id: completeAgentData._id,
+        username: completeAgentData.username,
+        fullName: completeAgentData.fullName,
+        email: completeAgentData.email,
+        profileImage: completeAgentData.profileImage,
+        position: completeAgentData.position,
+        contactNumber: completeAgentData.contactNumber,
+        whatsapp: completeAgentData.whatsapp || "",
+        department: completeAgentData.department || "",
+        vcard: completeAgentData.vcard || "",
+        languages: completeAgentData.languages || [],
+        aboutMe: completeAgentData.aboutMe || "",
+        address: completeAgentData.address || "",
+        socialLinks: completeAgentData.socialLinks || [],
+        listings: agent.listings || 0
+      };
+      
+      // Store the complete agent data
+      setCompleteAgent(fullAgent);
+      setIsEditDialogOpen(true);
+    } catch (error) {
+      console.error('Error fetching agent details:', error);
+      toast.error('Failed to load agent details for editing');
+    }
   };
 
   const handleDelete = async () => {
@@ -98,7 +136,7 @@ export function AgentCard({ agent, onAgentUpdated, onAgentDeleted }) {
       <AgentFormDialog 
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
-        agent={agent}
+        agent={completeAgent}
         onAgentUpdated={onAgentUpdated}
         isEditing={true}
       />

@@ -38,11 +38,19 @@ const AgentsPage = () => {
         // Transform data to match our frontend structure
         const transformedAgents = data.map(agent => ({
           id: agent._id,
+          username: agent.username,
           fullName: agent.fullName,
           profileImage: agent.profileImage,
           position: agent.position,
           email: agent.email,
           contactNumber: agent.contactNumber,
+          whatsapp: agent.whatsapp || "",
+          department: agent.department || "",
+          vcard: agent.vcard || "",
+          languages: agent.languages || [],
+          aboutMe: agent.aboutMe || "",
+          address: agent.address || "",
+          socialLinks: agent.socialLinks || [],
           listings: 0, // You might want to add this field to your backend model
         }));
         
