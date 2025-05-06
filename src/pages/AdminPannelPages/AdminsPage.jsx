@@ -11,58 +11,52 @@ import {
 } from "@/components/AdminPannel/ui/pagination";
 import { AdminFormDialog } from "@/components/AdminPannel/admins/AdminFormDialog";
 import { motion, AnimatePresence } from "framer-motion";
-
-// Mock admin data
-const MOCK_ADMINS = [
-  {
-    id: "ad1",
-    name: "John Smith",
-    email: "john.s@estatecompass.com",
-    role: "Super Admin",
-    avatarUrl: "https://randomuser.me/api/portraits/men/41.jpg",
-    lastActive: "Just now"
-  },
-  {
-    id: "ad2",
-    name: "Fatima Al Zahra",
-    email: "fatima.z@estatecompass.com",
-    role: "Content Admin",
-    avatarUrl: "https://randomuser.me/api/portraits/women/65.jpg",
-    lastActive: "2 hours ago"
-  },
-  {
-    id: "ad3",
-    name: "Robert Chen",
-    email: "robert.c@estatecompass.com",
-    role: "Agent Admin",
-    avatarUrl: "https://randomuser.me/api/portraits/men/36.jpg",
-    lastActive: "Yesterday"
-  },
-  {
-    id: "ad4",
-    name: "Layla Kumar",
-    email: "layla.k@estatecompass.com",
-    role: "Property Admin",
-    avatarUrl: "https://randomuser.me/api/portraits/women/26.jpg",
-    lastActive: "3 days ago"
-  },
-  {
-    id: "ad5",
-    name: "Mohammed Al Farsi",
-    email: "mohammed.f@estatecompass.com",
-    role: "Super Admin",
-    avatarUrl: "https://randomuser.me/api/portraits/men/12.jpg",
-    lastActive: "1 week ago"
-  }
-];
+import { toast } from "sonner";
 
 const AdminsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [admins, setAdmins] = useState(MOCK_ADMINS);
-  const [filteredAdmins, setFilteredAdmins] = useState(admins);
+  const [admins, setAdmins] = useState([]);
+  const [filteredAdmins, setFilteredAdmins] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const itemsPerPage = 4;
+
+  // Fetch admins from API
+  useEffect(() => {
+    const fetchAdmins = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/admins`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch admins');
+        }
+        
+        const data = await response.json();
+        
+        // Transform data to match our frontend structure
+        const transformedAdmins = data.map(admin => ({
+          id: admin._id,
+          name: admin.fullName,
+          email: admin.email,
+          role: "Admin", // You might want to add this field to your backend model
+          avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(admin.fullName)}&background=random`,
+          lastActive: "Just now",
+        }));
+        
+        setAdmins(transformedAdmins);
+        setFilteredAdmins(transformedAdmins);
+      } catch (error) {
+        console.error('Error fetching admins:', error);
+        toast.error('Failed to load admins. Please try again later.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchAdmins();
+  }, []);
 
   // Listen for search event from Header
   useEffect(() => {
@@ -119,23 +113,32 @@ const AdminsPage = () => {
           <h2 className="text-xl font-medium text-gray-800">System Administrators ({filteredAdmins.length})</h2>
         </div>
 
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          </div>
+        )}
+
         {/* Admins List */}
-        <div className="space-y-4">
-          <AnimatePresence mode="popLayout">
-            {currentAdmins.map((admin) => (
-              <motion.div 
-                key={admin.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.3 }}
-                layout
-              >
-                <AdminCard key={admin.id} admin={admin} />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
+        {!isLoading && (
+          <div className="space-y-4">
+            <AnimatePresence mode="popLayout">
+              {currentAdmins.map((admin) => (
+                <motion.div 
+                  key={admin.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3 }}
+                  layout
+                >
+                  <AdminCard admin={admin} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
 
         {/* No results */}
         {currentAdmins.length === 0 && (

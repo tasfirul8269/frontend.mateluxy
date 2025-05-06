@@ -59,25 +59,47 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded }) {
     },
   });
 
-  function onSubmit(values) {
-    console.log("Adding new admin:", values);
+  async function onSubmit(values) {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/add-admins`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: values.username,
+          fullName: values.fullname,
+          email: values.email,
+          password: values.password,
+        }),
+      });
 
-    const newAdmin = {
-      id: `ad${Date.now()}`,
-      name: values.fullname,
-      email: values.email,
-      role: values.role,
-      avatarUrl: `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? "men" : "women"}/${Math.floor(Math.random() * 100)}.jpg`,
-      lastActive: "Just now",
-    };
+      if (!response.ok) {
+        throw new Error('Failed to add admin');
+      }
 
-    if (onAdminAdded) {
-      onAdminAdded(newAdmin);
+      const data = await response.json();
+
+      const newAdmin = {
+        id: data._id || `ad${Date.now()}`,
+        name: values.fullname,
+        email: values.email,
+        role: values.role,
+        avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(values.fullname)}&background=random`,
+        lastActive: "Just now",
+      };
+
+      if (onAdminAdded) {
+        onAdminAdded(newAdmin);
+      }
+
+      toast.success("Admin added successfully!");
+      form.reset();
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error adding admin:', error);
+      toast.error("Failed to add admin. Please try again.");
     }
-
-    toast.success("Admin added successfully!");
-    form.reset();
-    onOpenChange(false);
   }
 
   return (
