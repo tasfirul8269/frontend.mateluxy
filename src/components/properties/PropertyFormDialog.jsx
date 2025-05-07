@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,10 +11,23 @@ import { propertyApi } from "@/services/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 
-export const PropertyFormDialog = ({ isOpen, onClose }) => {
+export const PropertyFormDialog = ({ 
+  isOpen, 
+  onClose, 
+  property = null, 
+  isEditing = false,
+  onPropertyUpdated = null
+}) => {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(isEditing && property ? property.category : null);
+
+  // Update selected category if property changes
+  useEffect(() => {
+    if (isEditing && property) {
+      setSelectedCategory(property.category);
+    }
+  }, [isEditing, property]);
 
   const categories = [
     { id: "Buy", label: "Buy", icon: "🏠" },
@@ -27,14 +40,43 @@ export const PropertyFormDialog = ({ isOpen, onClose }) => {
   const handleSubmit = async (data) => {
     try {
       setIsSubmitting(true);
-      const propertyData = { ...data, category: selectedCategory };
-      await propertyApi.createProperty(propertyData);
-      toast.success("Property added successfully!");
+      
+      // Ensure all required fields are set
+      const propertyData = { 
+        ...data,
+        category: selectedCategory,
+        // Ensure these required fields are present
+        propertyCountry: data.propertyCountry || "UAE",
+        propertyState: data.propertyState || "Dubai",
+        propertyZip: data.propertyZip || "00000",
+        propertyFeaturedImage: data.propertyFeaturedImage || data.featuredImage || "https://via.placeholder.com/600x400?text=Property",
+        brokerFee: data.brokerFee !== undefined ? data.brokerFee : 0,
+        dldQrCode: data.dldQrCode || "https://example.com/qrcode.png"
+      };
+      
+      console.log(`${isEditing ? "Updating" : "Creating"} property:`, propertyData);
+      
+      if (isEditing && property) {
+        // Update existing property
+        await propertyApi.updateProperty(property._id, propertyData);
+        toast.success("Property updated successfully!");
+        
+        // Call the onPropertyUpdated callback if provided
+        if (onPropertyUpdated) {
+          onPropertyUpdated(propertyData);
+        }
+      } else {
+        // Create new property
+        await propertyApi.createProperty(propertyData);
+        toast.success("Property added successfully!");
+      }
+      
+      // Refresh the properties list
       queryClient.invalidateQueries({ queryKey: ['properties'] });
       onClose();
     } catch (error) {
-      console.error("Error adding property:", error);
-      toast.error("Failed to add property. Please try again.");
+      console.error(`Error ${isEditing ? "updating" : "adding"} property:`, error);
+      toast.error(error.message || `Failed to ${isEditing ? "update" : "add"} property. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -45,7 +87,10 @@ export const PropertyFormDialog = ({ isOpen, onClose }) => {
   };
 
   const handleBack = () => {
-    setSelectedCategory(null);
+    // Only allow going back if not in edit mode
+    if (!isEditing) {
+      setSelectedCategory(null);
+    }
   };
 
   return (
@@ -53,14 +98,21 @@ export const PropertyFormDialog = ({ isOpen, onClose }) => {
       <DialogContent className="bg-white sm:max-w-[1100px] max-w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-gray-800">
-            {selectedCategory ? `Add New ${selectedCategory} Property` : "Select Property Category"}
+            {isEditing 
+              ? `Edit ${property?.category || ''} Property` 
+              : selectedCategory 
+                ? `Add New ${selectedCategory} Property` 
+                : "Select Property Category"
+            }
           </DialogTitle>
         </DialogHeader>
         
         {isSubmitting ? (
           <div className="flex flex-col items-center justify-center py-12">
             <span className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600 mb-4"></span>
-            <p className="mt-4 text-gray-600">Submitting property...</p>
+            <p className="mt-4 text-gray-600">
+              {isEditing ? "Updating property..." : "Submitting property..."}
+            </p>
           </div>
         ) : selectedCategory ? (
           <motion.div
@@ -68,21 +120,25 @@ export const PropertyFormDialog = ({ isOpen, onClose }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="mb-4">
-              <button 
-                onClick={handleBack}
-                className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 12H5M12 19l-7-7 7-7"/>
-                </svg>
-                <span className="ml-1">Back to categories</span>
-              </button>
-            </div>
+            {!isEditing && (
+              <div className="mb-4">
+                <button 
+                  onClick={handleBack}
+                  className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                  </svg>
+                  <span className="ml-1">Back to categories</span>
+                </button>
+              </div>
+            )}
             <TabbedPropertyForm 
               onSubmit={handleSubmit} 
               onCancel={onClose} 
               selectedCategory={selectedCategory}
+              initialData={isEditing ? property : null}
+              isEditing={isEditing}
             />
           </motion.div>
         ) : (

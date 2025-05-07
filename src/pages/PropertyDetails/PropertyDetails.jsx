@@ -199,7 +199,7 @@ const PropertyDetails = () => {
           <SimpleMap
             latitude={propertyDetails.latitude}
             longitude={propertyDetails.longitude}
-          ></SimpleMap>
+          />
 
           {/* divider */}
           <div className="border border-0.5 border-gray-100 my-6 md:my-10"></div>

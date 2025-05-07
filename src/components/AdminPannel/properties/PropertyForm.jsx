@@ -23,6 +23,7 @@ import {
 } from "@/components/AdminPannel/ui/select";
 import { agentApi } from "@/services/agentApi";
 import { useQuery } from "@tanstack/react-query";
+import SimpleMap from "@/components/SimpleMap/SimpleMap";
 
 // Common schema fields for all property types
 const basePropertySchema = {
@@ -162,6 +163,10 @@ export const PropertyForm = ({ category, onSubmit, onCancel }) => {
   const isCommercial = category.includes("Commercial");
   const isRent = category === "Rent" || category === "Commercial for Rent";
   const isBuy = category === "Buy" || category === "Commercial for Buy";
+
+  // Watch the latitude and longitude fields
+  const latitude = form.watch("latitude");
+  const longitude = form.watch("longitude");
 
   return (
     <Form {...form}>
@@ -469,6 +474,55 @@ export const PropertyForm = ({ category, onSubmit, onCancel }) => {
         </div>
         
         <div className="space-y-4">
+          <h3 className="text-lg font-medium">Location</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <FormField
+                control={form.control}
+                name="latitude"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Latitude</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.000001" placeholder="Enter latitude" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="longitude"
+                render={({ field }) => (
+                  <FormItem className="mt-4">
+                    <FormLabel>Longitude</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.000001" placeholder="Enter longitude" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                Click on the map to set coordinates, or enter values directly in the fields.
+              </p>
+            </div>
+            
+            <div className="w-full">
+              <SimpleMap 
+                latitude={latitude} 
+                longitude={longitude}
+                onCoordinateChange={(lat, lng) => {
+                  form.setValue("latitude", lat);
+                  form.setValue("longitude", lng);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-4">
           <h3 className="text-lg font-medium">Additional Information</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
@@ -523,36 +577,6 @@ export const PropertyForm = ({ category, onSubmit, onCancel }) => {
                       )}
                     </SelectContent>
                   </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="latitude"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Latitude</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.000001" placeholder="Enter latitude" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="longitude"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Longitude</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.000001" placeholder="Enter longitude" {...field} />
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

@@ -16,6 +16,7 @@ import { Button } from "@/components/AdminPannel/ui/button";
 import { toast } from "@/components/AdminPannel/ui/sonner";
 import { cn } from "@/lib/utils";
 import { useLocation } from "react-router-dom";
+import { propertyApi } from "@/services/api";
 
 const NOTIFICATIONS = [
   {
@@ -41,47 +42,141 @@ const NOTIFICATIONS = [
   },
 ];
 
-const PROPERTY_SUGGESTIONS = [
-  { id: "ps1", value: "Modern Waterfront Villa", type: "property" },
-  { id: "ps2", value: "Luxury Downtown Apartment", type: "property" },
-  { id: "ps3", value: "Dubai Marina", type: "location" },
-  { id: "ps4", value: "Palm Jumeirah", type: "location" },
-];
-
-const AGENT_SUGGESTIONS = [
-  { id: "as1", value: "Michael Johnson", type: "name" },
-  { id: "as2", value: "Sarah Williams", type: "name" },
-  { id: "as3", value: "info@realestate.com", type: "email" },
-  { id: "as4", value: "+971501234567", type: "phone" },
-];
-
-const ADMIN_SUGGESTIONS = [
-  { id: "ad1", value: "John Admin", type: "name" },
-  { id: "ad2", value: "Lisa Manager", type: "name" },
-  { id: "ad3", value: "admin@realestate.com", type: "email" },
-];
-
 export function Header({ title, searchPlaceholder, onSearch }) {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState(NOTIFICATIONS);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const searchInputRef = useRef(null);
   const location = useLocation();
   
   const unreadCount = notifications.filter(n => !n.read).length;
-
-  const getSuggestions = () => {
-    const pathname = location.pathname;
-    if (pathname === "/agents") return AGENT_SUGGESTIONS;
-    if (pathname === "/admins") return ADMIN_SUGGESTIONS;
-    return PROPERTY_SUGGESTIONS;
-  };
-
-  const filteredSuggestions = getSuggestions().filter(
-    suggestion => suggestion.value.toLowerCase().includes(searchValue.toLowerCase())
-  );
+  
+  // Fetch dynamic suggestions based on current location and search value
+  useEffect(() => {
+    if (!searchValue || searchValue.length < 2) {
+      // Don't fetch suggestions for very short queries
+      setSuggestions([]);
+      return;
+    }
+    
+    const fetchSuggestions = async () => {
+      setIsLoadingSuggestions(true);
+      try {
+        const pathname = location.pathname;
+        
+        if (pathname.includes("properties") || pathname === "/") {
+          // Fetch property suggestions
+          const properties = await propertyApi.getProperties();
+          
+          // Create suggestions from property titles
+          const titleSuggestions = properties
+            .filter(p => p.propertyTitle?.toLowerCase().includes(searchValue.toLowerCase()))
+            .slice(0, 5)
+            .map(p => ({ id: p._id, value: p.propertyTitle, type: "property" }));
+          
+          // Create suggestions from property addresses
+          const addressSuggestions = properties
+            .filter(p => p.propertyAddress?.toLowerCase().includes(searchValue.toLowerCase()))
+            .slice(0, 3)
+            .map(p => ({ id: `addr-${p._id}`, value: p.propertyAddress, type: "address" }));
+          
+          // Create suggestions from property types
+          const typeSuggestions = [...new Set(
+            properties
+              .filter(p => p.propertyType?.toLowerCase().includes(searchValue.toLowerCase()))
+              .map(p => p.propertyType)
+          )]
+            .slice(0, 3)
+            .map((type, i) => ({ id: `type-${i}`, value: type, type: "type" }));
+          
+          // Create suggestions from locations
+          const locationSuggestions = [...new Set(
+            properties
+              .filter(p => p.propertyState?.toLowerCase().includes(searchValue.toLowerCase()))
+              .map(p => p.propertyState)
+          )]
+            .slice(0, 3)
+            .map((location, i) => ({ id: `loc-${i}`, value: location, type: "location" }));
+          
+          // Combine suggestions
+          setSuggestions([
+            ...titleSuggestions,
+            ...addressSuggestions,
+            ...typeSuggestions,
+            ...locationSuggestions
+          ]);
+        } 
+        else if (pathname.includes("agents")) {
+          // In a real implementation, you would fetch agents from an API
+          // For now, let's use mock data
+          const mockAgents = [
+            { _id: "a1", fullName: "Michael Johnson", email: "michael@realestate.com", contactNumber: "+971501234567" },
+            { _id: "a2", fullName: "Sarah Williams", email: "sarah@realestate.com", contactNumber: "+971509876543" },
+            { _id: "a3", fullName: "Ahmed Al Mansoori", email: "ahmed@realestate.com", contactNumber: "+971504567890" },
+            { _id: "a4", fullName: "Jessica Thompson", email: "jessica@realestate.com", contactNumber: "+971502345678" },
+          ];
+          
+          // Create suggestions from agent names
+          const nameSuggestions = mockAgents
+            .filter(a => a.fullName?.toLowerCase().includes(searchValue.toLowerCase()))
+            .map(a => ({ id: a._id, value: a.fullName, type: "name" }));
+          
+          // Create suggestions from agent emails
+          const emailSuggestions = mockAgents
+            .filter(a => a.email?.toLowerCase().includes(searchValue.toLowerCase()))
+            .map(a => ({ id: `email-${a._id}`, value: a.email, type: "email" }));
+          
+          // Create suggestions from agent phone numbers
+          const phoneSuggestions = mockAgents
+            .filter(a => a.contactNumber?.includes(searchValue))
+            .map(a => ({ id: `phone-${a._id}`, value: a.contactNumber, type: "phone" }));
+          
+          // Combine suggestions
+          setSuggestions([...nameSuggestions, ...emailSuggestions, ...phoneSuggestions]);
+        } 
+        else if (pathname.includes("admins")) {
+          // Mock admin data
+          const mockAdmins = [
+            { id: "ad1", fullName: "John Admin", email: "john@admin.com", username: "johnadmin" },
+            { id: "ad2", fullName: "Lisa Manager", email: "lisa@admin.com", username: "lisamanager" },
+            { id: "ad3", fullName: "Robert Super", email: "robert@admin.com", username: "robertsuper" },
+          ];
+          
+          // Create suggestions from admin names
+          const nameSuggestions = mockAdmins
+            .filter(a => a.fullName?.toLowerCase().includes(searchValue.toLowerCase()))
+            .map(a => ({ id: a.id, value: a.fullName, type: "name" }));
+          
+          // Create suggestions from admin emails
+          const emailSuggestions = mockAdmins
+            .filter(a => a.email?.toLowerCase().includes(searchValue.toLowerCase()))
+            .map(a => ({ id: `email-${a.id}`, value: a.email, type: "email" }));
+          
+          // Create suggestions from admin usernames
+          const usernameSuggestions = mockAdmins
+            .filter(a => a.username?.toLowerCase().includes(searchValue.toLowerCase()))
+            .map(a => ({ id: `user-${a.id}`, value: a.username, type: "username" }));
+          
+          // Combine suggestions
+          setSuggestions([...nameSuggestions, ...emailSuggestions, ...usernameSuggestions]);
+        }
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
+        setSuggestions([]);
+      } finally {
+        setIsLoadingSuggestions(false);
+      }
+    };
+    
+    // Debounce the fetch to prevent too many API calls
+    const timeoutId = setTimeout(fetchSuggestions, 300);
+    
+    return () => clearTimeout(timeoutId);
+  }, [searchValue, location.pathname]);
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
@@ -185,9 +280,14 @@ export function Header({ title, searchPlaceholder, onSearch }) {
 
           {showSuggestions && (
             <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg border border-gray-200 overflow-hidden z-50 animate-fade-in">
-              {filteredSuggestions.length > 0 ? (
+              {isLoadingSuggestions ? (
+                <div className="p-4 text-center text-gray-500">
+                  <div className="inline-block h-4 w-4 border-2 border-current border-r-transparent rounded-full animate-spin mr-2"></div>
+                  Loading suggestions...
+                </div>
+              ) : suggestions.length > 0 ? (
                 <ul className="max-h-64 overflow-auto">
-                  {filteredSuggestions.map(suggestion => (
+                  {suggestions.map(suggestion => (
                     <li 
                       key={suggestion.id}
                       onClick={() => handleSelectSuggestion(suggestion.value)}
@@ -200,7 +300,7 @@ export function Header({ title, searchPlaceholder, onSearch }) {
                 </ul>
               ) : (
                 <div className="p-4 text-center text-gray-500">
-                  No suggestions found
+                  {searchValue.length < 2 ? "Type at least 2 characters" : "No suggestions found"}
                 </div>
               )}
             </div>
@@ -250,51 +350,43 @@ export function Header({ title, searchPlaceholder, onSearch }) {
                           <X size={14} />
                         </button>
                       </div>
-                      <p className="text-xs text-gray-600 mt-1">{notification.message}</p>
-                      <span className="text-xs text-gray-400 mt-1 block">{notification.time}</span>
+                      <p className="text-gray-600 text-sm mt-1">{notification.message}</p>
+                      <span className="text-gray-400 text-xs mt-2 block">{notification.time}</span>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="p-6 text-center">
-                  <p className="text-gray-500 text-sm">No notifications</p>
+                <div className="p-6 text-center text-gray-500">
+                  <p>No notifications</p>
                 </div>
               )}
             </div>
-            {notifications.length > 0 && (
-              <div className="p-2 border-t border-gray-100">
-                <Button variant="ghost" size="sm" className="w-full text-sm">
-                  View all notifications
-                </Button>
-              </div>
-            )}
           </PopoverContent>
         </Popover>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center space-x-3 hover:bg-gray-100 p-1 px-2 rounded-full transition-colors">
-              <div className="h-8 w-8 bg-red-600 rounded-full text-white flex items-center justify-center text-sm font-medium">
-                JD
-              </div>
-              <span className="text-sm font-medium text-gray-700 hidden md:inline">John Doe</span>
+            <button className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition-colors">
+              <User size={18} />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem className="cursor-pointer">
-              <User className="mr-2 h-4 w-4" />
-              <span>Edit Profile</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer">
-              <Settings className="mr-2 h-4 w-4" />
-              <span>Security</span>
-            </DropdownMenuItem>
+          <DropdownMenuContent align="end" className="mr-4 w-56">
+            <div className="flex items-center px-3 py-2">
+              <div className="h-9 w-9 rounded-full bg-gray-200 flex items-center justify-center mr-2">
+                <User size={20} className="text-gray-600" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-medium">Admin User</span>
+                <span className="text-xs text-gray-500">admin@realestate.com</span>
+              </div>
+            </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              className="cursor-pointer text-red-600 focus:text-red-600"
-              onClick={() => toast.success("Logout successful!")}
-            >
-              <LogOut className="mr-2 h-4 w-4" />
+            <DropdownMenuItem className="cursor-pointer">
+              <Settings size={16} className="mr-2" />
+              <span>Settings</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-red-600 cursor-pointer">
+              <LogOut size={16} className="mr-2" />
               <span>Logout</span>
             </DropdownMenuItem>
           </DropdownMenuContent>

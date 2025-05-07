@@ -18,18 +18,29 @@ export const OffPlanPropertyFormDialog = ({ isOpen, onClose }) => {
   const handleSubmit = async (data) => {
     try {
       setIsSubmitting(true);
+
+      // Ensure all required fields are present
+      const ensureRequiredFields = {
+        // If a field might be missing, provide a default value
+        propertyCountry: data.propertyCountry || "UAE",
+        propertyState: data.propertyState || (data.location || "Dubai"),
+        propertyZip: data.propertyZip || "00000",
+        dldQrCode: data.dldQrCode || "https://example.com/qrcode.png",
+        brokerFee: data.brokerFee !== undefined ? data.brokerFee : 0,
+        propertyRooms: data.propertyRooms || (data.bedrooms ? data.bedrooms + 1 : 1),
+        propertyBathrooms: data.propertyBathrooms || data.bedrooms || 1,
+        propertyKitchen: data.propertyKitchen || 1,
+        agent: data.agent || "1", // Default agent
+      };
       
       // Transform the form data to match the backend model
       const propertyData = { 
         // Base required fields
         propertyTitle: data.propertyTitle,
-        propertyDescription: data.projectDescription,
-        propertyAddress: data.location,
-        propertyCountry: "UAE", // default
-        propertyState: data.location,
-        propertyZip: "00000", // default
-        propertyFeaturedImage: data.exteriorsGallery[0], // Use first exterior image
-        media: [...data.exteriorsGallery, ...data.interiorsGallery], // Combine galleries
+        propertyDescription: data.projectDescription || data.shortDescription,
+        propertyAddress: data.location || data.exactLocation,
+        propertyFeaturedImage: data.exteriorsGallery?.[0] || data.propertyFeaturedImage || "https://via.placeholder.com/600x400?text=Property",
+        media: [...(data.exteriorsGallery || []), ...(data.interiorsGallery || [])],
         
         // Category and type
         category: "Off Plan",
@@ -37,7 +48,6 @@ export const OffPlanPropertyFormDialog = ({ isOpen, onClose }) => {
         
         // Price details
         propertyPrice: data.startingPrice,
-        brokerFee: 0, // default for off-plan
         
         // Off-plan specific
         developer: data.developerName,
@@ -53,21 +63,36 @@ export const OffPlanPropertyFormDialog = ({ isOpen, onClose }) => {
         // Property features
         propertySize: data.area,
         propertyBedrooms: data.bedrooms,
-        propertyRooms: data.bedrooms + 1, // simple calculation
-        propertyBathrooms: data.bedrooms, // Assuming 1:1 ratio
-        propertyKitchen: 1, // default
         
         // Legal
         dldPermitNumber: data.dldPermitNumber,
-        dldQrCode: "https://example.com/qrcode.png", // placeholder
-        agent: "1", // default agent ID
         
         // Location
         latitude: data.latitude,
         longitude: data.longitude,
+
+        // Include the ensured required fields
+        ...ensureRequiredFields
       };
       
       console.log("Submitting Off Plan property:", propertyData);
+      
+      // Ensure all required fields from Property model are present
+      if (!propertyData.propertyCountry) {
+        throw new Error("Country is required");
+      }
+      if (!propertyData.propertyState) {
+        throw new Error("State is required");
+      }
+      if (!propertyData.propertyZip) {
+        throw new Error("ZIP code is required");
+      }
+      if (!propertyData.dldQrCode) {
+        throw new Error("DLD QR code is required");
+      }
+      if (propertyData.brokerFee === undefined) {
+        throw new Error("Broker fee is required");
+      }
       
       // Send data to the API
       await propertyApi.createProperty(propertyData);
@@ -104,6 +129,7 @@ export const OffPlanPropertyFormDialog = ({ isOpen, onClose }) => {
           <TabbedPropertyForm 
             onSubmit={handleSubmit}
             onCancel={onClose}
+            selectedCategory="Off Plan"
           />
         )}
       </DialogContent>

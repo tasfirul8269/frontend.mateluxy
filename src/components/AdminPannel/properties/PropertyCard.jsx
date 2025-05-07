@@ -62,23 +62,12 @@ export function PropertyCard({ property, onEdit, onDelete }) {
         {/* Horizontal line */}
         <div className="border-t border-gray-100 my-3"></div>
         
-        {/* Property specs row */}
-        <div className="flex justify-between mb-4">
-          {property.area && (
-            <div className="text-center">
-              <p className="text-blue-500 font-semibold">{property.area}</p>
-              <p className="text-xs text-gray-500">Area</p>
-            </div>
-          )}
-          
-          {property.bedrooms !== undefined && (
-            <div className="text-center">
-              <p className="text-blue-500 font-semibold">{property.bedrooms}</p>
-              <p className="text-xs text-gray-500">Bedrooms</p>
-            </div>
-          )}
-          
-          {/* Add more property specs as needed */}
+        {/* Price display - Emphasized */}
+        <div className="flex justify-center mb-4">
+          <div className="text-center">
+            <p className="text-blue-600 font-bold text-xl">{property.price}</p>
+            <p className="text-xs text-gray-500">{property.type === 'Rent' ? 'Per Month' : 'Price'}</p>
+          </div>
         </div>
         
         {/* Buttons */}

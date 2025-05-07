@@ -130,7 +130,7 @@ const MapPreview = React.memo(({ latitude, longitude, zoomLevel, onMapClick }) =
   );
 });
 
-export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategory }) {
+export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategory, initialData = null, isEditing = false }) {
   const [activeTab, setActiveTab] = useState(0);
   const [agents, setAgents] = useState([]);
   
@@ -178,6 +178,66 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
   
   // Define different initial form states based on category
   const getInitialFormState = () => {
+    // If we have initialData for editing, use that
+    if (initialData) {
+      // Transform backend data model to form model
+      return {
+        // General
+        propertyTitle: initialData.propertyTitle || "",
+        propertyDescription: initialData.propertyDescription || "",
+        propertyAddress: initialData.propertyAddress || "",
+        propertyCountry: initialData.propertyCountry || "UAE",
+        propertyState: initialData.propertyState || "",
+        propertyZip: initialData.propertyZip || "",
+        featuredImage: initialData.propertyFeaturedImage || "",
+        
+        // Media
+        media: initialData.media || [],
+        
+        // Property details
+        propertyType: initialData.propertyType || "",
+        propertyPrice: initialData.propertyPrice || "",
+        numberOfCheques: initialData.numberOfCheques || "",
+        brokerFee: initialData.brokerFee || "",
+        propertySize: initialData.propertySize || "",
+        propertyRooms: initialData.propertyRooms || "",
+        propertyBedrooms: initialData.propertyBedrooms || "",
+        propertyKitchen: initialData.propertyKitchen || "",
+        propertyBathrooms: initialData.propertyBathrooms || "",
+        
+        // Legal
+        dldPermitNumber: initialData.dldPermitNumber || "",
+        dldQrCode: initialData.dldQrCode || "",
+        agent: initialData.agent || "",
+        
+        // Location
+        latitude: initialData.latitude || DEFAULT_COORDINATES.latitude,
+        longitude: initialData.longitude || DEFAULT_COORDINATES.longitude,
+        zoomLevel: initialData.zoomLevel || DEFAULT_COORDINATES.zoom.toString(),
+        
+        // Features and amenities
+        features: initialData.features || [],
+        amenities: initialData.amenities || [],
+        
+        // Off Plan specific
+        developer: initialData.developer || "",
+        developerImage: initialData.developerImage || "",
+        launchType: initialData.launchType || "",
+        brochureFile: initialData.brochureFile || "",
+        shortDescription: initialData.shortDescription || "",
+        exactLocation: initialData.exactLocation || "",
+        tags: initialData.tags || [],
+        completionDate: initialData.completionDate || "",
+        paymentPlan: initialData.paymentPlan || "",
+        exteriorGallery: initialData.media ? initialData.media.slice(0, 5) : [],
+        interiorGallery: initialData.media ? initialData.media.slice(5, 10) : [],
+        
+        // Additional fields
+        category: selectedCategory,
+      };
+    }
+    
+    // Otherwise, use the default initial state
     const commonFields = {
       // Common fields for Buy and Rent
       propertyTitle: "",
@@ -211,42 +271,49 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
     // For Off Plan properties
     if (selectedCategory === "Off Plan") {
       return {
-        launchType: "New Launch",
+        ...commonFields,
         developer: "",
         developerImage: "",
-        propertyTitle: "",
-        shortDescription: "",
+        launchType: "New Launch", 
         brochureFile: "",
-        dldPermitNumber: "",
-        dldQrCode: "",
-        propertyPrice: "", // Starting price
-        propertySize: "", // Area
-        propertyRooms: "",
-        propertyBedrooms: "",
-        propertyBathrooms: "",
-        propertyKitchen: "",
-        propertyAddress: "", // Location
-        propertyDescription: "", // About the project
-        exteriorGallery: [], // Exterior images
-        interiorGallery: [], // Interior images
+        shortDescription: "",
         exactLocation: "",
-        locationImage: "",
-        locationDescription: "",
+        exteriorGallery: [],
+        interiorGallery: [],
         tags: [],
         completionDate: "",
-        category: selectedCategory,
-        features: [], // Initialize as empty array
-        amenities: [], // Initialize as empty array
-        agent: "", // This will be set when agents are fetched
-        featuredImage: "", // Add featured image field
-        media: [], // Add media field
+        paymentPlan: "",
       };
     }
     
+    // For Rent properties
+    if (selectedCategory === "Rent" || selectedCategory === "Commercial for Rent") {
+      return {
+        ...commonFields,
+        roiPercentage: "", // Return on Investment
+      };
+    }
+    
+    // For Commercial properties
+    if (selectedCategory.includes("Commercial")) {
+      return {
+        ...commonFields,
+        commercialType: "", // Type of commercial property
+      };
+    }
+    
+    // Default for Buy
     return commonFields;
   };
-
+  
   const [form, setForm] = useState(getInitialFormState());
+  
+  // Update form when initialData changes
+  useEffect(() => {
+    if (initialData || selectedCategory) {
+      setForm(getInitialFormState());
+    }
+  }, [initialData, selectedCategory]);
   
   // Upload states
   const [uploading, setUploading] = useState(false);
@@ -638,27 +705,86 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
     });
   };
 
-  return (
-    <div className="w-full">
-      {/* Tab Bar */}
-      <div className="flex mb-8 rounded-2xl overflow-hidden bg-[#fafafa] border border-[#f3f3f3]">
-        {TAB_LIST.map((tab, idx) => (
-          <button
-            key={tab.label}
-            className={`flex-1 py-4 text-lg font-medium transition-colors focus:outline-none ${
-              activeTab === idx
-                ? "bg-[#ffeaea] text-[#ff4d4f]"
-                : "bg-transparent text-gray-400 hover:text-[#ff4d4f]"
-            }`}
-            style={{ borderRadius: idx === 0 ? '16px 0 0 16px' : idx === TAB_LIST.length - 1 ? '0 16px 16px 0' : 0 }}
-            onClick={() => setActiveTab(idx)}
-            type="button"
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+  // Form submission handler - Update to handle editing
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // Prepare form data based on property type
+    let formData = { ...form, category: selectedCategory };
+    
+    // Ensure required fields are present
+    if (!formData.propertyTitle || !formData.propertyDescription || !formData.propertyAddress) {
+      alert("Please fill in all required fields");
+      return;
+    }
+    
+    // Ensure agent is set
+    if (!formData.agent) {
+      alert("Please select an agent");
+      return;
+    }
+    
+    // Common mappings
+    if (formData.featuredImage) {
+      formData.propertyFeaturedImage = formData.featuredImage;
+    }
+    
+    if (selectedCategory === "Buy" || selectedCategory === "Rent" || 
+        selectedCategory === "Commercial for Buy" || selectedCategory === "Commercial for Rent") {
+      // For Buy/Rent properties
+      formData = {
+        ...formData,
+        propertyFeaturedImage: formData.featuredImage || "",
+        media: formData.media || [],
+        features: formData.features || [],
+        amenities: formData.amenities || [],
+      };
+    } else if (selectedCategory === "Off Plan") {
+      // For Off Plan properties
+      formData = {
+        ...formData,
+        propertyFeaturedImage: formData.featuredImage || formData.exteriorGallery?.[0] || "",
+        media: [
+          ...(formData.exteriorGallery || []),
+          ...(formData.interiorGallery || [])
+        ],
+        features: formData.features || [],
+        amenities: formData.amenities || [],
+        // Ensure all required fields are present
+        propertyType: formData.propertyType || "Apartment",
+        propertySize: formData.propertySize || 0,
+        propertyRooms: formData.propertyRooms || 0,
+        propertyBedrooms: formData.propertyBedrooms || 0,
+        propertyBathrooms: formData.propertyBathrooms || 0,
+        propertyKitchen: formData.propertyKitchen || 0,
+      };
+    }
+    
+    // Call the onSubmit callback with the prepared form data
+    onSubmit(formData);
+  };
 
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col space-y-6">
+      {/* Tab Navigation */}
+      <ul className="flex overflow-x-auto space-x-1 bg-gray-100 rounded-lg p-1">
+        {TAB_LIST.map((tab, index) => (
+          <li key={index} className="flex-shrink-0">
+            <button 
+              type="button"
+              onClick={() => setActiveTab(index)}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                activeTab === index 
+                  ? "bg-white text-[#ff4d4f] shadow-sm" 
+                  : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
+              }`}
+            >
+              {tab.label}
+            </button>
+          </li>
+        ))}
+      </ul>
+      
       {/* Tab Content */}
       <motion.div 
         className="w-full"
@@ -1279,8 +1405,50 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                     />
                   </div>
                 </div>
-                {/* DLD Permit Info */}
+                {/* Right Column with Featured Image and DLD Permit */}
                 <div className="w-full md:w-[350px] flex flex-col gap-6">
+                  {/* Featured Image */}
+                  <div className="bg-white rounded-2xl p-6 shadow border border-[#f3f3f3]">
+                    <div className="text-lg font-semibold mb-3">Featured Image</div>
+                    {form.featuredImage ? (
+                      <div className="relative rounded-xl overflow-hidden mb-4">
+                        <img src={form.featuredImage} alt="Featured" className="w-full h-48 object-cover" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/30">
+                          <button
+                            type="button"
+                            className="px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-medium hover:bg-blue-200 transition"
+                            onClick={() => document.getElementById('featured-image-input').click()}
+                          >
+                            Replace
+                          </button>
+                          <button
+                            type="button"
+                            className="px-4 py-2 rounded-full bg-red-100 text-red-600 font-medium hover:bg-red-200 transition"
+                            onClick={handleRemoveImage}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-[#e5e7eb] rounded-xl cursor-pointer hover:border-[#ff4d4f] transition">
+                        <span className="text-3xl text-gray-300 mb-2">+</span>
+                        <span className="text-gray-400">Add Featured Image</span>
+                        <input
+                          id="featured-image-input"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleImageUpload}
+                          disabled={uploading}
+                        />
+                      </label>
+                    )}
+                    {uploading && <div className="text-xs text-gray-500 mt-2">Uploading...</div>}
+                    {uploadError && <div className="text-xs text-red-500 mt-2">{uploadError}</div>}
+                  </div>
+                  
+                  {/* DLD Permit Info */}
                   <div className="bg-white rounded-2xl p-6 shadow border border-[#f3f3f3]">
                     <div className="text-lg font-semibold mb-3">DLD Permits</div>
                     <div className="mb-4">
@@ -1316,6 +1484,48 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                     {uploadErrorQr && <div className="text-xs text-red-500 mt-2">{uploadErrorQr}</div>}
                   </div>
                   
+                  {/* Featured Image Section */}
+                  <div className="bg-white rounded-2xl p-6 shadow border border-[#f3f3f3]">
+                    <div className="text-lg font-semibold mb-3">Featured Image</div>
+                    {form.featuredImage ? (
+                      <div className="relative rounded-xl overflow-hidden mb-4">
+                        <img src={form.featuredImage} alt="Featured" className="w-full h-48 object-cover" />
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/30">
+                          <button
+                            type="button"
+                            className="px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-medium hover:bg-blue-200 transition"
+                            onClick={() => document.getElementById('featured-image-input').click()}
+                          >
+                            Replace
+                          </button>
+                          <button
+                            type="button"
+                            className="px-4 py-2 rounded-full bg-red-100 text-red-600 font-medium hover:bg-red-200 transition"
+                            onClick={handleRemoveImage}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-[#e5e7eb] rounded-xl cursor-pointer hover:border-[#ff4d4f] transition">
+                        <span className="text-3xl text-gray-300 mb-2">+</span>
+                        <span className="text-gray-400">Add Featured Image</span>
+                        <input
+                          id="featured-image-input"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleImageUpload}
+                          disabled={uploading}
+                        />
+                      </label>
+                    )}
+                    {uploading && <div className="text-xs text-gray-500 mt-2">Uploading...</div>}
+                    {uploadError && <div className="text-xs text-red-500 mt-2">{uploadError}</div>}
+                  </div>
+                  
+                  {/* Brochure Section */}
                   <div className="bg-white rounded-2xl p-6 shadow border border-[#f3f3f3]">
                     <div className="text-lg font-semibold mb-3">Brochure</div>
                     <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#e5e7eb] rounded-xl cursor-pointer hover:border-[#ff4d4f] transition">
@@ -1638,110 +1848,61 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         )}
       </motion.div>
       
-      {/* Navigation Buttons with Animation */}
-      <div className="flex justify-end gap-3 mt-8">
+      {/* Bottom navigation buttons */}
+      <div className="flex justify-between mt-8">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           type="button"
           onClick={onCancel}
-          className="px-5 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition"
+          className="px-5 py-2 rounded-lg bg-gray-200 text-gray-700 font-medium hover:bg-gray-300 transition"
         >
           Cancel
         </motion.button>
-        {activeTab > 0 && (
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            type="button"
-            onClick={() => setActiveTab(activeTab - 1)}
-            className="px-5 py-2 rounded-lg bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition flex items-center"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-              <path d="M15 18l-6-6 6-6"/>
-            </svg>
-            Back
-          </motion.button>
-        )}
-        {activeTab < TAB_LIST.length - 1 && (
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            type="button"
-            onClick={() => setActiveTab(activeTab + 1)}
-            className="px-5 py-2 rounded-lg bg-[#ff4d4f] text-white font-semibold hover:bg-[#ff2d2f] transition flex items-center"
-          >
-            Next
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1">
-              <path d="M9 18l6-6-6-6"/>
-            </svg>
-          </motion.button>
-        )}
-        {activeTab === TAB_LIST.length - 1 && (
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.98 }}
-            type="button"
-            onClick={() => {
-              // Prepare form data based on property type
-              let formData = { ...form, category: selectedCategory };
-              
-              // Ensure required fields are present
-              if (!formData.propertyTitle || !formData.propertyDescription || !formData.propertyAddress) {
-                alert("Please fill in all required fields");
-                return;
-              }
-
-              // Ensure agent is set
-              if (!formData.agent) {
-                alert("Please select an agent");
-                return;
-              }
-              
-              // Common mappings
-              if (formData.featuredImage) {
-                formData.propertyFeaturedImage = formData.featuredImage;
-              }
-              
-              if (selectedCategory === "Buy" || selectedCategory === "Rent" || 
-                  selectedCategory === "Commercial for Buy" || selectedCategory === "Commercial for Rent") {
-                // For Buy/Rent properties
-                formData = {
-                  ...formData,
-                  propertyFeaturedImage: formData.featuredImage || "",
-                  media: formData.media || [],
-                  features: formData.features || [],
-                  amenities: formData.amenities || [],
-                };
-              } else if (selectedCategory === "Off Plan") {
-                // For Off Plan properties
-                formData = {
-                  ...formData,
-                  propertyFeaturedImage: formData.featuredImage || formData.exteriorGallery?.[0] || "",
-                  media: [
-                    ...(formData.exteriorGallery || []),
-                    ...(formData.interiorGallery || [])
-                  ],
-                  features: formData.features || [],
-                  amenities: formData.amenities || [],
-                  // Ensure all required fields are present
-                  propertyType: formData.propertyType || "Apartment",
-                  propertySize: formData.propertySize || 0,
-                  propertyRooms: formData.propertyRooms || 0,
-                  propertyBedrooms: formData.propertyBedrooms || 0,
-                  propertyBathrooms: formData.propertyBathrooms || 0,
-                  propertyKitchen: formData.propertyKitchen || 0,
-                };
-              }
-              
-              onSubmit(formData);
-            }}
-            className="px-5 py-2 rounded-lg bg-[#ff4d4f] text-white font-semibold hover:bg-[#ff2d2f] transition"
-          >
-            Submit
-          </motion.button>
-        )}
+        
+        <div className="flex space-x-4">
+          {activeTab > 0 && (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="button"
+              onClick={() => setActiveTab(activeTab - 1)}
+              className="px-5 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                <path d="M15 18l-6-6 6-6"/>
+              </svg>
+              Back
+            </motion.button>
+          )}
+          
+          {activeTab < TAB_LIST.length - 1 && (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="button"
+              onClick={() => setActiveTab(activeTab + 1)}
+              className="px-5 py-2 rounded-lg bg-[#ff4d4f] text-white font-semibold hover:bg-[#ff2d2f] transition flex items-center"
+            >
+              Next
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </motion.button>
+          )}
+          
+          {activeTab === TAB_LIST.length - 1 && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+              type="submit"
+              className="px-5 py-2 rounded-lg bg-[#ff4d4f] text-white font-semibold hover:bg-[#ff2d2f] transition"
+            >
+              {isEditing ? "Update Property" : "Submit Property"}
+            </motion.button>
+          )}
+        </div>
       </div>
-    </div>
+    </form>
   );
 } 

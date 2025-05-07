@@ -25,13 +25,17 @@ import {
 } from "@/components/AdminPannel/ui/select";
 import { Slider } from "@/components/AdminPannel/ui/slider";
 import { PropertyFormDialog } from "@/components/properties/PropertyFormDialog";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { propertyApi } from "@/services/api";
+import { toast } from "sonner";
 
 // Categories for the filter tabs
 const CATEGORIES = ["All", "Rent", "Buy", "Off Plan", "Commercial for Rent", "Commercial for Buy"];
 
 const PropertiesPage = () => {
+  // Get query client for invalidating queries after updates
+  const queryClient = useQueryClient();
+  
   // State
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
@@ -39,6 +43,9 @@ const PropertiesPage = () => {
   const [selectedLocation, setSelectedLocation] = useState("all");
   const [priceRange, setPriceRange] = useState([0, 4000000]);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [propertyToEdit, setPropertyToEdit] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const itemsPerPage = 6;
   
@@ -128,18 +135,73 @@ const PropertiesPage = () => {
   });
 
   // Handle property edit
-  const handleEditProperty = (propertyId) => {
-    // Set the ID of the property to edit
-    console.log("Edit property:", propertyId);
-    // You could implement edit functionality here
+  const handleEditProperty = async (propertyId) => {
+    try {
+      // Find the property in the list
+      const property = properties.find(p => p._id === propertyId);
+      if (!property) {
+        toast.error("Property not found");
+        return;
+      }
+      
+      // Set the property to edit
+      setPropertyToEdit(property);
+      
+      // Open the edit dialog
+      setIsEditDialogOpen(true);
+    } catch (error) {
+      console.error("Error preparing property for edit:", error);
+      toast.error("Error preparing property for edit");
+    }
+  };
+
+  // Handle update property
+  const handleUpdateProperty = async (updatedPropertyData) => {
+    try {
+      if (!propertyToEdit || !propertyToEdit._id) {
+        toast.error("No property selected for update");
+        return;
+      }
+      
+      // Call the API to update the property
+      await propertyApi.updateProperty(propertyToEdit._id, updatedPropertyData);
+      
+      // Show success message
+      toast.success("Property updated successfully!");
+      
+      // Refetch properties to update the list
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      
+      // Close the edit dialog
+      setIsEditDialogOpen(false);
+      setPropertyToEdit(null);
+    } catch (error) {
+      console.error("Error updating property:", error);
+      toast.error(error.message || "Failed to update property");
+    }
   };
 
   // Handle property delete
-  const handleDeleteProperty = (propertyId) => {
+  const handleDeleteProperty = async (propertyId) => {
     // Confirm before deleting
     if (window.confirm("Are you sure you want to delete this property?")) {
-      console.log("Delete property:", propertyId);
-      // You could implement delete functionality here
+      try {
+        setIsDeleting(true);
+        
+        // Call the API to delete the property
+        await propertyApi.deleteProperty(propertyId);
+        
+        // Show success message
+        toast.success("Property deleted successfully!");
+        
+        // Refetch properties to update the list
+        queryClient.invalidateQueries({ queryKey: ['properties'] });
+      } catch (error) {
+        console.error("Error deleting property:", error);
+        toast.error(error.message || "Failed to delete property");
+      } finally {
+        setIsDeleting(false);
+      }
     }
   };
 
@@ -255,44 +317,49 @@ const PropertiesPage = () => {
         )}
         
         {/* Pagination */}
-        {!isLoading && !error && filteredProperties.length > 0 && (
+        {totalPages > 1 && (
           <Pagination className="mt-8">
             <PaginationContent>
               <PaginationItem>
-                <PaginationPrevious
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (currentPage > 1) handlePageChange(currentPage - 1);
-                  }}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                <PaginationPrevious 
+                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                  className={currentPage === 1 ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
                 />
               </PaginationItem>
               
-              {/* Generate page numbers */}
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <PaginationItem key={page}>
-                  <PaginationLink
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePageChange(page);
-                    }}
-                    isActive={currentPage === page}
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                // Determine which page numbers to show
+                let pageNum;
+                if (totalPages <= 5) {
+                  // If we have 5 or fewer pages, show all
+                  pageNum = i + 1;
+                } else if (currentPage <= 3) {
+                  // If we're near the start, show 1-5
+                  pageNum = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  // If we're near the end, show the last 5
+                  pageNum = totalPages - 4 + i;
+                } else {
+                  // Otherwise show 2 before and 2 after current
+                  pageNum = currentPage - 2 + i;
+                }
+                
+                return (
+                  <PaginationItem key={pageNum}>
+                    <PaginationLink
+                      onClick={() => handlePageChange(pageNum)}
+                      isActive={currentPage === pageNum}
+                    >
+                      {pageNum}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              })}
               
               <PaginationItem>
-                <PaginationNext
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (currentPage < totalPages) handlePageChange(currentPage + 1);
-                  }}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                <PaginationNext 
+                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                  className={currentPage === totalPages ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
                 />
               </PaginationItem>
             </PaginationContent>
@@ -300,16 +367,28 @@ const PropertiesPage = () => {
         )}
       </div>
       
-      <FloatingActionButton
-        label="Add Property"
-        onClick={handleAddProperty}
+      {/* Add Property Button */}
+      <FloatingActionButton onClick={handleAddProperty} />
+      
+      {/* Add Property Dialog */}
+      <PropertyFormDialog 
+        isOpen={isFormDialogOpen} 
+        onClose={() => setIsFormDialogOpen(false)} 
       />
       
-      {/* Property Form Dialog */}
-      <PropertyFormDialog 
-        isOpen={isFormDialogOpen}
-        onClose={() => setIsFormDialogOpen(false)}
-      />
+      {/* Edit Property Dialog */}
+      {propertyToEdit && (
+        <PropertyFormDialog 
+          isOpen={isEditDialogOpen} 
+          onClose={() => {
+            setIsEditDialogOpen(false);
+            setPropertyToEdit(null);
+          }} 
+          property={propertyToEdit}
+          isEditing={true}
+          onPropertyUpdated={handleUpdateProperty}
+        />
+      )}
     </div>
   );
 };
