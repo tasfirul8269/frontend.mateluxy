@@ -28,6 +28,7 @@ import { PropertyFormDialog } from "@/components/properties/PropertyFormDialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { propertyApi } from "@/services/api";
 import { toast } from "sonner";
+import { useNotifications } from "@/context/NotificationContext";
 
 // Categories for the filter tabs
 const CATEGORIES = ["All", "Rent", "Buy", "Off Plan", "Commercial for Rent", "Commercial for Buy"];
@@ -35,6 +36,7 @@ const CATEGORIES = ["All", "Rent", "Buy", "Off Plan", "Commercial for Rent", "Co
 const PropertiesPage = () => {
   // Get query client for invalidating queries after updates
   const queryClient = useQueryClient();
+  const { notifyPropertyChange } = useNotifications();
   
   // State
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -99,6 +101,28 @@ const PropertiesPage = () => {
 
   const handleAddProperty = () => {
     setIsFormDialogOpen(true);
+  };
+
+  // Handle successful property submission
+  const handlePropertySubmit = async (propertyData) => {
+    try {
+      await propertyApi.addProperty(propertyData);
+      
+      // Show success message
+      toast.success("Property added successfully!");
+      
+      // Create notification
+      await notifyPropertyChange('added', propertyData.propertyTitle);
+      
+      // Refetch properties to update the list
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      
+      // Close the dialog
+      setIsFormDialogOpen(false);
+    } catch (error) {
+      console.error("Error adding property:", error);
+      toast.error(error.message || "Failed to add property");
+    }
   };
 
   const handlePageChange = (page) => {
@@ -166,6 +190,9 @@ const PropertiesPage = () => {
       // Call the API to update the property
       await propertyApi.updateProperty(propertyToEdit._id, updatedPropertyData);
       
+      // Create notification
+      await notifyPropertyChange('updated', updatedPropertyData.propertyTitle);
+      
       // Show success message
       toast.success("Property updated successfully!");
       
@@ -183,6 +210,13 @@ const PropertiesPage = () => {
 
   // Handle property delete
   const handleDeleteProperty = async (propertyId) => {
+    // Get property title before deleting
+    const property = properties.find(p => p._id === propertyId);
+    if (!property) {
+      toast.error("Property not found");
+      return;
+    }
+    
     // Confirm before deleting
     if (window.confirm("Are you sure you want to delete this property?")) {
       try {
@@ -190,6 +224,9 @@ const PropertiesPage = () => {
         
         // Call the API to delete the property
         await propertyApi.deleteProperty(propertyId);
+        
+        // Create notification
+        await notifyPropertyChange('deleted', property.propertyTitle);
         
         // Show success message
         toast.success("Property deleted successfully!");
@@ -249,70 +286,59 @@ const PropertiesPage = () => {
                       max={4000000}
                       step={100000}
                       value={priceRange}
-                      onValueChange={(value) => setPriceRange(value)}
-                      className="py-4"
+                      onValueChange={setPriceRange}
                     />
                   </div>
                 </div>
               </PopoverContent>
             </Popover>
-          </div>
-        </div>
-
-        {/* Category Tabs */}
-        <div className="bg-white p-1 rounded-lg shadow-sm inline-flex mb-6 border border-gray-200 overflow-x-auto">
-          {CATEGORIES.map((category) => (
-            <button
-              key={category}
-              onClick={() => {
-                setSelectedCategory(category);
-                setCurrentPage(1);
-              }}
-              className={`px-5 py-2 text-sm font-medium rounded-md transition-all ${
-                selectedCategory === category
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
+            
+            <button 
+              onClick={handleAddProperty}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-red-600 text-white hover:bg-red-700"
             >
-              {category}
+              Add Property
             </button>
-          ))}
+          </div>
         </div>
-
-        {/* Loading State */}
-        {isLoading && (
-          <div className="text-center py-12">
-            <div className="text-lg font-medium text-gray-700">Loading properties...</div>
-          </div>
-        )}
-
-        {/* Error State */}
-        {error && (
-          <div className="text-center py-12">
-            <div className="text-lg font-medium text-red-600">Error loading properties</div>
-            <p className="text-gray-500 mt-1">Please try refreshing the page.</p>
-          </div>
-        )}
-
-        {/* Properties Grid */}
-        {!isLoading && !error && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {currentProperties.map((property) => (
-              <PropertyCard 
-                key={property._id} 
-                property={transformPropertyForCard(property)} 
-                onEdit={handleEditProperty}
-                onDelete={handleDeleteProperty}
-              />
+        
+        {/* Category Tabs */}
+        <div className="mb-6 overflow-x-auto">
+          <div className="flex space-x-1 border-b">
+            {CATEGORIES.map((category) => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`px-4 py-2 text-sm font-medium whitespace-nowrap ${
+                  selectedCategory === category
+                    ? "border-b-2 border-red-500 text-red-600"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                {category}
+              </button>
             ))}
           </div>
-        )}
+        </div>
         
-        {/* No results */}
-        {!isLoading && !error && currentProperties.length === 0 && (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-gray-700">No properties found</h3>
-            <p className="text-gray-500 mt-1">Try changing your filter or add new properties.</p>
+        {/* Properties Grid */}
+        {isLoading ? (
+          <div className="text-center py-10">Loading properties...</div>
+        ) : error ? (
+          <div className="text-center py-10 text-red-500">Error loading properties</div>
+        ) : filteredProperties.length === 0 ? (
+          <div className="text-center py-10 text-gray-500">No properties found</div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6">
+            {currentProperties.map((property) => (
+              <PropertyCard
+                key={property._id}
+                property={transformPropertyForCard(property)}
+                onEdit={() => handleEditProperty(property._id)}
+                onDelete={() => handleDeleteProperty(property._id)}
+                isDeleting={isDeleting}
+              />
+            ))}
           </div>
         )}
         
@@ -321,45 +347,27 @@ const PropertiesPage = () => {
           <Pagination className="mt-8">
             <PaginationContent>
               <PaginationItem>
-                <PaginationPrevious 
+                <PaginationPrevious
                   onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                  className={currentPage === 1 ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
+                  disabled={currentPage === 1}
                 />
               </PaginationItem>
               
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                // Determine which page numbers to show
-                let pageNum;
-                if (totalPages <= 5) {
-                  // If we have 5 or fewer pages, show all
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  // If we're near the start, show 1-5
-                  pageNum = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  // If we're near the end, show the last 5
-                  pageNum = totalPages - 4 + i;
-                } else {
-                  // Otherwise show 2 before and 2 after current
-                  pageNum = currentPage - 2 + i;
-                }
-                
-                return (
-                  <PaginationItem key={pageNum}>
-                    <PaginationLink
-                      onClick={() => handlePageChange(pageNum)}
-                      isActive={currentPage === pageNum}
-                    >
-                      {pageNum}
-                    </PaginationLink>
-                  </PaginationItem>
-                );
-              })}
+              {[...Array(totalPages)].map((_, i) => (
+                <PaginationItem key={i + 1}>
+                  <PaginationLink
+                    onClick={() => handlePageChange(i + 1)}
+                    isActive={currentPage === i + 1}
+                  >
+                    {i + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
               
               <PaginationItem>
-                <PaginationNext 
+                <PaginationNext
                   onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                  className={currentPage === totalPages ? "cursor-not-allowed opacity-50" : "cursor-pointer"}
+                  disabled={currentPage === totalPages}
                 />
               </PaginationItem>
             </PaginationContent>
@@ -367,28 +375,34 @@ const PropertiesPage = () => {
         )}
       </div>
       
-      {/* Add Property Button */}
-      <FloatingActionButton onClick={handleAddProperty} />
-      
       {/* Add Property Dialog */}
-      <PropertyFormDialog 
-        isOpen={isFormDialogOpen} 
-        onClose={() => setIsFormDialogOpen(false)} 
+      <PropertyFormDialog
+        open={isFormDialogOpen}
+        onOpenChange={setIsFormDialogOpen}
+        onSubmit={handlePropertySubmit}
+        title="Add New Property"
+        description="Fill out the form below to add a new property."
+        submitButtonText="Add Property"
+        category={selectedCategory === "All" ? "Buy" : selectedCategory}
       />
       
       {/* Edit Property Dialog */}
       {propertyToEdit && (
-        <PropertyFormDialog 
-          isOpen={isEditDialogOpen} 
-          onClose={() => {
-            setIsEditDialogOpen(false);
-            setPropertyToEdit(null);
-          }} 
-          property={propertyToEdit}
+        <PropertyFormDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onSubmit={handleUpdateProperty}
+          title="Edit Property"
+          description="Update the property details below."
+          submitButtonText="Update Property"
+          initialData={propertyToEdit}
+          category={propertyToEdit.category}
           isEditing={true}
-          onPropertyUpdated={handleUpdateProperty}
         />
       )}
+      
+      {/* Floating Action Button for mobile */}
+      <FloatingActionButton onClick={handleAddProperty} />
     </div>
   );
 };

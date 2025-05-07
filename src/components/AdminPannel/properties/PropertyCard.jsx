@@ -1,5 +1,5 @@
 import React from "react";
-import { MapPin, Building, Calendar, Bed, Bath, Move, Edit, Trash2 } from "lucide-react";
+import { MapPin, Building, Calendar, Bed, Bath, Move, Edit, Trash2, } from "lucide-react";
 
 export function PropertyCard({ property, onEdit, onDelete }) {
   return (
@@ -36,22 +36,41 @@ export function PropertyCard({ property, onEdit, onDelete }) {
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
           />
         </div>
+        
+        {/* Location on image bottom left */}
+        <div className="absolute bottom-3 left-3 z-10">
+          <span className="px-3 py-1.5 bg-black bg-opacity-50 rounded-full text-xs font-medium text-white flex items-center">
+            <MapPin size={12} className="mr-1 text-white flex-shrink-0" />
+            {property.location || property.address?.split(',').pop()?.trim()}
+          </span>
+        </div>
       </div>
       
       <div className="p-5">
-        {/* Title and Price */}
-        <div className="flex justify-between items-start mb-3">
+        {/* Title only - removed price */}
+        <div className="mb-3">
           <h3 className="text-lg font-bold text-gray-800 line-clamp-1">{property.title}</h3>
-          <span className="text-blue-500 font-bold">{property.price}</span>
         </div>
+        {/* Address */}
+        {property.type != 'Off Plan' && (
+          <div className="mb-3 text-sm text-left text-gray-500">
+            <span className="flex items-top text-ellipsis whitespace-wrap w-[80$] overflow-hidden justify-start">
+              <MapPin size={16} className="mr-1.5 flex-shrink-0" />
+              {property.address}
+            </span>
+          </div>
+        )}
+         {/* Off Plan Completion Date */}
+         {property.type === 'Off Plan' && property.completionDate && (
+          <div className="mb-3 text-sm text-left text-gray-500">
+            <span className="flex items-center justify-start">
+              <Calendar size={16} className="mr-1.5 flex-shrink-0" />
+              Delivery: {property.completionDate}
+            </span>
+          </div>
+        )}
         
-        {/* Location with icon */}
-        <div className="flex items-center text-gray-500 mb-3">
-          <MapPin size={16} className="mr-1.5 text-gray-400 flex-shrink-0" />
-          <span className="text-sm truncate">{property.address}</span>
-        </div>
-        
-        {/* Developer for Off Plan */}
+        {/* Developer for Off Plan - removed location */}
         {property.type === 'Off Plan' && property.developer && (
           <div className="flex items-center text-sm text-gray-500 mb-3">
             <Building size={16} className="mr-1.5 text-gray-400 flex-shrink-0" />
@@ -62,11 +81,11 @@ export function PropertyCard({ property, onEdit, onDelete }) {
         {/* Horizontal line */}
         <div className="border-t border-gray-100 my-3"></div>
         
-        {/* Price display - Emphasized */}
-        <div className="flex justify-center mb-4">
-          <div className="text-center">
+        {/* Price display - Left aligned */}
+        <div className="flex justify-start mb-4">
+          <div className="text-left">
             <p className="text-blue-600 font-bold text-xl">{property.price}</p>
-            <p className="text-xs text-gray-500">{property.type === 'Rent' ? 'Per Month' : 'Price'}</p>
+            {/* <p className="text-xs text-gray-500">{property.type === 'Rent' ? 'Per Month' : 'Price'}</p> */}
           </div>
         </div>
         
@@ -95,15 +114,7 @@ export function PropertyCard({ property, onEdit, onDelete }) {
           </div>
         </div>
         
-        {/* Off Plan Completion Date */}
-        {property.type === 'Off Plan' && property.completionDate && (
-          <div className="mt-3 text-xs text-right text-gray-500">
-            <span className="flex items-center justify-end">
-              <Calendar size={12} className="mr-1 flex-shrink-0" />
-              Delivery: {property.completionDate}
-            </span>
-          </div>
-        )}
+       
       </div>
     </div>
   );

@@ -12,6 +12,9 @@ const PROPERTY_TYPE_LIST = [
 const FEATURES_LIST = ["Balcony", "Pool", "Gym", "Parking", "Garden", "Elevator", "Security", "Smart Home"];
 const AMENITIES_LIST = ["School", "Supermarket", "Hospital", "Mosque", "Park", "Mall", "Metro", "Playground"];
 
+const DEFAULT_FEATURES_LIST = ["Balcony", "Pool", "Gym", "Parking", "Garden", "Elevator", "Security", "Smart Home"];
+const DEFAULT_AMENITIES_LIST = ["School", "Supermarket", "Hospital", "Mosque", "Park", "Mall", "Metro", "Playground"];
+
 // Animation variants for tab transitions
 const tabVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -133,7 +136,7 @@ const MapPreview = React.memo(({ latitude, longitude, zoomLevel, onMapClick }) =
 export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategory, initialData = null, isEditing = false }) {
   const [activeTab, setActiveTab] = useState(0);
   const [agents, setAgents] = useState([]);
-  
+
   // Different tab layouts based on property category
   const categoryTabs = {
     "Buy": [
@@ -172,10 +175,10 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
       { label: "Features & Amenities" },
     ],
   };
-  
+
   // Use the tabs based on the selected category
   const TAB_LIST = categoryTabs[selectedCategory] || categoryTabs["Buy"];
-  
+
   // Define different initial form states based on category
   const getInitialFormState = () => {
     // If we have initialData for editing, use that
@@ -190,10 +193,10 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         propertyState: initialData.propertyState || "",
         propertyZip: initialData.propertyZip || "",
         featuredImage: initialData.propertyFeaturedImage || "",
-        
+
         // Media
         media: initialData.media || [],
-        
+
         // Property details
         propertyType: initialData.propertyType || "",
         propertyPrice: initialData.propertyPrice || "",
@@ -204,21 +207,21 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         propertyBedrooms: initialData.propertyBedrooms || "",
         propertyKitchen: initialData.propertyKitchen || "",
         propertyBathrooms: initialData.propertyBathrooms || "",
-        
+
         // Legal
         dldPermitNumber: initialData.dldPermitNumber || "",
         dldQrCode: initialData.dldQrCode || "",
         agent: initialData.agent || "",
-        
+
         // Location
         latitude: initialData.latitude || DEFAULT_COORDINATES.latitude,
         longitude: initialData.longitude || DEFAULT_COORDINATES.longitude,
         zoomLevel: initialData.zoomLevel || DEFAULT_COORDINATES.zoom.toString(),
-        
+
         // Features and amenities
         features: initialData.features || [],
         amenities: initialData.amenities || [],
-        
+
         // Off Plan specific
         developer: initialData.developer || "",
         developerImage: initialData.developerImage || "",
@@ -231,12 +234,12 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         paymentPlan: initialData.paymentPlan || "",
         exteriorGallery: initialData.media ? initialData.media.slice(0, 5) : [],
         interiorGallery: initialData.media ? initialData.media.slice(5, 10) : [],
-        
+
         // Additional fields
         category: selectedCategory,
       };
     }
-    
+
     // Otherwise, use the default initial state
     const commonFields = {
       // Common fields for Buy and Rent
@@ -267,14 +270,14 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
       amenities: [], // Initialize as empty array
       category: selectedCategory,
     };
-    
+
     // For Off Plan properties
     if (selectedCategory === "Off Plan") {
       return {
         ...commonFields,
         developer: "",
         developerImage: "",
-        launchType: "New Launch", 
+        launchType: "New Launch",
         brochureFile: "",
         shortDescription: "",
         exactLocation: "",
@@ -285,7 +288,7 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         paymentPlan: "",
       };
     }
-    
+
     // For Rent properties
     if (selectedCategory === "Rent" || selectedCategory === "Commercial for Rent") {
       return {
@@ -293,7 +296,7 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         roiPercentage: "", // Return on Investment
       };
     }
-    
+
     // For Commercial properties
     if (selectedCategory.includes("Commercial")) {
       return {
@@ -301,26 +304,26 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         commercialType: "", // Type of commercial property
       };
     }
-    
+
     // Default for Buy
     return commonFields;
   };
-  
+
   const [form, setForm] = useState(getInitialFormState());
-  
+
   // Update form when initialData changes
   useEffect(() => {
     if (initialData || selectedCategory) {
       setForm(getInitialFormState());
     }
   }, [initialData, selectedCategory]);
-  
+
   // Upload states
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [uploadingQr, setUploadingQr] = useState(false);
   const [uploadErrorQr, setUploadErrorQr] = useState("");
-  
+
   // New upload states for Off Plan
   const [uploadingDeveloperLogo, setUploadingDeveloperLogo] = useState(false);
   const [uploadErrorDeveloperLogo, setUploadErrorDeveloperLogo] = useState("");
@@ -332,13 +335,16 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
   const [uploadErrorExterior, setUploadErrorExterior] = useState("");
   const [uploadingInterior, setUploadingInterior] = useState(false);
   const [uploadErrorInterior, setUploadErrorInterior] = useState("");
-  
+
   // States for custom inputs
   const [showCustomFeatureInput, setShowCustomFeatureInput] = useState(false);
   const [customFeature, setCustomFeature] = useState("");
   const [showCustomAmenityInput, setShowCustomAmenityInput] = useState(false);
   const [customAmenity, setCustomAmenity] = useState("");
   const [tagInput, setTagInput] = useState("");
+
+  const [featuresList, setFeaturesList] = useState(DEFAULT_FEATURES_LIST);
+  const [amenitiesList, setAmenitiesList] = useState(DEFAULT_AMENITIES_LIST);
 
   // Fetch agents on component mount
   useEffect(() => {
@@ -360,7 +366,7 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         setAgents([]);
       }
     };
-    
+
     fetchAgents();
   }, []);
 
@@ -377,15 +383,15 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
   const handleMediaUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
-    
+
     setUploading(true);
     setUploadError("");
-    
+
     const uploadPromises = files.map(async (file) => {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("upload_preset", UPLOAD_PRESET);
-      
+
       try {
         const res = await fetch(CLOUDINARY_URL, {
           method: "POST",
@@ -400,10 +406,10 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         return null;
       }
     });
-    
+
     const uploadedUrls = await Promise.all(uploadPromises);
     const validUrls = uploadedUrls.filter(url => url !== null);
-    
+
     if (validUrls.length > 0) {
       setForm(prev => ({
         ...prev,
@@ -412,17 +418,17 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
     } else {
       setUploadError("Failed to upload media. Please try again.");
     }
-    
+
     setUploading(false);
   };
-  
+
   const handleRemoveMedia = (index) => {
     setForm(prev => ({
       ...prev,
       media: prev.media.filter((_, i) => i !== index)
     }));
   };
-  
+
   // Existing upload functions
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -478,9 +484,9 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
     }
     setUploadingQr(false);
   };
-  
+
   // New functions for Off Plan
-  
+
   // Developer Logo upload
   const handleDeveloperLogoUpload = async (e) => {
     const file = e.target.files[0];
@@ -503,11 +509,11 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
     }
     setUploadingDeveloperLogo(false);
   };
-  
+
   const handleRemoveDeveloperLogo = () => {
     setForm((prev) => ({ ...prev, developerImage: "" }));
   };
-  
+
   // Brochure upload
   const handleBrochureUpload = async (e) => {
     const file = e.target.files[0];
@@ -530,11 +536,11 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
     }
     setUploadingBrochure(false);
   };
-  
+
   const handleRemoveBrochure = () => {
     setForm((prev) => ({ ...prev, brochureFile: "" }));
   };
-  
+
   // Location Image upload
   const handleLocationImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -557,24 +563,24 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
     }
     setUploadingLocationImage(false);
   };
-  
+
   const handleRemoveLocationImage = () => {
     setForm((prev) => ({ ...prev, locationImage: "" }));
   };
-  
+
   // Exterior Gallery upload
   const handleExteriorGalleryUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
-    
+
     setUploadingExterior(true);
     setUploadErrorExterior("");
-    
+
     const uploadPromises = files.map(async (file) => {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("upload_preset", UPLOAD_PRESET);
-      
+
       try {
         const res = await fetch(CLOUDINARY_URL, { method: "POST", body: formData });
         const data = await res.json();
@@ -583,10 +589,10 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         return null;
       }
     });
-    
+
     const uploadedUrls = await Promise.all(uploadPromises);
     const validUrls = uploadedUrls.filter(url => url !== null);
-    
+
     if (validUrls.length > 0) {
       setForm(prev => ({
         ...prev,
@@ -595,30 +601,30 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
     } else {
       setUploadErrorExterior("Failed to upload images. Please try again.");
     }
-    
+
     setUploadingExterior(false);
   };
-  
+
   const handleRemoveExteriorImage = (index) => {
     setForm(prev => ({
       ...prev,
       exteriorGallery: prev.exteriorGallery.filter((_, i) => i !== index)
     }));
   };
-  
+
   // Interior Gallery upload
   const handleInteriorGalleryUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
-    
+
     setUploadingInterior(true);
     setUploadErrorInterior("");
-    
+
     const uploadPromises = files.map(async (file) => {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("upload_preset", UPLOAD_PRESET);
-      
+
       try {
         const res = await fetch(CLOUDINARY_URL, { method: "POST", body: formData });
         const data = await res.json();
@@ -627,10 +633,10 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         return null;
       }
     });
-    
+
     const uploadedUrls = await Promise.all(uploadPromises);
     const validUrls = uploadedUrls.filter(url => url !== null);
-    
+
     if (validUrls.length > 0) {
       setForm(prev => ({
         ...prev,
@@ -639,17 +645,17 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
     } else {
       setUploadErrorInterior("Failed to upload images. Please try again.");
     }
-    
+
     setUploadingInterior(false);
   };
-  
+
   const handleRemoveInteriorImage = (index) => {
     setForm(prev => ({
       ...prev,
       interiorGallery: prev.interiorGallery.filter((_, i) => i !== index)
     }));
   };
-  
+
   // Tag handling
   const handleAddTag = () => {
     if (tagInput.trim()) {
@@ -660,14 +666,14 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
       setTagInput("");
     }
   };
-  
+
   const handleRemoveTag = (index) => {
     setForm(prev => ({
       ...prev,
       tags: prev.tags.filter((_, i) => i !== index)
     }));
   };
-  
+
   // Features handling
   const handleAddCustomFeature = () => {
     if (customFeature.trim()) {
@@ -675,11 +681,12 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         ...prev,
         features: [...prev.features, customFeature.trim()]
       }));
+      setFeaturesList(prev => [...prev, customFeature.trim()]);
       setCustomFeature("");
       setShowCustomFeatureInput(false);
     }
   };
-  
+
   // Amenities handling
   const handleAddCustomAmenity = () => {
     if (customAmenity.trim()) {
@@ -687,6 +694,7 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         ...prev,
         amenities: [...prev.amenities, customAmenity.trim()]
       }));
+      setAmenitiesList(prev => [...prev, customAmenity.trim()]);
       setCustomAmenity("");
       setShowCustomAmenityInput(false);
     }
@@ -708,29 +716,29 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
   // Form submission handler - Update to handle editing
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     // Prepare form data based on property type
     let formData = { ...form, category: selectedCategory };
-    
+
     // Ensure required fields are present
     if (!formData.propertyTitle || !formData.propertyDescription || !formData.propertyAddress) {
       alert("Please fill in all required fields");
       return;
     }
-    
+
     // Ensure agent is set
     if (!formData.agent) {
       alert("Please select an agent");
       return;
     }
-    
+
     // Common mappings
     if (formData.featuredImage) {
       formData.propertyFeaturedImage = formData.featuredImage;
     }
-    
-    if (selectedCategory === "Buy" || selectedCategory === "Rent" || 
-        selectedCategory === "Commercial for Buy" || selectedCategory === "Commercial for Rent") {
+
+    if (selectedCategory === "Buy" || selectedCategory === "Rent" ||
+      selectedCategory === "Commercial for Buy" || selectedCategory === "Commercial for Rent") {
       // For Buy/Rent properties
       formData = {
         ...formData,
@@ -759,7 +767,7 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         propertyKitchen: formData.propertyKitchen || 0,
       };
     }
-    
+
     // Call the onSubmit callback with the prepared form data
     onSubmit(formData);
   };
@@ -770,23 +778,22 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
       <ul className="flex overflow-x-auto space-x-1 bg-gray-100 rounded-lg p-1">
         {TAB_LIST.map((tab, index) => (
           <li key={index} className="flex-shrink-0">
-            <button 
+            <button
               type="button"
               onClick={() => setActiveTab(index)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                activeTab === index 
-                  ? "bg-white text-[#ff4d4f] shadow-sm" 
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${activeTab === index
+                  ? "bg-white text-[#ff4d4f] shadow-sm"
                   : "text-gray-600 hover:text-gray-900 hover:bg-white/50"
-              }`}
+                }`}
             >
               {tab.label}
             </button>
           </li>
         ))}
       </ul>
-      
+
       {/* Tab Content */}
-      <motion.div 
+      <motion.div
         className="w-full"
         key={activeTab}
         variants={tabVariants}
@@ -822,15 +829,30 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                       className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition resize-none"
                     />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
-                    <label className="block text-base font-medium mb-2">Property Address</label>
-                    <input
-                      name="propertyAddress"
-                      value={form.propertyAddress}
-                      onChange={handleInput}
-                      placeholder="Property Address"
-                      className="rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <div>
+                      <label className="block text-base font-medium mb-2">Property Address</label>
+                      <input
+                        name="propertyAddress"
+                        value={form.propertyAddress}
+                        onChange={handleInput}
+                        placeholder="Property Address"
+                        className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-base font-medium mb-2">State</label>
+                      <input
+                        name="propertyState"
+                        value={form.propertyState}
+                        onChange={handleInput}
+                        placeholder="State"
+                        className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
+                      />
+                    </div>
+
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -844,16 +866,6 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                       />
                     </div>
                     <div>
-                      <label className="block text-base font-medium mb-2">State</label>
-                      <input
-                        name="propertyState"
-                        value={form.propertyState}
-                        onChange={handleInput}
-                        placeholder="State"
-                        className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
-                      />
-                    </div>
-                    <div>
                       <label className="block text-base font-medium mb-2">Zip Code</label>
                       <input
                         name="propertyZip"
@@ -863,6 +875,8 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                         className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
                       />
                     </div>
+                    
+
                   </div>
                 </div>
                 {/* Right: Featured Image and Media */}
@@ -870,9 +884,9 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                   <div className="bg-white rounded-2xl p-6 shadow border border-[#f3f3f3]">
                     <div className="text-lg font-semibold mb-3">Featured Image</div>
                     {form.featuredImage ? (
-                      <div className="relative rounded-xl overflow-hidden mb-4">
+                      <div className="relative rounded-xl overflow-hidden mb-4 group">
                         <img src={form.featuredImage} alt="Featured" className="w-full h-48 object-cover" />
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/30">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             type="button"
                             className="px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-medium hover:bg-blue-200 transition"
@@ -893,16 +907,16 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                       <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-[#e5e7eb] rounded-xl cursor-pointer hover:border-[#ff4d4f] transition">
                         <span className="text-3xl text-gray-300 mb-2">+</span>
                         <span className="text-gray-400">Add Featured Image</span>
-                        <input
-                          id="featured-image-input"
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleImageUpload}
-                          disabled={uploading}
-                        />
                       </label>
                     )}
+                    <input
+                      id="featured-image-input"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                      disabled={uploading}
+                    />
                     {uploading && <div className="text-xs text-gray-500 mt-2">Uploading...</div>}
                     {uploadError && <div className="text-xs text-red-500 mt-2">{uploadError}</div>}
                   </div>
@@ -935,7 +949,7 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                               onClick={() => handleRemoveMedia(index)}
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M18 6L6 18M6 6l12 12"/>
+                                <path d="M18 6L6 18M6 6l12 12" />
                               </svg>
                             </button>
                           </div>
@@ -946,7 +960,7 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                 </div>
               </div>
             )}
-            
+
             {/* Price Tab */}
             {activeTab === 1 && (
               <div className="bg-white rounded-2xl p-8 shadow border border-[#f3f3f3]">
@@ -966,8 +980,8 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                   </div>
                   <div>
                     <label className="block text-base font-medium mb-2">
-                      {selectedCategory === "Rent" || selectedCategory === "Commercial for Rent" 
-                        ? "Property Price (Yearly)" 
+                      {selectedCategory === "Rent" || selectedCategory === "Commercial for Rent"
+                        ? "Property Price (Yearly)"
                         : "Property Price"}
                     </label>
                     <input
@@ -1081,37 +1095,40 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                     className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
                   />
                 </div>
-                <div>
-                  <label className="block text-base font-medium mb-2">DLD Permit Number</label>
-                  <input
-                    name="dldPermitNumber"
-                    value={form.dldPermitNumber}
+                <div className="mb-6">
+                  <label className="block text-base font-medium mb-2">Agent</label>
+                  <select
+                    name="agent"
+                    value={form.agent}
                     onChange={handleInput}
-                    placeholder="DLD Permit Number"
-                    className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
-                  />
+                    className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition appearance-none"
+                  >
+                    <option value="">Select an agent</option>
+                    {agents.map(agent => (
+                      <option key={agent._id} value={agent.fullName}>
+                        {agent.fullName}
+                      </option>
+                    ))}
+                  </select>
                 </div>
+
               </div>
-              <div className="mb-6">
-                <label className="block text-base font-medium mb-2">Agent</label>
-                <select
-                  name="agent"
-                  value={form.agent}
-                  onChange={handleInput}
-                  className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition appearance-none"
-                >
-                  <option value="">Select an agent</option>
-                  {agents.map(agent => (
-                    <option key={agent._id} value={agent.fullName}>
-                      {agent.fullName}
-                    </option>
-                  ))}
-                </select>
-              </div>
+
             </div>
             {/* DLD QR Code */}
             <div className="w-full md:w-[350px] flex flex-col gap-6">
-              <div className="bg-white rounded-2xl p-6 shadow border border-[#f3f3f3] flex flex-col items-center justify-center h-full">
+              <div>
+                <label className="block text-base font-medium mb-2">DLD Permit Number</label>
+                <input
+                  name="dldPermitNumber"
+                  value={form.dldPermitNumber}
+                  onChange={handleInput}
+                  placeholder="DLD Permit Number"
+                  className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
+                />
+              </div>
+              <div className="bg-white rounded-2xl p-6 shadow border border-[#f3f3f3] flex flex-col items-center justify-center h-auto">
+
                 <div className="text-lg font-semibold mb-3">DLD QR Code</div>
                 <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-[#e5e7eb] rounded-xl cursor-pointer hover:border-[#ff4d4f] transition">
                   {form.dldQrCode ? (
@@ -1206,7 +1223,7 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
               <div className="mb-6">
                 <div className="text-lg font-semibold mb-3">Features</div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {FEATURES_LIST.map((feature) => (
+                  {featuresList.map((feature) => (
                     <label key={feature} className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
@@ -1218,14 +1235,14 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                     </label>
                   ))}
                 </div>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="mt-4 px-4 py-2 rounded-lg bg-[#ffeaea] text-[#ff4d4f] font-medium hover:bg-[#ffdada] transition"
                   onClick={() => setShowCustomFeatureInput(prev => !prev)}
                 >
                   + Add Custom Feature
                 </button>
-                
+
                 {showCustomFeatureInput && (
                   <div className="mt-4 flex gap-2">
                     <input
@@ -1250,7 +1267,7 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
               <div className="mb-6">
                 <div className="text-lg font-semibold mb-3">Amenities</div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {AMENITIES_LIST.map((amenity) => (
+                  {amenitiesList.map((amenity) => (
                     <label key={amenity} className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
@@ -1262,14 +1279,14 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                     </label>
                   ))}
                 </div>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="mt-4 px-4 py-2 rounded-lg bg-[#ffeaea] text-[#ff4d4f] font-medium hover:bg-[#ffdada] transition"
                   onClick={() => setShowCustomAmenityInput(prev => !prev)}
                 >
                   + Add Custom Amenity
                 </button>
-                
+
                 {showCustomAmenityInput && (
                   <div className="mt-4 flex gap-2">
                     <input
@@ -1367,7 +1384,7 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                 </div>
               </div>
             )}
-            
+
             {/* Property Details Tab */}
             {activeTab === 1 && (
               <div className="flex flex-col md:flex-row gap-8">
@@ -1405,15 +1422,15 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                     />
                   </div>
                 </div>
-                {/* Right Column with Featured Image and DLD Permit */}
+                {/* Right Column with Featured Image only (removed DLD Permit and QR) */}
                 <div className="w-full md:w-[350px] flex flex-col gap-6">
                   {/* Featured Image */}
                   <div className="bg-white rounded-2xl p-6 shadow border border-[#f3f3f3]">
                     <div className="text-lg font-semibold mb-3">Featured Image</div>
                     {form.featuredImage ? (
-                      <div className="relative rounded-xl overflow-hidden mb-4">
+                      <div className="relative rounded-xl overflow-hidden mb-4 group">
                         <img src={form.featuredImage} alt="Featured" className="w-full h-48 object-cover" />
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/30">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             type="button"
                             className="px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-medium hover:bg-blue-200 transition"
@@ -1434,98 +1451,21 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                       <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-[#e5e7eb] rounded-xl cursor-pointer hover:border-[#ff4d4f] transition">
                         <span className="text-3xl text-gray-300 mb-2">+</span>
                         <span className="text-gray-400">Add Featured Image</span>
-                        <input
-                          id="featured-image-input"
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleImageUpload}
-                          disabled={uploading}
-                        />
                       </label>
                     )}
+                    <input
+                      id="featured-image-input"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                      disabled={uploading}
+                    />
                     {uploading && <div className="text-xs text-gray-500 mt-2">Uploading...</div>}
                     {uploadError && <div className="text-xs text-red-500 mt-2">{uploadError}</div>}
                   </div>
-                  
-                  {/* DLD Permit Info */}
-                  <div className="bg-white rounded-2xl p-6 shadow border border-[#f3f3f3]">
-                    <div className="text-lg font-semibold mb-3">DLD Permits</div>
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium mb-2">DLD Permit Number</label>
-                      <input
-                        name="dldPermitNumber"
-                        value={form.dldPermitNumber}
-                        onChange={handleInput}
-                        placeholder="DLD Permit Number"
-                        className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
-                      />
-                    </div>
-                    
-                    <div className="text-sm font-medium mb-2">DLD QR Code</div>
-                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#e5e7eb] rounded-xl cursor-pointer hover:border-[#ff4d4f] transition">
-                      {form.dldQrCode ? (
-                        <img src={form.dldQrCode} alt="DLD QR Code" className="h-full object-contain" />
-                      ) : (
-                        <>
-                          <span className="text-2xl text-gray-300 mb-1">+</span>
-                          <span className="text-sm text-gray-400">Upload QR Code</span>
-                        </>
-                      )}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleQrUpload}
-                        disabled={uploadingQr}
-                      />
-                    </label>
-                    {uploadingQr && <div className="text-xs text-gray-500 mt-2">Uploading...</div>}
-                    {uploadErrorQr && <div className="text-xs text-red-500 mt-2">{uploadErrorQr}</div>}
-                  </div>
-                  
-                  {/* Featured Image Section */}
-                  <div className="bg-white rounded-2xl p-6 shadow border border-[#f3f3f3]">
-                    <div className="text-lg font-semibold mb-3">Featured Image</div>
-                    {form.featuredImage ? (
-                      <div className="relative rounded-xl overflow-hidden mb-4">
-                        <img src={form.featuredImage} alt="Featured" className="w-full h-48 object-cover" />
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/30">
-                          <button
-                            type="button"
-                            className="px-4 py-2 rounded-full bg-blue-100 text-blue-700 font-medium hover:bg-blue-200 transition"
-                            onClick={() => document.getElementById('featured-image-input').click()}
-                          >
-                            Replace
-                          </button>
-                          <button
-                            type="button"
-                            className="px-4 py-2 rounded-full bg-red-100 text-red-600 font-medium hover:bg-red-200 transition"
-                            onClick={handleRemoveImage}
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-[#e5e7eb] rounded-xl cursor-pointer hover:border-[#ff4d4f] transition">
-                        <span className="text-3xl text-gray-300 mb-2">+</span>
-                        <span className="text-gray-400">Add Featured Image</span>
-                        <input
-                          id="featured-image-input"
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleImageUpload}
-                          disabled={uploading}
-                        />
-                      </label>
-                    )}
-                    {uploading && <div className="text-xs text-gray-500 mt-2">Uploading...</div>}
-                    {uploadError && <div className="text-xs text-red-500 mt-2">{uploadError}</div>}
-                  </div>
-                  
-                  {/* Brochure Section */}
+                  {/* Removed DLD Permit and QR Code from here */}
+                  {/* Brochure Section remains unchanged */}
                   <div className="bg-white rounded-2xl p-6 shadow border border-[#f3f3f3]">
                     <div className="text-lg font-semibold mb-3">Brochure</div>
                     <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#e5e7eb] rounded-xl cursor-pointer hover:border-[#ff4d4f] transition">
@@ -1570,89 +1510,83 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                 </div>
               </div>
             )}
-            
+
             {/* Pricing & Specifics Tab for Off Plan */}
             {activeTab === 2 && selectedCategory === "Off Plan" && (
-              <div className="bg-white rounded-2xl p-8 shadow border border-[#f3f3f3]">
+              <div className="bg-white rounded-2xl p-8 shadow border mt-10 border-[#f3f3f3]">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
-                    <label className="block text-base font-medium mb-2">Starting Price</label>
+                    <label className="block text-base font-medium mb-2">Property type</label>
+                    <input
+                      name="propertyType"
+                      value={form.propertyType}
+                      onChange={handleInput}
+                      placeholder="Property type"
+                      className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-base font-medium mb-2">Prices from</label>
                     <input
                       name="propertyPrice"
                       value={form.propertyPrice}
                       onChange={handleInput}
-                      placeholder="Starting Price"
+                      placeholder="Prices from"
                       type="number"
                       className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
                     />
                   </div>
                   <div>
-                    <label className="block text-base font-medium mb-2">Completion Date</label>
+                    <label className="block text-base font-medium mb-2">Number of Checques</label>
                     <input
-                      name="completionDate"
-                      value={form.completionDate}
+                      name="numberOfChecques"
+                      value={form.numberOfChecques}
                       onChange={handleInput}
-                      placeholder="e.g. Q4 2023"
-                      className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-base font-medium mb-2">Area (sq ft)</label>
-                    <input
-                      name="propertySize"
-                      value={form.propertySize}
-                      onChange={handleInput}
-                      placeholder="Area in sq ft"
+                      placeholder="Number of Checques"
                       type="number"
                       className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
                     />
                   </div>
+                  <div>
+                    <label className="block text-base font-medium mb-2">Broker Fee</label>
+                    <input
+                      name="brokerFee"
+                      value={form.brokerFee}
+                      onChange={handleInput}
+                      placeholder="Broker Fee"
+                      type="number"
+                      className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
+                    />
+                  </div>
+
                 </div>
-                
-                <div className="mb-6">
-                  <label className="block text-base font-medium mb-2">Tags</label>
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {form.tags.map((tag, index) => (
-                      <div 
-                        key={index}
-                        className="flex items-center gap-1 bg-[#ffeaea] text-[#ff4d4f] px-3 py-1 rounded-full text-sm"
-                      >
-                        <span>{tag}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveTag(index)}
-                          className="text-[#ff4d4f] hover:text-red-700 focus:outline-none"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                          </svg>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-base font-medium mb-2">During construction (%)</label>
                     <input
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                      placeholder="Add tags (e.g. Luxury, Beachfront)"
-                      className="flex-1 rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
+                      name="duringConstruction"
+                      value={form.duringConstruction || ''}
+                      onChange={handleInput}
+                      placeholder="During construction (%)"
+                      type="number"
+                      className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
                     />
-                    <button
-                      type="button"
-                      onClick={handleAddTag}
-                      disabled={!tagInput.trim()}
-                      className="px-4 py-2 rounded-lg bg-[#ff4d4f] text-white font-medium hover:bg-[#ff2d2f] transition disabled:opacity-50"
-                    >
-                      Add
-                    </button>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Press Enter to add multiple tags</p>
+                  <div>
+                    <label className="block text-base font-medium mb-2">On completion (%)</label>
+                    <input
+                      name="onCompletion"
+                      value={form.onCompletion || ''}
+                      onChange={handleInput}
+                      placeholder="On completion (%)"
+                      type="number"
+                      className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
+                    />
+                  </div>
                 </div>
               </div>
             )}
-            
+
             {/* Location Tab for Off Plan */}
             {activeTab === 3 && selectedCategory === "Off Plan" && (
               <div className="flex flex-col gap-8">
@@ -1755,10 +1689,10 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                 </div>
               </div>
             )}
-            
+
             {/* Gallery & Files Tab */}
             {activeTab === 4 && (
-              <div className="flex flex-col md:flex-row gap-8">
+              <div className="flex flex-col md:flex-row mt-10 gap-8">
                 <div className="flex-1 bg-white rounded-2xl p-8 shadow border border-[#f3f3f3]">
                   <div className="mb-6">
                     <div className="text-lg font-semibold mb-3">Exterior Gallery</div>
@@ -1773,7 +1707,7 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                               className="p-1 bg-red-500 rounded-full text-white"
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M18 6L6 18M6 6l12 12"/>
+                                <path d="M18 6L6 18M6 6l12 12" />
                               </svg>
                             </button>
                           </div>
@@ -1800,7 +1734,7 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                     {uploadErrorExterior && <div className="text-xs text-red-500 mt-2">{uploadErrorExterior}</div>}
                   </div>
                 </div>
-                
+
                 <div className="flex-1 bg-white rounded-2xl p-8 shadow border border-[#f3f3f3]">
                   <div className="mb-6">
                     <div className="text-lg font-semibold mb-3">Interior Gallery</div>
@@ -1815,7 +1749,7 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                               className="p-1 bg-red-500 rounded-full text-white"
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M18 6L6 18M6 6l12 12"/>
+                                <path d="M18 6L6 18M6 6l12 12" />
                               </svg>
                             </button>
                           </div>
@@ -1847,7 +1781,7 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
           </>
         )}
       </motion.div>
-      
+
       {/* Bottom navigation buttons */}
       <div className="flex justify-between mt-8">
         <motion.button
@@ -1859,7 +1793,7 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         >
           Cancel
         </motion.button>
-        
+
         <div className="flex space-x-4">
           {activeTab > 0 && (
             <motion.button
@@ -1870,12 +1804,12 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
               className="px-5 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition flex items-center"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                <path d="M15 18l-6-6 6-6"/>
+                <path d="M15 18l-6-6 6-6" />
               </svg>
               Back
             </motion.button>
           )}
-          
+
           {activeTab < TAB_LIST.length - 1 && (
             <motion.button
               whileHover={{ scale: 1.02 }}
@@ -1886,11 +1820,11 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
             >
               Next
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-1">
-                <path d="M9 18l6-6-6-6"/>
+                <path d="M9 18l6-6-6-6" />
               </svg>
             </motion.button>
           )}
-          
+
           {activeTab === TAB_LIST.length - 1 && (
             <motion.button
               whileHover={{ scale: 1.05 }}

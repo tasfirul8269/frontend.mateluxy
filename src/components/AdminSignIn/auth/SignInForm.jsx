@@ -4,24 +4,24 @@ import Input from '../ui/Input';
 import Button from '../ui/Button';
 import Checkbox from '../ui/Checkbox';
 import { useNavigate } from 'react-router-dom';
-
+import { useAdminAuth } from '../../../context/AdminAuthContext';
 
 const SignInForm = () => {
   const navigate = useNavigate();
+  const { login } = useAdminAuth();
+  
   const initialFormData = {
     email: '',
     password: '',
     rememberMe: false,
   };
-  const [formData, setFormData] = useState({initialFormData});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  
+  const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
   const validateForm = () => {
-
-
     const newErrors = {};
 
     // Email validation
@@ -56,7 +56,6 @@ const SignInForm = () => {
         [name]: undefined,
       });
     }
-    setLoading(false);
     setError(null);
   };
 
@@ -64,38 +63,24 @@ const SignInForm = () => {
     e.preventDefault();
 
     if (validateForm()) {
-      // Simulate API call
       try {
-        setLoading(true);
         setIsSubmitting(true);
-
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin-login`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify(formData),
-        });
-  
-        const data = await res.json();
-        if (data.success == false) {
-          setLoading(false);
-          isSubmitting(false);
-          setError("An error occurred while adding the agent. Please try again.");
-          return;
-        }
-        setLoading(false);
-        setIsSubmitting(false); 
         setError(null);
-        navigate('/admin-pannel'); 
-        setFormData(initialFormData);
-  
-  
+
+        // Use the login function from AdminAuthContext
+        const result = await login(formData.email, formData.password);
+
+        if (result.success) {
+          navigate('/admin-pannel'); 
+          setFormData(initialFormData);
+        } else {
+          setError(result.error || 'Login failed. Please check your credentials.');
+        }
       } catch (error) {
-        setLoading(false);
+        setError('An error occurred. Please try again.');
+        console.error('Login error:', error);
+      } finally {
         setIsSubmitting(false);
-        setError('An error occurred while adding the agent. Please try again.');
       }
     }
   };
@@ -150,8 +135,8 @@ const SignInForm = () => {
       <Button type="submit" fullWidth size="lg" isLoading={isSubmitting} className="mt-6">
         Sign in
       </Button>
+      
       {error && <p className="text-red-500 text-sm">{error}</p>}
-
     </form>
   );
 };
