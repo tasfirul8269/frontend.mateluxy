@@ -976,8 +976,8 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                 >
                   <option value="">Select an agent</option>
                   {agents.map(agent => (
-                    <option key={agent._id} value={agent.agentName}>
-                      {agent.agentName}
+                    <option key={agent._id} value={agent.fullName}>
+                      {agent.fullName}
                     </option>
                   ))}
                 </select>
