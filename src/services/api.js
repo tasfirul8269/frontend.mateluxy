@@ -32,7 +32,7 @@ export const propertyApi = {
     try {
       console.log('Submitting property data:', propertyData);
       
-      const response = await fetch(`${API_URL}/properties/add-property`, {
+      const response = await fetch(`${API_URL}/properties`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

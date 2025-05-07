@@ -1,27 +1,27 @@
 import React from "react";
-import { MapPin, Building, Calendar, Bed, Bath, Move, Edit, Trash2 } from "lucide-react";
+import { MapPin, Building, Calendar, Bed, Bath, Move, ExternalLink, Trash2 } from "lucide-react";
 
-export function PropertyCard({ property, onEdit, onDelete }) {
+export function PropertyCard({ property, onDelete }) {
   return (
     <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300">
       <div className="relative">
         {/* Tags on top */}
         <div className="absolute top-3 left-3 z-10 flex gap-2">
-          {property.type && (
+          {property.category && (
             <span className={`
               px-4 py-1.5 bg-white rounded-full text-xs font-semibold
-              ${property.type === 'Rent' ? 'text-green-600' : 
-               property.type === 'Buy' ? 'text-blue-600' :
-               property.type === 'Off Plan' ? 'text-purple-600' :
-               property.type === 'Commercial for Rent' ? 'text-amber-600' :
-               property.type === 'Commercial for Buy' ? 'text-orange-600' :
+              ${property.category === 'Rent' ? 'text-green-600' : 
+               property.category === 'Buy' ? 'text-blue-600' :
+               property.category === 'Off Plan' ? 'text-purple-600' :
+               property.category === 'Commercial for Rent' ? 'text-amber-600' :
+               property.category === 'Commercial for Buy' ? 'text-orange-600' :
                'text-gray-600'}
             `}>
-              {property.type}
+              {property.category}
             </span>
           )}
           {/* Display tags for Off Plan properties */}
-          {property.type === 'Off Plan' && property.tags && property.tags.map((tag, index) => (
+          {property.category === 'Off Plan' && property.tags && property.tags.map((tag, index) => (
             <span key={index} className="px-4 py-1.5 bg-white rounded-full text-xs font-medium">
               {tag}
             </span>
@@ -31,8 +31,8 @@ export function PropertyCard({ property, onEdit, onDelete }) {
         {/* Property Image */}
         <div className="h-52 overflow-hidden">
           <img 
-            src={property.imageUrl} 
-            alt={property.title} 
+            src={property.propertyFeaturedImage} 
+            alt={property.propertyTitle}
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
           />
         </div>
@@ -41,18 +41,21 @@ export function PropertyCard({ property, onEdit, onDelete }) {
       <div className="p-5">
         {/* Title and Price */}
         <div className="flex justify-between items-start mb-3">
-          <h3 className="text-lg font-bold text-gray-800 line-clamp-1">{property.title}</h3>
-          <span className="text-blue-500 font-bold">{property.price}</span>
+          <h3 className="text-lg font-bold text-gray-800 line-clamp-1">{property.propertyTitle}</h3>
+          <span className="text-blue-500 font-bold">
+            AED {property.propertyPrice?.toLocaleString() || 0}
+            {property.category === 'Rent' && '/month'}
+          </span>
         </div>
         
         {/* Location with icon */}
         <div className="flex items-center text-gray-500 mb-3">
           <MapPin size={16} className="mr-1.5 text-gray-400 flex-shrink-0" />
-          <span className="text-sm truncate">{property.address}</span>
+          <span className="text-sm truncate">{property.propertyAddress}</span>
         </div>
         
         {/* Developer for Off Plan */}
-        {property.type === 'Off Plan' && property.developer && (
+        {property.category === 'Off Plan' && property.developer && (
           <div className="flex items-center text-sm text-gray-500 mb-3">
             <Building size={16} className="mr-1.5 text-gray-400 flex-shrink-0" />
             <span>Developer: {property.developer}</span>
@@ -64,50 +67,44 @@ export function PropertyCard({ property, onEdit, onDelete }) {
         
         {/* Property specs row */}
         <div className="flex justify-between mb-4">
-          {property.area && (
+          {property.propertySize > 0 && (
             <div className="text-center">
-              <p className="text-blue-500 font-semibold">{property.area}</p>
+              <p className="text-blue-500 font-semibold">{property.propertySize} sq ft</p>
               <p className="text-xs text-gray-500">Area</p>
             </div>
           )}
           
-          {property.bedrooms !== undefined && (
+          {property.propertyBedrooms > 0 && (
             <div className="text-center">
-              <p className="text-blue-500 font-semibold">{property.bedrooms}</p>
+              <p className="text-blue-500 font-semibold">{property.propertyBedrooms}</p>
               <p className="text-xs text-gray-500">Bedrooms</p>
             </div>
           )}
-          
-          {/* Add more property specs as needed */}
         </div>
         
         {/* Buttons */}
         <div className="flex justify-between items-center">
-          <a 
-            href={`/property-details/${property.id}`}
-            className="px-5 py-2 bg-blue-50 text-blue-500 rounded-full text-sm font-medium"
+          <a
+            href={`/property-details/${property._id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-5 py-2 bg-blue-50 text-blue-500 rounded-full text-sm font-medium flex items-center"
           >
+            <ExternalLink size={14} className="mr-1.5" />
             View Details
           </a>
           
-          <div className="flex items-center space-x-2">
-            <button 
-              onClick={() => onEdit && onEdit(property.id)}
-              className="p-1.5 text-gray-500 hover:text-blue-600 rounded-full hover:bg-blue-50 transition-colors"
-            >
-              <Edit size={16} />
-            </button>
-            <button 
-              onClick={() => onDelete && onDelete(property.id)}
-              className="p-1.5 text-gray-500 hover:text-red-600 rounded-full hover:bg-red-50 transition-colors"
-            >
-              <Trash2 size={16} />
-            </button>
-          </div>
+          <button
+            onClick={() => onDelete && onDelete(property._id)}
+            className="px-3 py-1.5 bg-red-50 text-red-600 rounded-full text-sm font-medium flex items-center"
+          >
+            <Trash2 size={14} className="mr-1.5" />
+            Delete
+          </button>
         </div>
         
         {/* Off Plan Completion Date */}
-        {property.type === 'Off Plan' && property.completionDate && (
+        {property.category === 'Off Plan' && property.completionDate && (
           <div className="mt-3 text-xs text-right text-gray-500">
             <span className="flex items-center justify-end">
               <Calendar size={12} className="mr-1 flex-shrink-0" />
@@ -118,4 +115,4 @@ export function PropertyCard({ property, onEdit, onDelete }) {
       </div>
     </div>
   );
-}
+} 

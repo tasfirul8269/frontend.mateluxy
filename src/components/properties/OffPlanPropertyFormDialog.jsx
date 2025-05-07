@@ -5,16 +5,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/AdminPannel/ui/dialog";
-import { OffPlanPropertyForm } from "./OffPlanPropertyForm";
+import TabbedPropertyForm from "./TabbedPropertyForm";
 import { toast } from "sonner";
 import { propertyApi } from "@/services/api";
 import { useQueryClient } from "@tanstack/react-query";
+import { LoadingSpinner } from "@/components/AdminPannel/ui/loading-spinner";
 
 export const OffPlanPropertyFormDialog = ({ isOpen, onClose }) => {
   const queryClient = useQueryClient();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   
   const handleSubmit = async (data) => {
     try {
+      setIsSubmitting(true);
+      
       // Transform the form data to match the backend model
       const propertyData = { 
         // Base required fields
@@ -42,6 +46,9 @@ export const OffPlanPropertyFormDialog = ({ isOpen, onClose }) => {
         brochureFile: data.brochureFile,
         shortDescription: data.shortDescription,
         exactLocation: data.exactLocation,
+        tags: data.tags || [],
+        completionDate: data.completionDate,
+        paymentPlan: data.paymentPlan,
         
         // Property features
         propertySize: data.area,
@@ -75,22 +82,31 @@ export const OffPlanPropertyFormDialog = ({ isOpen, onClose }) => {
       onClose();
     } catch (error) {
       console.error("Error adding Off Plan property:", error);
-      toast.error("Failed to add property. Please try again.");
+      toast.error(error.message || "Failed to add property. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="bg-white sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="bg-white sm:max-w-[1100px] max-w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl">Add New Off Plan Property</DialogTitle>
+          <DialogTitle className="text-xl font-bold text-gray-800">Add New Off Plan Property</DialogTitle>
         </DialogHeader>
         
-        <OffPlanPropertyForm 
-          onSubmit={handleSubmit}
-          onCancel={onClose}
-        />
+        {isSubmitting ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <LoadingSpinner size="lg" />
+            <p className="mt-4 text-gray-600">Submitting property...</p>
+          </div>
+        ) : (
+          <TabbedPropertyForm 
+            onSubmit={handleSubmit}
+            onCancel={onClose}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
-}
+};

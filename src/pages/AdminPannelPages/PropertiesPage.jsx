@@ -112,7 +112,7 @@ const PropertiesPage = () => {
     id: property._id,
     title: property.propertyTitle,
     address: property.propertyAddress,
-    price: property.category === "Rent" ? `$${property.propertyPrice}/month` : `$${property.propertyPrice}`,
+    price: property.category === "Rent" ? `AED ${property.propertyPrice}/month` : `AED ${property.propertyPrice}`,
     priceValue: property.propertyPrice,
     type: property.category,
     bedrooms: property.propertyBedrooms,
@@ -120,8 +120,28 @@ const PropertiesPage = () => {
     area: `${property.propertySize} sq ft`,
     imageUrl: property.propertyFeaturedImage,
     location: property.propertyState,
-    developer: property.developer, // Add developer info for Off Plan properties
+    developer: property.developer, // For Off Plan properties
+    completionDate: property.completionDate, // For Off Plan properties
+    tags: property.tags || [], // Include tags array
+    status: property.status || "Active",
+    featured: property.featured || false,
   });
+
+  // Handle property edit
+  const handleEditProperty = (propertyId) => {
+    // Set the ID of the property to edit
+    console.log("Edit property:", propertyId);
+    // You could implement edit functionality here
+  };
+
+  // Handle property delete
+  const handleDeleteProperty = (propertyId) => {
+    // Confirm before deleting
+    if (window.confirm("Are you sure you want to delete this property?")) {
+      console.log("Delete property:", propertyId);
+      // You could implement delete functionality here
+    }
+  };
 
   return (
     <div className="flex-1 min-h-screen bg-gray-50">
@@ -214,9 +234,14 @@ const PropertiesPage = () => {
 
         {/* Properties Grid */}
         {!isLoading && !error && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {currentProperties.map((property) => (
-              <PropertyCard key={property._id} property={transformPropertyForCard(property)} />
+              <PropertyCard 
+                key={property._id} 
+                property={transformPropertyForCard(property)} 
+                onEdit={handleEditProperty}
+                onDelete={handleDeleteProperty}
+              />
             ))}
           </div>
         )}

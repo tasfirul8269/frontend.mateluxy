@@ -11,9 +11,14 @@ import ErrorPage from "../pages/ErrorPage/ErrorPage";
 import OffPlanSinglePage from "../pages/OffPlanSingle/OffPlanSInglePage";
 import OffPlanListingPage from "../pages/OffPlanProperties/OffPlanPropertyListingPage";
 import AdminSIgnInPage from "../pages/AdminSIgnInPage/AdminSignInPage";
+import AgentSignInPage from "../pages/AgentSignInPage/AgentSignInPage";
 import { ProtectedAdminRoute, PublicRoute } from "../pages/AdminPannel/ProtectedAdminRoute";
+import { ProtectedAgentRoute, PublicAgentRoute } from "../pages/AgentPannel/ProtectedAgentRoute";
 import AdminPannelPage from "@/pages/AdminPannelPages/AdminPannel";
+import AgentPannelPage from "@/pages/AgentPannelPages/AgentPannel";
 import PropertiesPage from "../pages/AdminPannelPages/PropertiesPage";
+import AgentPropertiesPage from "../pages/AgentPannelPages/PropertiesPage";
+import AddPropertyPage from "../pages/AgentPannelPages/AddPropertyPage";
 import AgentsPage from "@/pages/AdminPannelPages/AgentsPage";
 import AdminsPage from "@/pages/AdminPannelPages/AdminsPage";
 import { AgentProvider } from '@/components/AdminPannelAgents/context/AgentContext';
@@ -80,18 +85,16 @@ const router = createBrowserRouter([
         ]
     },
     {
-
         element: <ProtectedAdminRoute />,
         children: [
             {
                 path: "/admin-pannel",
                 element: <AdminPannelPage />,
                 children: [
-
                     {
                         index: true, // 👈 default path under /admin-pannel
                         element: <Navigate to="properties" replace />
-                      },
+                    },
                     {
                         path: "properties",
                         element: <PropertiesPage></PropertiesPage>
@@ -105,19 +108,47 @@ const router = createBrowserRouter([
                         element: <AdminsPage></AdminsPage>
                     }
                 ]
-
             },
-
-
         ]
     },
-
+    {
+        element: <ProtectedAgentRoute />,
+        children: [
+            {
+                path: "/agent-pannel",
+                element: <AgentPannelPage />,
+                children: [
+                    {
+                        index: true,
+                        element: <Navigate to="properties" replace />
+                    },
+                    {
+                        path: "properties",
+                        element: <AgentPropertiesPage />
+                    },
+                    {
+                        path: "add-property",
+                        element: <AddPropertyPage />
+                    }
+                ]
+            },
+        ]
+    },
     {
         element: <PublicRoute />,
         children: [
             {
                 path: "/admin-login",
                 element: <AdminSIgnInPage></AdminSIgnInPage>
+            }
+        ]
+    },
+    {
+        element: <PublicAgentRoute />,
+        children: [
+            {
+                path: "/agent-login",
+                element: <AgentSignInPage></AgentSignInPage>
             }
         ]
     }
