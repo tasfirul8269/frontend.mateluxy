@@ -23,7 +23,6 @@ import AgentsPage from "@/pages/AdminPannelPages/AgentsPage";
 import AdminsPage from "@/pages/AdminPannelPages/AdminsPage";
 import { AgentProvider } from '@/components/AdminPannelAgents/context/AgentContext';
 import NotificationProvider from '@/context/NotificationContext';
-import AdminAuthProvider from '@/context/AdminAuthContext';
 
 const router = createBrowserRouter([
 
@@ -88,11 +87,9 @@ const router = createBrowserRouter([
     },
     {
         element: (
-            <AdminAuthProvider>
-                <NotificationProvider>
-                    <ProtectedAdminRoute />
-                </NotificationProvider>
-            </AdminAuthProvider>
+            <NotificationProvider>
+                <ProtectedAdminRoute />
+            </NotificationProvider>
         ),
         children: [
             {
@@ -143,11 +140,7 @@ const router = createBrowserRouter([
         ]
     },
     {
-        element: (
-            <AdminAuthProvider>
-                <PublicRoute />
-            </AdminAuthProvider>
-        ),
+        element: <PublicRoute />,
         children: [
             {
                 path: "/admin-login",
