@@ -215,43 +215,119 @@ const PropertiesPage = () => {
           <div className="flex items-center space-x-2">
             <Popover>
               <PopoverTrigger asChild>
-                <button className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-md bg-white border border-gray-200 shadow-sm hover:bg-gray-50">
-                  <Filter size={16} className="mr-2" />
-                  Filters
+                <button className="inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-lg bg-white border border-gray-200 shadow-sm hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-200">
+                  <Filter size={16} className="mr-2 text-blue-500" />
+                  <span>Filters</span>
+                  <span className="ml-1.5 bg-blue-100 text-blue-600 text-xs font-semibold px-2 py-0.5 rounded-full">
+                    {selectedLocation !== 'all' || priceRange[0] !== 0 || priceRange[1] !== 4000000 ? '2' : '0'}
+                  </span>
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-80 p-4" align="end">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Location</Label>
+              <PopoverContent className="w-96 p-0 overflow-hidden" align="end">
+                <div className="bg-gradient-to-r from-blue-50 to-gray-50 px-5 py-4 border-b border-gray-100">
+                  <h3 className="text-base font-semibold text-gray-800 flex items-center">
+                    <Filter size={16} className="mr-2 text-blue-500" />
+                    Refine Properties
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">Filter properties by location and price range</p>
+                </div>
+                
+                <div className="p-5 space-y-6">
+                  <div className="space-y-3">
+                    <Label htmlFor="location" className="text-sm font-medium flex items-center text-gray-700">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Location
+                    </Label>
                     <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-                      <SelectTrigger id="location">
+                      <SelectTrigger id="location" className="bg-white border-gray-200 rounded-md h-10 ring-offset-background focus:ring-2 focus:ring-blue-200 focus:ring-offset-2">
                         <SelectValue placeholder="Select location" />
                       </SelectTrigger>
-                      <SelectContent position="popper">
-                        <SelectItem value="all">Any location</SelectItem>
+                      <SelectContent position="popper" className="bg-white shadow-lg border-gray-200">
+                        <SelectItem value="all" className="focus:bg-blue-50 focus:text-blue-700">Any location</SelectItem>
                         {locations.map((location) => (
-                          <SelectItem key={location} value={location}>{location}</SelectItem>
+                          <SelectItem key={location} value={location} className="focus:bg-blue-50 focus:text-blue-700">{location}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   
-                  <div className="space-y-2">
+                  <div className="space-y-3 pt-2 border-t border-gray-100">
                     <div className="flex justify-between items-center">
-                      <Label>Price Range</Label>
-                      <div className="text-sm font-medium">
+                      <Label className="text-sm font-medium flex items-center text-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Price Range
+                      </Label>
+                      <div className="text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full font-medium">
                         {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])}
                       </div>
                     </div>
-                    <Slider
-                      defaultValue={[0, 4000000]}
-                      max={4000000}
-                      step={100000}
-                      value={priceRange}
-                      onValueChange={(value) => setPriceRange(value)}
-                      className="py-4"
-                    />
+                    
+                    <div className="px-1 pt-4 pb-6">
+                      <Slider
+                        defaultValue={[0, 4000000]}
+                        value={priceRange}
+                        max={4000000}
+                        step={100000}
+                        onValueChange={(value) => setPriceRange(value)}
+                        className="mb-6"
+                      />
+                      
+                      <div className="flex justify-between text-xs text-gray-500 px-1 relative">
+                        <div className="absolute left-0 w-full flex justify-between -top-4">
+                          {[0, 1000000, 2000000, 3000000, 4000000].map((value, index) => (
+                            <div key={index} className="h-1.5 w-0.5 bg-gray-200"></div>
+                          ))}
+                        </div>
+                        <span className="text-center">$0</span>
+                        <span className="text-center">$1M</span>
+                        <span className="text-center">$2M</span>
+                        <span className="text-center">$3M</span>
+                        <span className="text-center">$4M+</span>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-4 gap-2 mt-4">
+                      {[
+                        { label: "< $500K", min: 0, max: 500000 },
+                        { label: "$500K-$1M", min: 500000, max: 1000000 },
+                        { label: "$1M-$2M", min: 1000000, max: 2000000 },
+                        { label: "$2M+", min: 2000000, max: 4000000 }
+                      ].map((preset, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setPriceRange([preset.min, preset.max])}
+                          className={`text-xs py-1.5 px-2 rounded-md transition border 
+                            ${priceRange[0] === preset.min && priceRange[1] === preset.max
+                              ? 'bg-blue-500 text-white border-blue-500'
+                              : 'bg-white text-gray-700 border-gray-200 hover:border-blue-200 hover:bg-blue-50'
+                            }`}
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="pt-4 flex justify-between space-x-3 border-t border-gray-100">
+                    <button 
+                      onClick={() => {
+                        setSelectedLocation('all');
+                        setPriceRange([0, 4000000]);
+                      }}
+                      className="px-4 py-2 text-sm font-medium rounded-md border border-gray-200 hover:bg-gray-50 transition-colors flex-1"
+                    >
+                      Reset All
+                    </button>
+                    <button 
+                      className="px-4 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors flex-1"
+                    >
+                      Apply Filters
+                    </button>
                   </div>
                 </div>
               </PopoverContent>

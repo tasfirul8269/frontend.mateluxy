@@ -50,10 +50,65 @@ export function Header({ title, searchPlaceholder, onSearch }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [adminData, setAdminData] = useState(null);
+  const [isLoadingAdminData, setIsLoadingAdminData] = useState(false);
   const searchInputRef = useRef(null);
   const location = useLocation();
   
   const unreadCount = notifications.filter(n => !n.read).length;
+  
+  // Fetch admin data
+  useEffect(() => {
+    const fetchAdminData = async () => {
+      setIsLoadingAdminData(true);
+      try {
+        // Use the new dedicated endpoint to get the current admin's profile
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admins/profile`, {
+          method: 'GET',
+          credentials: 'include', // Important to send cookies
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch admin profile');
+        }
+
+        const data = await response.json();
+        
+        if (data.success && data.admin) {
+          // Extract first name from fullName for the avatar
+          const nameParts = data.admin.fullName.split(' ');
+          const firstName = nameParts[0] || '';
+          
+          setAdminData({
+            id: data.admin._id,
+            fullName: data.admin.fullName,
+            firstName: firstName,
+            email: data.admin.email,
+            username: data.admin.username,
+            role: data.admin.role || 'Administrator',
+            profileImage: data.admin.profileImage || '',
+            adminId: data.admin.adminId
+          });
+        } else {
+          throw new Error('Invalid response format');
+        }
+      } catch (error) {
+        console.error("Error fetching admin data:", error);
+        // Fallback to default data if fetch fails
+        setAdminData({
+          fullName: "Admin User",
+          firstName: "Admin",
+          email: "admin@example.com",
+          role: "Administrator",
+          profileImage: ""
+        });
+      } finally {
+        setIsLoadingAdminData(false);
+      }
+    };
+    
+    fetchAdminData();
+  }, []);
   
   // Fetch dynamic suggestions based on current location and search value
   useEffect(() => {
@@ -309,43 +364,54 @@ export function Header({ title, searchPlaceholder, onSearch }) {
 
         <Popover open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
           <PopoverTrigger asChild>
-            <button className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full transition-colors">
+            <button className="relative p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-200">
               <Bell size={20} />
               {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                <span className="absolute top-0 right-0 flex h-4 w-4">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 items-center justify-center text-[9px] text-white font-bold">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                </span>
               )}
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-80 p-0 mr-4" align="end">
-            <div className="flex items-center justify-between p-3 border-b border-gray-100">
-              <h3 className="font-medium">Notifications</h3>
+          <PopoverContent className="w-[350px] p-0 mr-4 shadow-xl border-gray-200 overflow-hidden" align="end">
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-gray-50 rounded-t-lg">
+              <h3 className="font-medium text-gray-800 flex items-center">
+                Notifications
+                {unreadCount > 0 && (
+                  <span className="ml-2 text-xs bg-red-500 text-white px-2 py-0.5 rounded-full">
+                    {unreadCount} new
+                  </span>
+                )}
+              </h3>
               {unreadCount > 0 && (
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={markAllAsRead}
-                  className="text-sm font-normal h-8"
+                  className="text-sm font-normal h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                 >
                   Mark all as read
                 </Button>
               )}
             </div>
-            <div className="max-h-[300px] overflow-y-auto">
+            <div className="max-h-[350px] overflow-y-auto">
               {notifications.length > 0 ? (
                 notifications.map(notification => (
                   <div 
                     key={notification.id} 
                     className={cn(
-                      "p-3 border-b border-gray-100 flex items-start hover:bg-gray-50 transition-colors",
-                      notification.read ? "opacity-70" : "bg-red-50/50"
+                      "p-4 border-b border-gray-100 flex items-start hover:bg-gray-50 transition-colors",
+                      notification.read ? "opacity-75" : "bg-blue-50/40"
                     )}
                   >
+                    <div className={`w-2 h-2 mt-1.5 mr-3 rounded-full flex-shrink-0 ${notification.read ? 'bg-gray-300' : 'bg-blue-500'}`}></div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-sm">{notification.title}</h4>
+                        <h4 className="font-medium text-sm text-gray-800">{notification.title}</h4>
                         <button 
                           onClick={() => dismissNotification(notification.id)} 
-                          className="text-gray-400 hover:text-gray-600"
+                          className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
                         >
                           <X size={14} />
                         </button>
@@ -356,39 +422,79 @@ export function Header({ title, searchPlaceholder, onSearch }) {
                   </div>
                 ))
               ) : (
-                <div className="p-6 text-center text-gray-500">
-                  <p>No notifications</p>
+                <div className="p-8 text-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Bell size={24} className="text-gray-400" />
+                  </div>
+                  <p className="text-gray-500">No notifications</p>
                 </div>
               )}
             </div>
+            {notifications.length > 0 && (
+              <div className="p-3 text-center border-t border-gray-100 bg-gray-50">
+                <button className="text-sm text-blue-600 hover:underline font-medium">
+                  View all notifications
+                </button>
+              </div>
+            )}
           </PopoverContent>
         </Popover>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition-colors">
-              <User size={18} />
+            <button className="h-10 w-10 rounded-full flex items-center justify-center transition-all ring-offset-2 hover:ring-2 hover:ring-blue-200 hover:shadow-md overflow-hidden">
+              {adminData?.profileImage ? (
+                <img 
+                  src={adminData.profileImage} 
+                  alt={adminData.fullName} 
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full bg-gradient-to-r from-blue-100 to-blue-50 flex items-center justify-center">
+                  <User size={20} className="text-blue-600" />
+                </div>
+              )}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="mr-4 w-56">
-            <div className="flex items-center px-3 py-2">
-              <div className="h-9 w-9 rounded-full bg-gray-200 flex items-center justify-center mr-2">
-                <User size={20} className="text-gray-600" />
-              </div>
-              <div className="flex flex-col">
-                <span className="font-medium">Admin User</span>
-                <span className="text-xs text-gray-500">admin@realestate.com</span>
+          <DropdownMenuContent align="end" className="mr-4 w-72 p-0 overflow-hidden shadow-xl border border-gray-100 rounded-xl bg-white">
+            <div className="px-6 py-5 border-b border-gray-100">
+              <div className="flex items-center">
+                <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center mr-4 border-2 border-white shadow text-white">
+                  {adminData?.firstName ? (
+                    <span className="text-xl font-bold">{adminData.firstName.charAt(0)}</span>
+                  ) : (
+                    <User size={24} />
+                  )}
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-semibold text-gray-800 text-lg">
+                    {adminData?.fullName || 'Admin User'}
+                  </span>
+                  <span className="text-xs text-gray-500 mt-0.5">
+                    {adminData?.email || 'admin@example.com'}
+                  </span>
+                  <span className="inline-flex items-center mt-2 text-xs font-medium text-blue-600 bg-blue-100 px-2.5 py-0.5 rounded-full">
+                    <span className="w-2 h-2 bg-blue-600 rounded-full mr-1"></span>
+                    {adminData?.role || 'Administrator'}
+                  </span>
+                </div>
               </div>
             </div>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer">
-              <Settings size={16} className="mr-2" />
-              <span>Settings</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-red-600 cursor-pointer">
-              <LogOut size={16} className="mr-2" />
-              <span>Logout</span>
-            </DropdownMenuItem>
+            
+            <div className="py-2">
+              <DropdownMenuItem className="cursor-pointer px-4 py-2.5 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+                <Settings size={16} className="mr-2 text-blue-500" />
+                <span>Account Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer px-4 py-2.5 hover:bg-red-50 text-red-600 transition-colors">
+                <LogOut size={16} className="mr-2" />
+                <span>Sign Out</span>
+              </DropdownMenuItem>
+            </div>
+            
+            <div className="bg-gray-50 px-4 py-3 text-xs text-center text-gray-500 border-t border-gray-100">
+              <p>Admin Panel v1.2.0</p>
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

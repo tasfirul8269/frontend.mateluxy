@@ -22,7 +22,6 @@ import AddPropertyPage from "../pages/AgentPannelPages/AddPropertyPage";
 import AgentsPage from "@/pages/AdminPannelPages/AgentsPage";
 import AdminsPage from "@/pages/AdminPannelPages/AdminsPage";
 import { AgentProvider } from '@/components/AdminPannelAgents/context/AgentContext';
-import NotificationProvider from '@/context/NotificationContext';
 
 const router = createBrowserRouter([
 
@@ -86,11 +85,7 @@ const router = createBrowserRouter([
         ]
     },
     {
-        element: (
-            <NotificationProvider>
-                <ProtectedAdminRoute />
-            </NotificationProvider>
-        ),
+        element: <ProtectedAdminRoute />,
         children: [
             {
                 path: "/admin-pannel",
