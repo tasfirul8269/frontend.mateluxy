@@ -455,75 +455,103 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
       console.log(`Sending ${isEditing ? 'PUT' : 'POST'} request to: ${url}`);
       console.log('With data:', adminData);
 
-      const response = await fetch(url, {
-        method: isEditing ? 'PUT' : 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(adminData),
-        credentials: 'include',
-      });
+      try {
+        const response = await fetch(url, {
+          method: isEditing ? 'PUT' : 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(adminData),
+          credentials: 'include',
+        });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Server response:', errorText);
-        throw new Error(isEditing 
-          ? `Failed to update admin: ${response.status} ${response.statusText}` 
-          : `Failed to add admin: ${response.status} ${response.statusText}`
-        );
+        const contentType = response.headers.get("content-type");
+        let errorData;
+        
+        if (!response.ok) {
+          // Try to get detailed error message
+          if (contentType && contentType.includes("application/json")) {
+            errorData = await response.json();
+            console.error('Response error data:', errorData);
+            
+            // Handle specific permission error
+            if (response.status === 403 && errorData.message && errorData.message.includes("permission")) {
+              toast.error("Permission error: You don't have permission to update this admin profile.");
+              
+              // You can add a dialog here to confirm if the user wants to retry or cancel
+              if (window.confirm("Permission error: Would you like to try again? This might require higher privileges.")) {
+                // User wants to try again - you could implement special handling here
+                console.log("User wants to retry the admin update");
+              } else {
+                // User cancels
+                onOpenChange(false);
+                return; // Exit early
+              }
+            }
+            
+            throw new Error(errorData.message || `Failed to ${isEditing ? 'update' : 'add'} admin`);
+          } else {
+            const errorText = await response.text();
+            console.error('Response error text:', errorText);
+            throw new Error(`Failed to ${isEditing ? 'update' : 'add'} admin: ${response.status} ${response.statusText}`);
+          }
+        }
+
+        // Handle successful response
+        let data;
+        if (contentType && contentType.includes("application/json")) {
+          data = await response.json();
+        } else {
+          throw new Error('Invalid response format from server');
+        }
+
+        console.log('Server response:', data);
+
+        // Handle various response formats
+        const responseData = data._doc || data || {};
+        
+        const updatedAdmin = {
+          id: responseData._id || admin?.id || 'temp-' + Date.now(),
+          fullName: responseData.fullName || adminData.fullName,
+          email: responseData.email || adminData.email,
+          username: responseData.username || adminData.username,
+          profileImage: responseData.profileImage || adminData.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminData.fullName)}&background=random`,
+          lastLogin: responseData.lastLogin ? new Date(responseData.lastLogin) : new Date(),
+          adminId: responseData.adminId || `ADM${Math.floor(1000 + Math.random() * 9000)}`,
+          createdAt: responseData.createdAt ? new Date(responseData.createdAt) : new Date(),
+        };
+
+        if (isEditing && onAdminUpdated) {
+          onAdminUpdated(updatedAdmin);
+          toast.success("Admin updated successfully!");
+          // Add notification for admin update
+          addNotification(
+            'ADMIN_UPDATED',
+            `Admin ${updatedAdmin.fullName} was updated`,
+            updatedAdmin.id,
+            updatedAdmin.fullName
+          );
+        } else if (!isEditing && onAdminAdded) {
+          onAdminAdded(updatedAdmin);
+          toast.success("Admin added successfully!");
+          // Add notification for new admin
+          addNotification(
+            'ADMIN_ADDED',
+            `New admin ${updatedAdmin.fullName} was added`,
+            updatedAdmin.id,
+            updatedAdmin.fullName
+          );
+        }
+
+        form.reset();
+        setSelectedFile(null);
+        setPreviewUrl("");
+        onOpenChange(false);
+      } catch (fetchError) {
+        console.error('Fetch error:', fetchError);
+        throw fetchError;
       }
 
-      const contentType = response.headers.get("content-type");
-      let data;
-      
-      if (contentType && contentType.includes("application/json")) {
-        data = await response.json();
-      } else {
-        throw new Error('Invalid response format from server');
-      }
-
-      console.log('Server response:', data);
-
-      // Handle various response formats
-      const responseData = data._doc || data || {};
-      
-      const updatedAdmin = {
-        id: responseData._id || admin?.id || 'temp-' + Date.now(),
-        fullName: responseData.fullName || adminData.fullName,
-        email: responseData.email || adminData.email,
-        username: responseData.username || adminData.username,
-        profileImage: responseData.profileImage || adminData.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminData.fullName)}&background=random`,
-        lastLogin: responseData.lastLogin ? new Date(responseData.lastLogin) : new Date(),
-        adminId: responseData.adminId || `ADM${Math.floor(1000 + Math.random() * 9000)}`,
-        createdAt: responseData.createdAt ? new Date(responseData.createdAt) : new Date(),
-      };
-
-      if (isEditing && onAdminUpdated) {
-        onAdminUpdated(updatedAdmin);
-        toast.success("Admin updated successfully!");
-        // Add notification for admin update
-        addNotification(
-          'ADMIN_UPDATED',
-          `Admin ${updatedAdmin.fullName} was updated`,
-          updatedAdmin.id,
-          updatedAdmin.fullName
-        );
-      } else if (!isEditing && onAdminAdded) {
-        onAdminAdded(updatedAdmin);
-        toast.success("Admin added successfully!");
-        // Add notification for new admin
-        addNotification(
-          'ADMIN_ADDED',
-          `New admin ${updatedAdmin.fullName} was added`,
-          updatedAdmin.id,
-          updatedAdmin.fullName
-        );
-      }
-
-      form.reset();
-      setSelectedFile(null);
-      setPreviewUrl("");
-      onOpenChange(false);
     } catch (error) {
       console.error('Error:', error);
       toast.error(error.message || "Operation failed. Please try again.");
