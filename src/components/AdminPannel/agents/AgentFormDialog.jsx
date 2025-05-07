@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/AdminPannel/ui/input";
 import { Button } from "@/components/AdminPannel/ui/button";
 import { toast } from "sonner";
+import { addNotification } from "@/services/notificationService";
 import { User, Info, Phone, Lock, Globe, Languages, Check, X, Plus, Trash2, XCircle, FileText, Link } from "lucide-react";
 import {
   Select,
@@ -592,33 +593,49 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
         throw new Error(errorData.message || (isEditing ? 'Failed to update agent' : 'Failed to add agent'));
       }
 
-      const data = await response.json();
-      console.log("API success response:", data);
+      const responseData = await response.json();
+      console.log("API success response:", responseData);
 
-      // Create a normalized agent object from the API response
+      // Create a formatted agent object from the response
       const updatedAgent = {
-        id: data._id,
-        fullName: data.fullName,
-        email: data.email,
-        username: data.username,
-        contactNumber: data.contactNumber || "",
-        position: data.position || "",
-        profileImage: data.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=random`,
-        whatsapp: data.whatsapp || "",
-        department: data.department || "",
-        vcard: data.vcard || "",
-        languages: data.languages || [],
-        aboutMe: data.aboutMe || "",
-        address: data.address || "",
-        socialLinks: data.socialLinks || [],
+        id: responseData._id || agent?.id || 'temp-' + Date.now(),
+        fullName: responseData.fullName,
+        email: responseData.email,
+        username: responseData.username,
+        contactNumber: responseData.contactNumber || "",
+        position: responseData.position || "",
+        profileImage: responseData.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(responseData.fullName)}&background=random`,
+        whatsapp: responseData.whatsapp || "",
+        department: responseData.department || "",
+        vcard: responseData.vcard || "",
+        languages: responseData.languages || [],
+        aboutMe: responseData.aboutMe || "",
+        address: responseData.address || "",
+        socialLinks: responseData.socialLinks || [],
       };
 
       if (isEditing && onAgentUpdated) {
         onAgentUpdated(updatedAgent);
         toast.success("Agent updated successfully!");
+        
+        // Add notification for agent update
+        addNotification(
+          'AGENT_UPDATED',
+          `Agent ${updatedAgent.fullName} was updated`,
+          updatedAgent.id,
+          updatedAgent.fullName
+        );
       } else if (!isEditing && onAgentAdded) {
         onAgentAdded(updatedAgent);
         toast.success("Agent added successfully!");
+        
+        // Add notification for new agent
+        addNotification(
+          'AGENT_ADDED',
+          `New agent ${updatedAgent.fullName} was added`,
+          updatedAgent.id,
+          updatedAgent.fullName
+        );
       }
 
       // Reset form and close dialog

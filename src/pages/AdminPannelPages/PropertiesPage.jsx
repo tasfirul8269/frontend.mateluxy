@@ -27,7 +27,8 @@ import { Slider } from "@/components/AdminPannel/ui/slider";
 import { PropertyFormDialog } from "@/components/properties/PropertyFormDialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { propertyApi } from "@/services/api";
-import { toast } from "sonner";
+import { toast } from "@/components/AdminPannel/ui/sonner";
+import { addNotification } from "@/services/notificationService";
 
 // Categories for the filter tabs
 const CATEGORIES = ["All", "Rent", "Buy", "Off Plan", "Commercial for Rent", "Commercial for Buy"];
@@ -188,11 +189,24 @@ const PropertiesPage = () => {
       try {
         setIsDeleting(true);
         
+        // Find the property details before deletion
+        const propertyToDelete = properties.find(p => p._id === propertyId);
+        
         // Call the API to delete the property
         await propertyApi.deleteProperty(propertyId);
         
         // Show success message
         toast.success("Property deleted successfully!");
+        
+        // Add notification for property deletion
+        if (propertyToDelete) {
+          addNotification(
+            'PROPERTY_DELETED',
+            `Property "${propertyToDelete.propertyTitle}" was deleted`,
+            propertyId,
+            propertyToDelete.propertyTitle
+          );
+        }
         
         // Refetch properties to update the list
         queryClient.invalidateQueries({ queryKey: ['properties'] });

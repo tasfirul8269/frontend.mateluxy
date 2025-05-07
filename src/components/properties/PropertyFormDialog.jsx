@@ -10,13 +10,15 @@ import { toast } from "sonner";
 import { propertyApi } from "@/services/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import { addNotification } from "@/services/notificationService";
 
 export const PropertyFormDialog = ({ 
   isOpen, 
   onClose, 
   property = null, 
   isEditing = false,
-  onPropertyUpdated = null
+  onPropertyUpdated = null,
+  onPropertyAdded = null
 }) => {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,6 +38,36 @@ export const PropertyFormDialog = ({
     { id: "Commercial for Buy", label: "Commercial for Buy", icon: "🏢" },
     { id: "Commercial for Rent", label: "Commercial for Rent", icon: "🏬" },
   ];
+
+  // Successful property submission handler
+  const successHandler = (propertyData, isEdit) => {
+    const successMessage = isEdit 
+      ? "Property updated successfully!" 
+      : "Property added successfully!";
+      
+    // Close the dialog
+    onClose();
+    
+    // Show success toast
+    toast.success(successMessage);
+    
+    // Add notification
+    addNotification(
+      isEdit ? 'PROPERTY_UPDATED' : 'PROPERTY_ADDED',
+      isEdit 
+        ? `Property "${propertyData.title}" was updated` 
+        : `New property "${propertyData.title}" was added`,
+      propertyData._id,
+      propertyData.title
+    );
+    
+    // Call the appropriate callback
+    if (isEdit && onPropertyUpdated) {
+      onPropertyUpdated(propertyData);
+    } else if (!isEdit && onPropertyAdded) {
+      onPropertyAdded(propertyData);
+    }
+  };
 
   const handleSubmit = async (data) => {
     try {
@@ -58,22 +90,38 @@ export const PropertyFormDialog = ({
       
       if (isEditing && property) {
         // Update existing property
-        await propertyApi.updateProperty(property._id, propertyData);
-        toast.success("Property updated successfully!");
+        const response = await propertyApi.updateProperty(property._id, propertyData);
         
-        // Call the onPropertyUpdated callback if provided
-        if (onPropertyUpdated) {
-          onPropertyUpdated(propertyData);
+        // Handle API call result
+        if (response.ok) {
+          const updatedProperty = await response.json();
+          console.log("Property updated:", updatedProperty);
+          
+          // Call the success handler with property data and edit status
+          successHandler(updatedProperty, true);
+        } else {
+          console.error("Error updating property:", response.statusText);
+          toast.error("Failed to update property. Please try again.");
         }
       } else {
         // Create new property
-        await propertyApi.createProperty(propertyData);
-        toast.success("Property added successfully!");
+        const response = await propertyApi.createProperty(propertyData);
+        
+        // Handle API call result
+        if (response.ok) {
+          const newProperty = await response.json();
+          console.log("Property added:", newProperty);
+          
+          // Call the success handler with property data and edit status
+          successHandler(newProperty, false);
+        } else {
+          console.error("Error adding property:", response.statusText);
+          toast.error("Failed to add property. Please try again.");
+        }
       }
       
       // Refresh the properties list
       queryClient.invalidateQueries({ queryKey: ['properties'] });
-      onClose();
     } catch (error) {
       console.error(`Error ${isEditing ? "updating" : "adding"} property:`, error);
       toast.error(error.message || `Failed to ${isEditing ? "update" : "add"} property. Please try again.`);

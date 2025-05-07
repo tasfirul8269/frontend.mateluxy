@@ -21,36 +21,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/AdminPannel/ui/label";
 import { Input } from "@/components/AdminPannel/ui/input";
 import { logout } from "@/utils/isLoggedIn";
-
-const NOTIFICATIONS = [
-  {
-    id: "n1",
-    title: "New property listed",
-    message: "A new property was added in Downtown area",
-    time: "2 minutes ago",
-    read: false
-  },
-  {
-    id: "n2",
-    title: "Agent request approved",
-    message: "Janet Miller is now an approved agent",
-    time: "1 hour ago",
-    read: false
-  },
-  {
-    id: "n3",
-    title: "Weekly report",
-    message: "Your weekly performance report is ready",
-    time: "Yesterday",
-    read: true
-  },
-];
+import { getNotifications, markAsRead, markAllAsRead, deleteNotification, getUnreadCount } from "@/services/notificationService";
 
 export function Header({ title, searchPlaceholder, onSearch }) {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [notifications, setNotifications] = useState(NOTIFICATIONS);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
@@ -70,7 +48,43 @@ export function Header({ title, searchPlaceholder, onSearch }) {
   const location = useLocation();
   const navigate = useNavigate();
   
-  const unreadCount = notifications.filter(n => !n.read).length;
+  // Load notifications from service
+  useEffect(() => {
+    // Initial load of notifications
+    loadNotifications();
+    
+    // Listen for notification events to update the UI
+    const handleNotificationEvent = (event) => {
+      console.log("Notification event received in Header:", event.detail);
+      loadNotifications();
+    };
+    
+    window.addEventListener('notification', handleNotificationEvent);
+    
+    // Poll for notifications every 30 seconds as a fallback
+    const intervalId = setInterval(() => {
+      console.log("Polling for notifications");
+      loadNotifications();
+    }, 30000);
+    
+    return () => {
+      window.removeEventListener('notification', handleNotificationEvent);
+      clearInterval(intervalId);
+    };
+  }, []);
+  
+  // Function to load notifications
+  const loadNotifications = async () => {
+    try {
+      // Get notifications from the service (which now communicates with backend)
+      const allNotifications = await getNotifications();
+      console.log("Loaded notifications in Header:", allNotifications);
+      setNotifications(allNotifications);
+      setUnreadCount(getUnreadCount());
+    } catch (error) {
+      console.error("Error loading notifications:", error);
+    }
+  };
   
   // Fetch admin data
   useEffect(() => {
@@ -280,13 +294,49 @@ export function Header({ title, searchPlaceholder, onSearch }) {
     toast.success(`Searching for "${value}"`);
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(notif => ({ ...notif, read: true })));
-    toast.success("All notifications marked as read");
+  // Handle notification click (mark as read)
+  const handleNotificationClick = async (id) => {
+    try {
+      console.log(`Marking notification ${id} as read`);
+      await markAsRead(id);
+      await loadNotifications(); // Reload notifications after marking as read
+    } catch (error) {
+      console.error("Error handling notification click:", error);
+    }
   };
 
-  const dismissNotification = (id) => {
-    setNotifications(prev => prev.filter(notif => notif.id !== id));
+  // Handle clearing all notifications
+  const handleClearAll = async () => {
+    try {
+      console.log("Clearing all notifications");
+      await clearAllNotifications();
+      await loadNotifications(); // Reload notifications after clearing
+    } catch (error) {
+      console.error("Error clearing all notifications:", error);
+    }
+  };
+
+  // Handle marking all as read
+  const handleMarkAllAsRead = async () => {
+    try {
+      console.log("Marking all notifications as read");
+      await markAllAsRead();
+      await loadNotifications(); // Reload notifications after marking all as read
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+    }
+  };
+
+  // Handle deleting a notification
+  const handleDeleteNotification = async (e, id) => {
+    e.stopPropagation(); // Prevent triggering parent click handlers
+    try {
+      console.log(`Deleting notification ${id}`);
+      await deleteNotification(id);
+      await loadNotifications(); // Reload notifications after deletion
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
   };
 
   useEffect(() => {
@@ -447,6 +497,36 @@ export function Header({ title, searchPlaceholder, onSearch }) {
     }
   };
 
+  // Format time for display (fallback if time not provided)
+  const formatNotificationTime = (notification) => {
+    if (notification.time) {
+      return notification.time;
+    }
+    
+    if (notification.timestamp || notification.createdAt) {
+      try {
+        const date = new Date(notification.timestamp || notification.createdAt);
+        const now = new Date();
+        const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+        
+        if (diffInMinutes < 1) return 'Just now';
+        if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
+        
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        if (diffInHours < 24) return `${diffInHours} hours ago`;
+        
+        const diffInDays = Math.floor(diffInHours / 24);
+        if (diffInDays < 7) return `${diffInDays} days ago`;
+        
+        return date.toLocaleDateString();
+      } catch (e) {
+        return 'Recently';
+      }
+    }
+    
+    return 'Recently';
+  };
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 py-3 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
       <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">{title}</h1>
@@ -535,25 +615,26 @@ export function Header({ title, searchPlaceholder, onSearch }) {
             </button>
           </PopoverTrigger>
           <PopoverContent className="w-[350px] p-0 mr-4 shadow-xl border-gray-200 overflow-hidden" align="end">
-            <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-gray-50 rounded-t-lg">
-              <h3 className="font-medium text-gray-800 flex items-center">
-                Notifications
-                {unreadCount > 0 && (
-                  <span className="ml-2 text-xs bg-red-500 text-white px-2 py-0.5 rounded-full">
-                    {unreadCount} new
-                  </span>
-                )}
-              </h3>
-              {unreadCount > 0 && (
+            <div className="flex justify-between items-center p-3 border-b border-gray-100">
+              <h3 className="font-semibold text-lg">Notifications</h3>
+              <div className="flex gap-2">
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={markAllAsRead}
+                  onClick={handleMarkAllAsRead}
                   className="text-sm font-normal h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                 >
                   Mark all as read
                 </Button>
-              )}
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleClearAll}
+                  className="text-sm font-normal h-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  Clear all
+                </Button>
+              </div>
             </div>
             <div className="max-h-[350px] overflow-y-auto">
               {notifications.length > 0 ? (
@@ -564,20 +645,25 @@ export function Header({ title, searchPlaceholder, onSearch }) {
                       "p-4 border-b border-gray-100 flex items-start hover:bg-gray-50 transition-colors",
                       notification.read ? "opacity-75" : "bg-blue-50/40"
                     )}
+                    onClick={() => handleNotificationClick(notification.id)}
                   >
                     <div className={`w-2 h-2 mt-1.5 mr-3 rounded-full flex-shrink-0 ${notification.read ? 'bg-gray-300' : 'bg-blue-500'}`}></div>
                     <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium text-sm text-gray-800">{notification.title}</h4>
-                        <button 
-                          onClick={() => dismissNotification(notification.id)} 
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-1">
+                          <span className="text-xl leading-none">{notification.icon}</span>
+                          <h4 className="font-medium text-gray-900">{notification.title}</h4>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteNotification(e, notification.id)}
                           className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
                         >
-                          <X size={14} />
+                          <X className="h-4 w-4" />
                         </button>
                       </div>
-                      <p className="text-gray-600 text-sm mt-1">{notification.message}</p>
-                      <span className="text-gray-400 text-xs mt-2 block">{notification.time}</span>
+                      <p className="text-sm text-gray-600 my-1">{notification.message}</p>
+                      <div className="text-xs text-gray-500">{formatNotificationTime(notification)}</div>
                     </div>
                   </div>
                 ))

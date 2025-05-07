@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/AdminPannel/ui/toaster";
 import { Toaster as Sonner } from "@/components/AdminPannel/ui/sonner";
 import { TooltipProvider } from "@/components/AdminPannel/ui/tooltip";
@@ -10,20 +9,30 @@ import AgentsPage from "@/pages/AdminPannelPages/AgentsPage";
 import AdminsPage from "@/pages/AdminPannelPages/AdminsPage";
 import NotFound from "@/pages/AdminPannelPages/NotFound";
 import { Outlet } from "react-router-dom";
+import { useEffect } from "react";
+import { createSampleNotifications } from "@/services/notificationService";
 
 const queryClient = new QueryClient();
 
-const AdminPannelPage = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-     
+const AdminPannelPage = () => {
+  // Initialize notification system
+  useEffect(() => {
+    console.log("Initializing notification system in AdminPannelPage");
+    createSampleNotifications();
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        
         <MainLayout>
           <Outlet />  
         </MainLayout>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default AdminPannelPage;
