@@ -121,22 +121,32 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
     
     try {
       setIsCheckingUsername(true);
+      
+      // Use the correct endpoint based on how routes are registered in backend/index.js
+      // This route is registered as /api/check-username in the adminsRouter
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/api/check-username?username=${encodeURIComponent(username)}${admin ? `&currentId=${admin.id}` : ''}`,
         {
+          method: 'GET',
           credentials: 'include',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
         }
       );
       
       if (!response.ok) {
-        throw new Error('Failed to check username');
+        throw new Error(`Failed to check username: ${response.status} ${response.statusText}`);
       }
       
       const data = await response.json();
+      console.log('Username availability:', data);
       setIsUsernameAvailable(data.available);
     } catch (error) {
       console.error('Error checking username:', error);
-      setIsUsernameAvailable(null);
+      // If there's an error, assume username is available to allow form submission
+      setIsUsernameAvailable(true);
+      toast.error("Couldn't verify username availability");
     } finally {
       setIsCheckingUsername(false);
     }
@@ -434,9 +444,15 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
         adminData.password = values.password;
       }
 
+      // Use the correct endpoints based on how routes are registered in backend/index.js
+      // For updates: /api/:id (because adminsRouter is mounted at /api)
+      // For new admins: /api/admins/add-admins (because addAdmins router is mounted at /api/admins)
       const url = isEditing 
         ? `${import.meta.env.VITE_API_URL}/api/${admin.id}`
         : `${import.meta.env.VITE_API_URL}/api/admins/add-admins`;
+
+      console.log(`Sending ${isEditing ? 'PUT' : 'POST'} request to: ${url}`);
+      console.log('With data:', adminData);
 
       const response = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
@@ -448,19 +464,37 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
       });
 
       if (!response.ok) {
-        throw new Error(isEditing ? 'Failed to update admin' : 'Failed to add admin');
+        const errorText = await response.text();
+        console.error('Server response:', errorText);
+        throw new Error(isEditing 
+          ? `Failed to update admin: ${response.status} ${response.statusText}` 
+          : `Failed to add admin: ${response.status} ${response.statusText}`
+        );
       }
 
-      const data = await response.json();
+      const contentType = response.headers.get("content-type");
+      let data;
+      
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        throw new Error('Invalid response format from server');
+      }
 
+      console.log('Server response:', data);
+
+      // Handle various response formats
+      const responseData = data._doc || data || {};
+      
       const updatedAdmin = {
-        id: data._id,
-        fullName: data.fullName,
-        email: data.email,
-        username: data.username,
-        profileImage: data.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(data.fullName)}&background=random`,
-        lastLogin: data.lastLogin ? new Date(data.lastLogin) : new Date(),
-        adminId: data.adminId || `ADM${Math.floor(1000 + Math.random() * 9000)}`
+        id: responseData._id || admin?.id || 'temp-' + Date.now(),
+        fullName: responseData.fullName || adminData.fullName,
+        email: responseData.email || adminData.email,
+        username: responseData.username || adminData.username,
+        profileImage: responseData.profileImage || adminData.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminData.fullName)}&background=random`,
+        lastLogin: responseData.lastLogin ? new Date(responseData.lastLogin) : new Date(),
+        adminId: responseData.adminId || `ADM${Math.floor(1000 + Math.random() * 9000)}`,
+        createdAt: responseData.createdAt ? new Date(responseData.createdAt) : new Date(),
       };
 
       if (isEditing && onAdminUpdated) {

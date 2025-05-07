@@ -15,8 +15,12 @@ import {
 import { Button } from "@/components/AdminPannel/ui/button";
 import { toast } from "@/components/AdminPannel/ui/sonner";
 import { cn } from "@/lib/utils";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { propertyApi } from "@/services/api";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/AdminPannel/ui/dialog";
+import { Label } from "@/components/AdminPannel/ui/label";
+import { Input } from "@/components/AdminPannel/ui/input";
+import { logout } from "@/utils/isLoggedIn";
 
 const NOTIFICATIONS = [
   {
@@ -52,8 +56,19 @@ export function Header({ title, searchPlaceholder, onSearch }) {
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [adminData, setAdminData] = useState(null);
   const [isLoadingAdminData, setIsLoadingAdminData] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    username: "",
+    password: "",
+    confirmPassword: "",
+    profileImage: ""
+  });
   const searchInputRef = useRef(null);
   const location = useLocation();
+  const navigate = useNavigate();
   
   const unreadCount = notifications.filter(n => !n.read).length;
   
@@ -62,8 +77,8 @@ export function Header({ title, searchPlaceholder, onSearch }) {
     const fetchAdminData = async () => {
       setIsLoadingAdminData(true);
       try {
-        // Use the new dedicated endpoint to get the current admin's profile
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admins/profile`, {
+        // Use the correct endpoint path based on how routes are registered in the backend
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/profile`, {
           method: 'GET',
           credentials: 'include', // Important to send cookies
         });
@@ -79,7 +94,7 @@ export function Header({ title, searchPlaceholder, onSearch }) {
           const nameParts = data.admin.fullName.split(' ');
           const firstName = nameParts[0] || '';
           
-          setAdminData({
+          const adminDetails = {
             id: data.admin._id,
             fullName: data.admin.fullName,
             firstName: firstName,
@@ -88,6 +103,16 @@ export function Header({ title, searchPlaceholder, onSearch }) {
             role: data.admin.role || 'Administrator',
             profileImage: data.admin.profileImage || '',
             adminId: data.admin.adminId
+          };
+          
+          setAdminData(adminDetails);
+          setFormData({
+            fullName: adminDetails.fullName || '',
+            email: adminDetails.email || '',
+            username: adminDetails.username || '',
+            password: '',
+            confirmPassword: '',
+            profileImage: adminDetails.profileImage || ''
           });
         } else {
           throw new Error('Invalid response format');
@@ -287,6 +312,141 @@ export function Header({ title, searchPlaceholder, onSearch }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Handle sign out
+  const handleSignOut = async () => {
+    try {
+      // Use the centralized logout utility
+      const success = await logout();
+      
+      if (success) {
+        toast.success("Signed out successfully");
+      } else {
+        throw new Error('Failed to sign out');
+      }
+      
+      // Force client-side logout by redirecting
+      setTimeout(() => {
+        navigate('/admin-login'); // Redirect to login page
+      }, 500);
+    } catch (error) {
+      console.error("Error signing out:", error);
+      // Even if the server-side logout fails, we'll still redirect
+      toast.error("Failed to sign out properly, redirecting anyway");
+      setTimeout(() => {
+        navigate('/admin-login');
+      }, 500);
+    }
+  };
+
+  // Handle settings form changes
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Handle profile image change
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, profileImage: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Handle settings form submission
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    if (!adminData?.id) return;
+    
+    // Validate form
+    if (!formData.fullName || !formData.email || !formData.username) {
+      toast.error("Full name, email, and username are required");
+      return;
+    }
+    
+    // Validate passwords if entered
+    if (formData.password) {
+      if (formData.password.length < 6) {
+        toast.error("Password must be at least 6 characters");
+        return;
+      }
+      if (formData.password !== formData.confirmPassword) {
+        toast.error("Passwords do not match");
+        return;
+      }
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Prepare data to send
+      const updateData = {
+        fullName: formData.fullName,
+        email: formData.email,
+        username: formData.username,
+        profileImage: formData.profileImage
+      };
+      
+      // Only include password if it was changed
+      if (formData.password) {
+        updateData.password = formData.password;
+      }
+      
+      // IMPORTANT FIX: Check backend/index.js to see that adminsRouter is mounted at /api not /api/admins
+      // This means the PUT route for updating admins is at /api/{id} not /api/admins/{id}
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/${adminData.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(updateData)
+      });
+      
+      const contentType = response.headers.get("content-type");
+      
+      if (!response.ok) {
+        // Check if the response is JSON before parsing
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to update profile');
+        } else {
+          // If not JSON, use the status text
+          throw new Error(`Server error: ${response.status} ${response.statusText}`);
+        }
+      }
+      
+      // Check if the response is JSON before parsing
+      let data;
+      if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+      } else {
+        throw new Error('Invalid response format from server');
+      }
+      
+      // Update local admin data state
+      setAdminData(prev => ({
+        ...prev,
+        fullName: data.fullName || formData.fullName,
+        firstName: (data.fullName || formData.fullName).split(' ')[0] || '',
+        email: data.email || formData.email,
+        username: data.username || formData.username,
+        profileImage: data.profileImage || formData.profileImage || prev.profileImage
+      }));
+      
+      toast.success("Profile updated successfully");
+      setIsSettingsOpen(false);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error(error.message || "Failed to update profile");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 py-3 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
       <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">{title}</h1>
@@ -482,11 +642,17 @@ export function Header({ title, searchPlaceholder, onSearch }) {
             </div>
             
             <div className="py-2">
-              <DropdownMenuItem className="cursor-pointer px-4 py-2.5 hover:bg-blue-50 hover:text-blue-700 transition-colors">
+              <DropdownMenuItem 
+                className="cursor-pointer px-4 py-2.5 hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                onClick={() => setIsSettingsOpen(true)}
+              >
                 <Settings size={16} className="mr-2 text-blue-500" />
                 <span>Account Settings</span>
               </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer px-4 py-2.5 hover:bg-red-50 text-red-600 transition-colors">
+              <DropdownMenuItem 
+                className="cursor-pointer px-4 py-2.5 hover:bg-red-50 text-red-600 transition-colors"
+                onClick={handleSignOut}
+              >
                 <LogOut size={16} className="mr-2" />
                 <span>Sign Out</span>
               </DropdownMenuItem>
@@ -498,6 +664,122 @@ export function Header({ title, searchPlaceholder, onSearch }) {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Settings Dialog */}
+      <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Account Settings</DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={handleUpdateProfile} className="grid gap-4 py-4">
+            <div className="flex justify-center mb-2">
+              <div className="relative h-24 w-24 rounded-full overflow-hidden border-2 border-gray-200">
+                {formData.profileImage ? (
+                  <img 
+                    src={formData.profileImage} 
+                    alt="Profile" 
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-gray-100 flex items-center justify-center">
+                    <User size={40} className="text-gray-400" />
+                  </div>
+                )}
+                <label 
+                  htmlFor="profileImage" 
+                  className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center text-white text-xs font-medium opacity-0 hover:opacity-100 transition-opacity cursor-pointer"
+                >
+                  Change
+                </label>
+                <input 
+                  type="file" 
+                  id="profileImage" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={handleImageChange}
+                />
+              </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input 
+                id="fullName" 
+                name="fullName" 
+                value={formData.fullName} 
+                onChange={handleFormChange} 
+                required
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input 
+                id="email" 
+                name="email" 
+                type="email" 
+                value={formData.email} 
+                onChange={handleFormChange} 
+                required
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="username">Username</Label>
+              <Input 
+                id="username" 
+                name="username" 
+                value={formData.username} 
+                onChange={handleFormChange} 
+                required
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="password">New Password</Label>
+                <Input 
+                  id="password" 
+                  name="password" 
+                  type="password" 
+                  placeholder="Leave blank to keep current" 
+                  value={formData.password} 
+                  onChange={handleFormChange} 
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input 
+                  id="confirmPassword" 
+                  name="confirmPassword" 
+                  type="password" 
+                  disabled={!formData.password}
+                  value={formData.confirmPassword} 
+                  onChange={handleFormChange} 
+                />
+              </div>
+            </div>
+            
+            <DialogFooter className="mt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsSettingsOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }

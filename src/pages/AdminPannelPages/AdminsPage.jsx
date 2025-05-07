@@ -35,13 +35,29 @@ const AdminsPage = () => {
     const fetchAdmins = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/`);
+        
+        // Add credentials to fetch real data from the server
+        // Update the endpoint to match how it's registered in backend/index.js
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/`, {
+          method: 'GET',
+          credentials: 'include', // Important for authentication cookies
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        });
         
         if (!response.ok) {
-          throw new Error('Failed to fetch admins');
+          const errorText = await response.text();
+          console.error('Server response:', errorText);
+          throw new Error(`Failed to fetch admins: ${response.status} ${response.statusText}`);
         }
         
         const data = await response.json();
+        
+        if (!Array.isArray(data)) {
+          console.error('Unexpected data format:', data);
+          throw new Error('Received invalid data format from server');
+        }
         
         // Transform data to match our frontend structure
         const transformedAdmins = data.map(admin => ({
@@ -54,45 +70,50 @@ const AdminsPage = () => {
           adminId: admin.adminId || `ADM${Math.floor(1000 + Math.random() * 9000)}`
         }));
         
+        console.log('Fetched admins:', transformedAdmins);
         setAdmins(transformedAdmins);
         setFilteredAdmins(transformedAdmins);
       } catch (error) {
         console.error('Error fetching admins:', error);
-        toast.error('Failed to load admins. Please try again later.');
+        toast.error('Failed to load admins: ' + error.message);
 
-        // Use mock data for development
-        const mockAdmins = [
-          {
-            id: "1",
-            fullName: "John Smith",
-            email: "john.smith@realestate.com",
-            username: "johnsmith",
-            profileImage: `https://ui-avatars.com/api/?name=John+Smith&background=random`,
-            createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-            adminId: "ADM001"
-          },
-          {
-            id: "2",
-            fullName: "Jessica Lee",
-            email: "jessica.lee@realestate.com",
-            username: "jessicalee",
-            profileImage: `https://ui-avatars.com/api/?name=Jessica+Lee&background=random`,
-            createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 days ago
-            adminId: "ADM002"
-          },
-          {
-            id: "3",
-            fullName: "Robert Johnson",
-            email: "robert.j@realestate.com",
-            username: "robertj",
-            profileImage: `https://ui-avatars.com/api/?name=Robert+Johnson&background=random`,
-            createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago 
-            adminId: "ADM003"
-          },
-        ];
-        
-        setAdmins(mockAdmins);
-        setFilteredAdmins(mockAdmins);
+        // For development only - remove or comment this out for production
+        // ONLY show mock data during development for UI testing
+        if (import.meta.env.DEV) {
+          console.warn('Using mock data in development mode');
+          const mockAdmins = [
+            {
+              id: "1",
+              fullName: "John Smith",
+              email: "john.smith@realestate.com",
+              username: "johnsmith",
+              profileImage: `https://ui-avatars.com/api/?name=John+Smith&background=random`,
+              createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+              adminId: "ADM001"
+            },
+            {
+              id: "2",
+              fullName: "Jessica Lee",
+              email: "jessica.lee@realestate.com",
+              username: "jessicalee",
+              profileImage: `https://ui-avatars.com/api/?name=Jessica+Lee&background=random`,
+              createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 days ago
+              adminId: "ADM002"
+            },
+            {
+              id: "3",
+              fullName: "Robert Johnson",
+              email: "robert.j@realestate.com",
+              username: "robertj",
+              profileImage: `https://ui-avatars.com/api/?name=Robert+Johnson&background=random`,
+              createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago 
+              adminId: "ADM003"
+            },
+          ];
+          
+          setAdmins(mockAdmins);
+          setFilteredAdmins(mockAdmins);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -167,17 +188,21 @@ const AdminsPage = () => {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/${adminId}`, {
         method: 'DELETE',
         credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete admin');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to delete admin');
       }
 
       toast.success('Admin deleted successfully');
       setAdmins(prevAdmins => prevAdmins.filter(admin => admin.id !== adminId));
     } catch (error) {
       console.error('Error deleting admin:', error);
-      toast.error('Failed to delete admin');
+      toast.error(error.message || 'Failed to delete admin');
     }
   };
 
