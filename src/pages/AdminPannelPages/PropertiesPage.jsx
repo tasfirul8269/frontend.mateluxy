@@ -458,7 +458,7 @@ const PropertiesPage = () => {
       </div>
       
       {/* Add Property Button */}
-      <FloatingActionButton onClick={handleAddProperty} />
+      <FloatingActionButton onClick={handleAddProperty} label="Add Property" />
       
       {/* Add Property Dialog */}
       <PropertyFormDialog 

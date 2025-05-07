@@ -16,14 +16,15 @@ import { Button } from "@/components/AdminPannel/ui/button";
 import { toast } from "@/components/AdminPannel/ui/sonner";
 import { cn } from "@/lib/utils";
 import { useLocation, useNavigate } from "react-router-dom";
-import { propertyApi } from "@/services/api";
+import { propertyApi, agentApi, adminApi } from "@/services/api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/AdminPannel/ui/dialog";
 import { Label } from "@/components/AdminPannel/ui/label";
 import { Input } from "@/components/AdminPannel/ui/input";
 import { logout } from "@/utils/isLoggedIn";
-import { getNotifications, markAsRead, markAllAsRead, deleteNotification, getUnreadCount } from "@/services/notificationService";
+import { getNotifications, markAsRead, markAllAsRead, deleteNotification, getUnreadCount, clearAllNotifications } from "@/services/notificationService";
+import { NotificationDetailDialog } from "@/components/AdminPannel/notifications/NotificationDetailDialog";
 
-export function Header({ title, searchPlaceholder, onSearch }) {
+export function Header({ searchPlaceholder, onSearch }) {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -47,6 +48,27 @@ export function Header({ title, searchPlaceholder, onSearch }) {
   const searchInputRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
+  
+  // Determine page title based on the current route
+  const getPageTitle = () => {
+    const path = location.pathname;
+    
+    if (path.includes('/properties')) return 'Properties';
+    if (path.includes('/agents')) return 'Agents';
+    if (path.includes('/admins')) return 'Admins';
+    if (path.includes('/dashboard')) return 'Dashboard';
+    if (path.includes('/settings')) return 'Settings';
+    
+    // Default title or extract from the path
+    return 'Admin Panel';
+  };
+  
+  // Get the current page title
+  const pageTitle = getPageTitle();
+  
+  // Add state for selected notification and dialog
+  const [selectedNotification, setSelectedNotification] = useState(null);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   
   // Load notifications from service
   useEffect(() => {
@@ -80,7 +102,21 @@ export function Header({ title, searchPlaceholder, onSearch }) {
       const allNotifications = await getNotifications();
       console.log("Loaded notifications in Header:", allNotifications);
       setNotifications(allNotifications);
-      setUnreadCount(getUnreadCount());
+      
+      // Get the unread count
+      const unreadNotificationCount = getUnreadCount();
+      setUnreadCount(unreadNotificationCount);
+      
+      // If we have the selected notification open in the dialog, update its read status
+      if (selectedNotification && isDetailDialogOpen) {
+        const updatedNotification = allNotifications.find(n => n.id === selectedNotification.id);
+        if (updatedNotification) {
+          setSelectedNotification(updatedNotification);
+        } else {
+          // If the notification was deleted, close the dialog
+          setIsDetailDialogOpen(false);
+        }
+      }
     } catch (error) {
       console.error("Error loading notifications:", error);
     }
@@ -205,27 +241,21 @@ export function Header({ title, searchPlaceholder, onSearch }) {
           ]);
         } 
         else if (pathname.includes("agents")) {
-          // In a real implementation, you would fetch agents from an API
-          // For now, let's use mock data
-          const mockAgents = [
-            { _id: "a1", fullName: "Michael Johnson", email: "michael@realestate.com", contactNumber: "+971501234567" },
-            { _id: "a2", fullName: "Sarah Williams", email: "sarah@realestate.com", contactNumber: "+971509876543" },
-            { _id: "a3", fullName: "Ahmed Al Mansoori", email: "ahmed@realestate.com", contactNumber: "+971504567890" },
-            { _id: "a4", fullName: "Jessica Thompson", email: "jessica@realestate.com", contactNumber: "+971502345678" },
-          ];
+          // Fetch agents from API
+          const agents = await agentApi.getAgents();
           
           // Create suggestions from agent names
-          const nameSuggestions = mockAgents
+          const nameSuggestions = agents
             .filter(a => a.fullName?.toLowerCase().includes(searchValue.toLowerCase()))
             .map(a => ({ id: a._id, value: a.fullName, type: "name" }));
           
           // Create suggestions from agent emails
-          const emailSuggestions = mockAgents
+          const emailSuggestions = agents
             .filter(a => a.email?.toLowerCase().includes(searchValue.toLowerCase()))
             .map(a => ({ id: `email-${a._id}`, value: a.email, type: "email" }));
           
           // Create suggestions from agent phone numbers
-          const phoneSuggestions = mockAgents
+          const phoneSuggestions = agents
             .filter(a => a.contactNumber?.includes(searchValue))
             .map(a => ({ id: `phone-${a._id}`, value: a.contactNumber, type: "phone" }));
           
@@ -233,27 +263,23 @@ export function Header({ title, searchPlaceholder, onSearch }) {
           setSuggestions([...nameSuggestions, ...emailSuggestions, ...phoneSuggestions]);
         } 
         else if (pathname.includes("admins")) {
-          // Mock admin data
-          const mockAdmins = [
-            { id: "ad1", fullName: "John Admin", email: "john@admin.com", username: "johnadmin" },
-            { id: "ad2", fullName: "Lisa Manager", email: "lisa@admin.com", username: "lisamanager" },
-            { id: "ad3", fullName: "Robert Super", email: "robert@admin.com", username: "robertsuper" },
-          ];
+          // Fetch admins from API
+          const admins = await adminApi.getAdmins();
           
           // Create suggestions from admin names
-          const nameSuggestions = mockAdmins
+          const nameSuggestions = admins
             .filter(a => a.fullName?.toLowerCase().includes(searchValue.toLowerCase()))
-            .map(a => ({ id: a.id, value: a.fullName, type: "name" }));
+            .map(a => ({ id: a._id, value: a.fullName, type: "name" }));
           
           // Create suggestions from admin emails
-          const emailSuggestions = mockAdmins
+          const emailSuggestions = admins
             .filter(a => a.email?.toLowerCase().includes(searchValue.toLowerCase()))
-            .map(a => ({ id: `email-${a.id}`, value: a.email, type: "email" }));
+            .map(a => ({ id: `email-${a._id}`, value: a.email, type: "email" }));
           
           // Create suggestions from admin usernames
-          const usernameSuggestions = mockAdmins
+          const usernameSuggestions = admins
             .filter(a => a.username?.toLowerCase().includes(searchValue.toLowerCase()))
-            .map(a => ({ id: `user-${a.id}`, value: a.username, type: "username" }));
+            .map(a => ({ id: `user-${a._id}`, value: a.username, type: "username" }));
           
           // Combine suggestions
           setSuggestions([...nameSuggestions, ...emailSuggestions, ...usernameSuggestions]);
@@ -294,25 +320,43 @@ export function Header({ title, searchPlaceholder, onSearch }) {
     toast.success(`Searching for "${value}"`);
   };
 
-  // Handle notification click (mark as read)
-  const handleNotificationClick = async (id) => {
-    try {
-      console.log(`Marking notification ${id} as read`);
-      await markAsRead(id);
-      await loadNotifications(); // Reload notifications after marking as read
-    } catch (error) {
-      console.error("Error handling notification click:", error);
-    }
+  // Handle notification click to show details
+  const handleNotificationClick = (notification) => {
+    // Set the selected notification and open the dialog
+    setSelectedNotification(notification);
+    setIsDetailDialogOpen(true);
+    
+    // Close the notifications popover
+    setIsNotificationsOpen(false);
   };
-
-  // Handle clearing all notifications
+  
+  // Handle clear all notifications
   const handleClearAll = async () => {
     try {
       console.log("Clearing all notifications");
+      
+      // First close the popover to improve user experience
+      setIsNotificationsOpen(false);
+      
+      // Show loading toast
+      const toastId = toast.loading("Clearing notifications...");
+      
+      // Call the service to clear all notifications
       await clearAllNotifications();
-      await loadNotifications(); // Reload notifications after clearing
+      
+      // Update toast on success
+      toast.success("All notifications cleared", { id: toastId });
+      
+      // Reload notifications (should be empty now)
+      await loadNotifications();
     } catch (error) {
       console.error("Error clearing all notifications:", error);
+      
+      // Show detailed error message
+      toast.error(`Failed to clear notifications: ${error.message || "Unknown error"}`);
+      
+      // Try to reload notifications anyway to ensure UI is in sync
+      await loadNotifications();
     }
   };
 
@@ -529,7 +573,7 @@ export function Header({ title, searchPlaceholder, onSearch }) {
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 py-3 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
-      <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">{title}</h1>
+      <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">{pageTitle}</h1>
 
       <div className="flex items-center space-x-3 sm:space-x-6">
         <div className="relative">
@@ -642,10 +686,10 @@ export function Header({ title, searchPlaceholder, onSearch }) {
                   <div 
                     key={notification.id} 
                     className={cn(
-                      "p-4 border-b border-gray-100 flex items-start hover:bg-gray-50 transition-colors",
+                      "p-4 border-b border-gray-100 flex items-start hover:bg-gray-50 transition-colors cursor-pointer",
                       notification.read ? "opacity-75" : "bg-blue-50/40"
                     )}
-                    onClick={() => handleNotificationClick(notification.id)}
+                    onClick={() => handleNotificationClick(notification)}
                   >
                     <div className={`w-2 h-2 mt-1.5 mr-3 rounded-full flex-shrink-0 ${notification.read ? 'bg-gray-300' : 'bg-blue-500'}`}></div>
                     <div className="flex-1">
@@ -673,16 +717,10 @@ export function Header({ title, searchPlaceholder, onSearch }) {
                     <Bell size={24} className="text-gray-400" />
                   </div>
                   <p className="text-gray-500">No notifications</p>
+                  <p className="text-xs text-gray-400 mt-2">You're all caught up!</p>
                 </div>
               )}
             </div>
-            {notifications.length > 0 && (
-              <div className="p-3 text-center border-t border-gray-100 bg-gray-50">
-                <button className="text-sm text-blue-600 hover:underline font-medium">
-                  View all notifications
-                </button>
-              </div>
-            )}
           </PopoverContent>
         </Popover>
 
@@ -866,6 +904,14 @@ export function Header({ title, searchPlaceholder, onSearch }) {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Add the notification detail dialog */}
+      <NotificationDetailDialog 
+        notification={selectedNotification}
+        open={isDetailDialogOpen}
+        onOpenChange={setIsDetailDialogOpen}
+        onNotificationChange={loadNotifications}
+      />
     </header>
   );
 }

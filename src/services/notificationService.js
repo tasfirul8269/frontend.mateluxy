@@ -147,7 +147,9 @@ export const addNotification = async (type, message, entityId = null, entityName
         timestamp: new Date().toISOString(),
         read: false,
         entityId,
-        entityName
+        entityName,
+        // When using local storage, we don't have the admin ID, so we mark as system-generated
+        createdByName: 'System'
       };
       
       // Add to beginning of array and limit the size
@@ -178,7 +180,9 @@ export const addNotification = async (type, message, entityId = null, entityName
       timestamp: new Date().toISOString(),
       read: false,
       entityId,
-      entityName
+      entityName,
+      // When using local storage, we don't have the admin ID, so we mark as system-generated
+      createdByName: 'System'
     };
     
     // Add to beginning of array and limit the size
@@ -197,6 +201,9 @@ export const addNotification = async (type, message, entityId = null, entityName
 // Get all notifications
 export const getNotifications = async () => {
   try {
+    // Check if notifications were previously cleared
+    const wasCleared = localStorage.getItem('notifications_cleared') === 'true';
+    
     // Try to get notifications from backend
     const response = await fetch(`${API_URL}/api/notifications`, {
       method: 'GET',
@@ -206,11 +213,27 @@ export const getNotifications = async () => {
     if (response.ok) {
       const notifications = await response.json();
       
+      // If we previously cleared notifications but backend returned some,
+      // it means they were added after clearing or another user made changes
+      if (notifications.length > 0) {
+        // Reset the cleared flag
+        localStorage.removeItem('notifications_cleared');
+      } else if (wasCleared) {
+        // If backend returned empty AND we have a cleared flag, return empty
+        return [];
+      }
+      
       // Format time strings for display
       const formattedNotifications = notifications.map(notification => ({
         ...notification,
         id: notification._id, // Map MongoDB _id to id for consistency
-        time: formatTime(notification.createdAt || notification.timestamp)
+        time: formatTime(notification.createdAt || notification.timestamp),
+        // Ensure createdByName is preserved
+        createdByName: notification.createdByName || null,
+        // Ensure the full admin object isn't lost when saving to local storage
+        createdBy: typeof notification.createdBy === 'object' ? 
+          { fullName: notification.createdBy.fullName, _id: notification.createdBy._id } : 
+          notification.createdBy
       }));
       
       // Also save to local storage as backup
@@ -219,20 +242,37 @@ export const getNotifications = async () => {
       return formattedNotifications;
     } else {
       console.warn("Failed to fetch notifications from backend, using local storage");
+      
+      // If notifications were previously cleared, return empty array
+      if (wasCleared) {
+        return [];
+      }
+      
       // Fall back to local storage if API call fails
       const notifications = loadNotificationsFromStorage();
       return notifications.map(notification => ({
         ...notification,
-        time: formatTime(notification.timestamp)
+        time: formatTime(notification.timestamp),
+        // Ensure createdByName is preserved from local storage
+        createdByName: notification.createdByName || null
       }));
     }
   } catch (error) {
     console.error("Error fetching notifications:", error);
+    
+    // Check if notifications were previously cleared
+    const wasCleared = localStorage.getItem('notifications_cleared') === 'true';
+    if (wasCleared) {
+      return [];
+    }
+    
     // Fall back to local storage if API call fails
     const notifications = loadNotificationsFromStorage();
     return notifications.map(notification => ({
       ...notification,
-      time: formatTime(notification.timestamp)
+      time: formatTime(notification.timestamp),
+      // Ensure createdByName is preserved from local storage
+      createdByName: notification.createdByName || null
     }));
   }
 };
@@ -371,18 +411,28 @@ export const deleteNotification = async (id) => {
 // Clear all notifications
 export const clearAllNotifications = async () => {
   try {
+    console.log("Attempting to clear all notifications from backend");
+    
     // Try to clear on backend first
     const response = await fetch(`${API_URL}/api/notifications/clear-all`, {
       method: 'DELETE',
       credentials: 'include'
     });
     
+    console.log("Clear all notifications response status:", response.status);
+    
     if (!response.ok) {
-      throw new Error('Failed to clear all notifications');
+      const errorText = await response.text();
+      console.error("Clear all error response:", errorText);
+      throw new Error(`Failed to clear all notifications: ${response.status} ${response.statusText}`);
     }
     
-    // Clear local storage as well
-    saveNotificationsToStorage([]);
+    const result = await response.json();
+    console.log("Clear all notifications successful:", result);
+    
+    // Clear local storage as well and store a flag to indicate notifications were cleared
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.setItem('notifications_cleared', 'true');
     
     // Dispatch event to notify components
     window.dispatchEvent(new CustomEvent('notification', { 
@@ -394,7 +444,9 @@ export const clearAllNotifications = async () => {
     console.error("Error clearing all notifications:", error);
     
     // Fall back to local storage update only
-    saveNotificationsToStorage([]);
+    console.log("Falling back to clearing local storage only");
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.setItem('notifications_cleared', 'true');
     
     // Dispatch event to notify components
     window.dispatchEvent(new CustomEvent('notification', { 
@@ -423,24 +475,25 @@ export const createSampleNotifications = async () => {
     if (existingNotifications.length === 0) {
       console.log("Creating sample notifications");
       
-      // Add some sample notifications
-      await addNotification(
+      // Add sample notifications - these will show the current admin as the creator
+      // since they're created through the API
+      const propNotification = await addNotification(
         'PROPERTY_ADDED',
-        'A new luxury villa was added in Downtown Dubai',
+        'Example: A new luxury villa was added in Downtown Dubai',
         'prop_123',
         'Luxury Villa'
       );
       
-      await addNotification(
+      const agentNotification = await addNotification(
         'AGENT_UPDATED',
-        'Agent John Smith updated their profile',
+        'Example: Agent John Smith updated their profile',
         'agent_456',
         'John Smith'
       );
       
-      await addNotification(
+      const adminNotification = await addNotification(
         'ADMIN_ADDED',
-        'New administrator Sarah Johnson joined the team',
+        'Example: New administrator Sarah Johnson joined the team',
         'admin_789',
         'Sarah Johnson'
       );

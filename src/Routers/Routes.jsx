@@ -78,7 +78,8 @@ const router = createBrowserRouter([
                 element: <TeamPage></TeamPage>
             },
             {
-                path: "/off-plan-single",
+                path: "/off-plan-single/:id",
+                loader: ({params}) => fetch(`${import.meta.env.VITE_API_URL}/api/properties/${params.id}`),
                 element: <OffPlanSinglePage></OffPlanSinglePage>
             },
 

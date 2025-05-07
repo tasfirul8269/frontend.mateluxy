@@ -1,23 +1,31 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+const HeroBanner = ({ property }) => {
+  // If no property is provided, use default fallback images
+  const defaultImages = [
+    {
+      src: 'https://images.pexels.com/photos/3935349/pexels-photo-3935349.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      alt: 'Luxurious waterfront villa with private pool'
+    },
+    {
+      src: 'https://images.pexels.com/photos/5997992/pexels-photo-5997992.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      alt: 'Modern beachfront property with terrace'
+    },
+    {
+      src: 'https://images.pexels.com/photos/206172/pexels-photo-206172.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
+      alt: 'Exclusive villa with garden and sea view'
+    }
+  ];
 
-const images = [
-  {
-    src: 'https://images.pexels.com/photos/3935349/pexels-photo-3935349.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    alt: 'Luxurious waterfront villa with private pool'
-  },
-  {
-    src: 'https://images.pexels.com/photos/5997992/pexels-photo-5997992.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    alt: 'Modern beachfront property with terrace'
-  },
-  {
-    src: 'https://images.pexels.com/photos/206172/pexels-photo-206172.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-    alt: 'Exclusive villa with garden and sea view'
-  }
-];
+  // Format property images if available
+  const images = property?.propertyImages?.length > 0 
+    ? property.propertyImages.map(img => ({ 
+        src: img, 
+        alt: property.propertyTitle || 'Property image' 
+      })) 
+    : defaultImages;
 
-const HeroBanner = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const goToNext = () => {
@@ -28,38 +36,41 @@ const HeroBanner = () => {
     setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
   };
 
-  return (
+  // Get property details or use fallbacks
+  const projectName = property?.propertyTitle || "Hudayriyat Island by Modon Properties";
+  const description = property?.propertyDescription || "Exclusive off-plan development with luxury amenities.";
+  const price = property?.propertyPrice ? `AED ${property.propertyPrice.toLocaleString()}` : "AED 6M (USD 1.63M)";
+  const area = property?.propertySize ? `${property.propertySize} sq. ft` : "3,595 sq. ft";
+  const bedrooms = property?.propertyBedrooms ? property.propertyBedrooms.toString() : "3-8";
+  const location = property?.propertyState || "Hudayriyat Island";
+  const developer = property?.developer || "Modon Properties";
 
-    <section className="  overflow-hidden mb-8">
+  return (
+    <section className="overflow-hidden mb-8">
       <div className="grid md:grid-cols-2 gap-5">
         <div className="bg-white rounded-[30px] border border-[#e6e6e6] p-8">
           <div className="flex items-center gap-4 mb-6">
             <span className="inline-block px-3 py-2 bg-green-100 text-green-500 text-[14px] font-medium rounded-[8px]">
-              New Launch!
+              {property?.type === 'Off Plan' ? 'New Launch!' : property?.type || 'Off Plan'}
             </span>
-            <img 
-              src="https://cdn.prod.website-files.com/65b8ae9b3af43cf735dab067/65ca07c11aed2a3e77cc2c7d_65b8ae9b3af43cf735dacccf_65a7ec4ce7d5ecd0257b8943_Luxury%252520properties%252520in%252520Abu%252520Dhabi%252520for%252520Sale%252520and%252520Rent%252520_%252520Metropolitan%252520Capital%252520Real%252520Estate-2%252520(1).svg" 
-              alt="Metropolitan Logo" 
-              className="h-10 w-auto object-contain" 
-            />
-            <img 
-              src="https://cdn.prod.website-files.com/65b8ae9b3af43cf735dab067/65ecd9d61c72d324ac86a518_logo%20black%20(2).svg" 
-              alt="Modon Logo" 
-              className="h-8 w-auto object-contain" 
-            />
+            {/* Show developer logo if available */}
+            {property?.developerLogo ? (
+              <img 
+                src={property.developerLogo}
+                alt={`${developer} Logo`} 
+                className="h-10 w-auto object-contain" 
+              />
+            ) : (
+              <div className="text-lg font-semibold">{developer}</div>
+            )}
           </div>
 
-
           <h1 className="text-5xl font-semibold text-gray-800 mb-6">
-            Hudayriyat Island by Modon Properties
+            {projectName}
           </h1>
 
           <p className="text-gray-600 mb-8 leading-relaxed">
-            Hudayriyat Island is an exclusive and highly-anticipated project by Modon Properties. 
-            This island occupies 11.6 sq. mi, and the coastline stretches for 9.9 mi. The dreams of all 
-            connoisseurs of nature, sports, comfort and resort recreation is being made into a reality here. 
-            The Nawayef community has three collections of villas and mansions, while Al Naseem has 
-            California-style and Art Nouveau villas.
+            {description}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -71,17 +82,16 @@ const HeroBanner = () => {
             </button>
           </div>
 
-          <p className="text-gray-500 text-[12px]">License number: 202402273451</p>
+          <p className="text-gray-500 text-[12px]">License number: {property?.licenseNumber || "202402273451"}</p>
         </div>
         
         <div className="bg-white rounded-[30px] border border-[#e6e6e6] overflow-hidden z-0 relative h-[420px] md:h-auto">
-    <img 
+          <img 
             src={images[currentIndex].src} 
             alt={images[currentIndex].alt} 
             className="w-full h-full object-cover"
           />
            
-          
           <button 
             onClick={goToPrevious}
             className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full text-gray-700 transition-all"
@@ -111,30 +121,25 @@ const HeroBanner = () => {
         </div>
       </div>
 
-      <div className="hidden lg:grid  grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 divide-x mt-[30px] divide-gray-100">
+      <div className="hidden lg:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 divide-x mt-[30px] divide-gray-100">
         <div className="bg-white rounded-[30px] border border-[#e6e6e6] p-6">
-        <p className="text-[14px] font-medium text-gray-500">Starting Price</p>
-          <h3 className="text-blue-400 text-xl font-semibold">AED 6M (USD 1.63M)</h3>
-          
-        </div>
-        <div  className="bg-white rounded-[30px] border border-[#e6e6e6] p-6">
-        <p className="text-gray-500 text-[14px] font-medium">Area from</p>
-          <h3 className="text-blue-400 text-xl font-semibold">3,595 sq. ft</h3>
-         
+          <p className="text-[14px] font-medium text-gray-500">Starting Price</p>
+          <h3 className="text-blue-400 text-xl font-semibold">{price}</h3>
         </div>
         <div className="bg-white rounded-[30px] border border-[#e6e6e6] p-6">
-        <p className="text-[14px] font-medium text-gray-500">Number of Bedrooms</p>
-
-          <h3 className="text-blue-400 text-xl font-semibold">3-8</h3>
+          <p className="text-gray-500 text-[14px] font-medium">Area from</p>
+          <h3 className="text-blue-400 text-xl font-semibold">{area}</h3>
         </div>
         <div className="bg-white rounded-[30px] border border-[#e6e6e6] p-6">
-        <p className="text-[14px] font-medium text-gray-500">Location</p>
-
-          <h3 className="text-blue-400 text-xl font-semibold">Hudayriyat Island</h3>
+          <p className="text-[14px] font-medium text-gray-500">Number of Bedrooms</p>
+          <h3 className="text-blue-400 text-xl font-semibold">{bedrooms}</h3>
+        </div>
+        <div className="bg-white rounded-[30px] border border-[#e6e6e6] p-6">
+          <p className="text-[14px] font-medium text-gray-500">Location</p>
+          <h3 className="text-blue-400 text-xl font-semibold">{location}</h3>
         </div>
       </div>
     </section>
-    
   );
 };
 

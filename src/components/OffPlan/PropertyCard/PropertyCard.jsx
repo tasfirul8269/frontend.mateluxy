@@ -10,10 +10,10 @@ const PropertyCard = ({ property }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate('/off-plan-single'); 
+    navigate(`/off-plan-single/${property._id || property.id}`); 
   }
   return (
-    <div onClick={handleClick} className="bg-white rounded-[20px] overflow-hidden hover:shadow-lg border border-[#e6e6e6]  transition-all duration-300">
+    <div onClick={handleClick} className="bg-white rounded-[20px] overflow-hidden hover:shadow-lg border border-[#e6e6e6]  transition-all duration-300 cursor-pointer">
       <div className="relative">
         <img 
           src={property.image} 

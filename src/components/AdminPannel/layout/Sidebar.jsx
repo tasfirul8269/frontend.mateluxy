@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Users, Settings, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, Users, Settings, ChevronLeft, ChevronRight, MenuIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/AdminPannel/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -86,16 +86,6 @@ export function Sidebar() {
           </motion.div>
           )}
         </AnimatePresence>
-        <Button
-          onClick={toggleSidebar}
-          variant="ghost"
-          size="icon"
-          className="text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-          aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
-          title={`${expanded ? "Collapse" : "Expand"} sidebar (Ctrl+B)`}
-        >
-          {expanded ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
-        </Button>
       </div>
 
       <nav className="flex-1 py-6 overflow-y-auto">
@@ -137,22 +127,25 @@ export function Sidebar() {
         </ul>
       </nav>
 
+      {/* Collapse/Expand Button at the bottom */}
       <div className="p-4 border-t border-gray-200">
-        <div className={cn("flex items-center", expanded ? "justify-start" : "justify-center")}>
-          <div className="h-8 w-8 rounded-full bg-red-600 flex items-center justify-center text-white text-sm">
-            AD
-          </div>
-          {expanded && (
-            <motion.span
-              className="ml-3 text-sm font-medium text-gray-700 whitespace-nowrap"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.2 }}
-            >
-              Admin Panel
-            </motion.span>
+        <Button
+          onClick={toggleSidebar}
+          variant="ghost"
+          className={cn(
+            "w-full flex items-center justify-center py-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors",
+            expanded && "justify-between"
           )}
-        </div>
+        >
+          {expanded ? (
+            <>
+              <span className="text-sm">Collapse</span>
+              <ChevronLeft size={18} />
+            </>
+          ) : (
+            <ChevronRight size={18} />
+          )}
+        </Button>
       </div>
     </motion.aside>
   );

@@ -186,5 +186,47 @@ export const propertyApi = {
   },
 };
 
+// Agent API
+export const agentApi = {
+  getAgents: async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/agents`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch agents: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching agents:', error);
+      return [];
+    }
+  }
+};
+
+// Admin API
+export const adminApi = {
+  getAdmins: async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch admins: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching admins:', error);
+      return [];
+    }
+  }
+};
+
 // Export the base API_URL for convenience
 export const apiUrl = API_URL;
