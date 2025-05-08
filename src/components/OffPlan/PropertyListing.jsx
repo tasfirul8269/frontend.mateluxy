@@ -1,14 +1,12 @@
 import React from 'react';
-
 import { useProperties } from '../../hooks/useProperties';
 import SearchBar from './SearchBar';
 import CategoryFilter from './CategoryFilter';
 import PropertyCardSkeleton from './PropertyCardSkeleton';
 import PropertyCard from './PropertyCard';
 
-const PropertyListing = () => {
+const PropertyListing = ({ offPlanProjects }) => {
   const {
-    properties,
     loading,
     selectedCategory,
     handleCategoryChange,
@@ -17,14 +15,17 @@ const PropertyListing = () => {
     hasMore
   } = useProperties();
 
+  // Filter off-plan projects (category === "Off Plan")
+  const filteredOffPlanProjects = offPlanProjects.filter(
+    project => project.category === "Off Plan"
+  );
+
   return (
     <div>
-      
-      
       <SearchBar onSearch={handleSearch} />
       <div className="my-8">
         <h1 className="text-4xl font-bold text-gray-800">
-        Start your <span className="text-[#00A3FF]">Off Plan </span>properties search 
+          Start your <span className="text-[#00A3FF]">Off Plan </span>properties search 
         </h1>
       </div>
       <CategoryFilter 
@@ -37,13 +38,13 @@ const PropertyListing = () => {
           Array.from({ length: 6 }).map((_, index) => (
             <PropertyCardSkeleton key={index} />
           ))
-        ) : properties.length > 0 ? (
-          properties.map((property) => (
-            <PropertyCard key={property.id} property={property} />
+        ) : filteredOffPlanProjects.length > 0 ? (
+          filteredOffPlanProjects.map((property) => (
+            <PropertyCard key={property._id} property={property} />
           ))
         ) : (
           <div className="col-span-3 text-center py-10">
-            <p className="text-gray-500 text-lg">No properties found matching your criteria.</p>
+            <p className="text-gray-500 text-lg">No off-plan properties found matching your criteria.</p>
             <button 
               onClick={() => {
                 handleCategoryChange('All');
