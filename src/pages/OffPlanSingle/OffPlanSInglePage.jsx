@@ -1,23 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { useLoaderData, useParams } from 'react-router-dom';
+import { useLoaderData } from 'react-router-dom';
 import Tabs from '../../components/OffPlanSingle/Navigation/Tabs';
 import ProjectDetailsCard from '../../components/OffPlanSingle/ProjectDetails/ProjectDetailsCard';
 import ContactForm from '../../components/OffPlanSingle/Forms/ContactForm';
 import HeroBanner from '../../components/OffPlanSingle/Hero/HeroBanner';
 import AboutSection from '../../components/OffPlanSingle/Sections/AboutSection';
 import GallerySection from '../../components/OffPlanSingle/Sections/GallerySection';
-import PricesSection from '../../components/OffPlanSingle/Sections/PricesSection';
 import LocationSection from '../../components/OffPlanSingle/Sections/LocationSection';
 
 const OffPlanSinglePage = () => {
   const propertyData = useLoaderData();
-  const { id } = useParams();
   const [isLoading, setIsLoading] = useState(true);
   const [property, setProperty] = useState(null);
-  
+
   useEffect(() => {
     if (propertyData) {
-      setProperty(propertyData);
+      const transformedProperty = {
+        ...propertyData,
+        image: propertyData.propertyFeaturedImage,
+        title: propertyData.propertyTitle,
+        location: propertyData.propertyAddress,
+      };
+      setProperty(transformedProperty);
       setIsLoading(false);
     }
   }, [propertyData]);
@@ -47,6 +51,7 @@ const OffPlanSinglePage = () => {
               </div>
               
               <div id="location">
+                {/* Updated to pass full property object */}
                 <LocationSection property={property} />
               </div>
             </div>
@@ -54,7 +59,9 @@ const OffPlanSinglePage = () => {
             <div className="order-1 lg:order-2 lg:col-span-1">
               <aside className="sticky top-8">
                 <Tabs />
+                {/* Updated to pass full property object */}
                 <ProjectDetailsCard property={property} />
+                {/* Updated to pass full property object */}
                 <ContactForm property={property} />
               </aside>
             </div>

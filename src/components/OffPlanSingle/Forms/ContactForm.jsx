@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 
-const ContactForm = () => {
+const ContactForm = ({ property }) => {
   const [formState, setFormState] = useState({
     name: '',
     email: '',
     phone: '',
     privacyConsent: false,
-    marketingConsent: false
+    marketingConsent: false,
+    propertyId: property?._id || '',
+    propertyTitle: property?.propertyTitle || ''
   });
 
   const handleChange = (e) => {
@@ -19,19 +21,36 @@ const ContactForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formState);
-    alert('Thank you for your interest! We will contact you shortly.');
+    const submissionData = {
+      ...formState,
+      propertyInfo: {
+        id: property?._id,
+        title: property?.propertyTitle
+      }
+    };
+    console.log('Form submitted:', submissionData);
+    alert(`Thank you for your interest in ${property?.propertyTitle || 'this property'}! We will contact you shortly.`);
   };
 
   return (
     <div className="bg-white rounded-[30px] border border-[#e6e6e6] p-6 mb-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Get a special offer</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">
+        {property ? `Contact about ${property.propertyTitle}` : 'Get a special offer'}
+      </h2>
+      
       <p className="text-gray-600 mb-6">
-        We will call you back within an hour and also send you additional information by email
+        {property ? 
+          `Get more information about this ${property.propertyType}` : 
+          'We will call you back within an hour with more information'
+        }
       </p>
 
       <form onSubmit={handleSubmit}>
         <div className="space-y-4">
+          {/* Hidden property fields */}
+          <input type="hidden" name="propertyId" value={formState.propertyId} />
+          <input type="hidden" name="propertyTitle" value={formState.propertyTitle} />
+          
           <div>
             <input
               type="text"
@@ -57,7 +76,11 @@ const ContactForm = () => {
           </div>
           
           <div className="flex items-center gap-2">
-            <select className="w-auto px-2 py-3 rounded-[10px] border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <select 
+              name="countryCode"
+              className="w-auto px-2 py-3 rounded-[10px] border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              defaultValue={property?.propertyCountry === 'UAE' ? '+971' : '+1'}
+            >
               <option value="+1">🇺🇸 +1</option>
               <option value="+44">🇬🇧 +44</option>
               <option value="+971">🇦🇪 +971</option>
@@ -81,7 +104,7 @@ const ContactForm = () => {
               id="privacyConsent"
               checked={formState.privacyConsent}
               onChange={handleChange}
-              className="mt-1 "
+              className="mt-1"
               required
             />
             <label htmlFor="privacyConsent" className="text-sm text-gray-600">
@@ -105,9 +128,9 @@ const ContactForm = () => {
           
           <button
             type="submit"
-            className=" cursor-pointer w-full bg-blue-400 hover:bg-blue-500 text-white py-3 px-6 rounded-[15px] transition-colors font-medium"
+            className="cursor-pointer w-full bg-blue-400 hover:bg-blue-500 text-white py-3 px-6 rounded-[15px] transition-colors font-medium"
           >
-            Get a consultation
+            {property ? 'Request Property Details' : 'Get a consultation'}
           </button>
         </div>
       </form>
