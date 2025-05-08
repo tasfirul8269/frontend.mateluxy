@@ -720,18 +720,6 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
     // Prepare form data based on property type
     let formData = { ...form, category: selectedCategory };
 
-    // Ensure required fields are present
-    if (!formData.propertyTitle || !formData.propertyDescription || !formData.propertyAddress) {
-      alert("Please fill in all required fields");
-      return;
-    }
-
-    // Ensure agent is set
-    if (!formData.agent) {
-      alert("Please select an agent");
-      return;
-    }
-
     // Common mappings
     if (formData.featuredImage) {
       formData.propertyFeaturedImage = formData.featuredImage;
@@ -766,6 +754,48 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         propertyBathrooms: formData.propertyBathrooms || 0,
         propertyKitchen: formData.propertyKitchen || 0,
       };
+    }
+
+    // Validate all required fields based on database schema
+    const requiredFields = [
+      { field: 'propertyTitle', label: 'Property Title' },
+      { field: 'propertyDescription', label: 'Property Description' },
+      { field: 'propertyAddress', label: 'Property Address' },
+      { field: 'propertyCountry', label: 'Country' },
+      { field: 'propertyState', label: 'State' },
+      { field: 'propertyZip', label: 'ZIP Code' },
+      { field: 'propertyFeaturedImage', label: 'Featured Image' },
+      { field: 'propertyType', label: 'Property Type' },
+      { field: 'propertyPrice', label: 'Price' },
+      { field: 'brokerFee', label: 'Broker Fee' },
+      { field: 'propertySize', label: 'Property Size' },
+      { field: 'propertyRooms', label: 'Rooms' },
+      { field: 'propertyBedrooms', label: 'Bedrooms' },
+      { field: 'propertyBathrooms', label: 'Bathrooms' },
+      { field: 'propertyKitchen', label: 'Kitchen' },
+      { field: 'dldPermitNumber', label: 'DLD Permit Number' },
+      { field: 'agent', label: 'Agent' },
+      { field: 'dldQrCode', label: 'DLD QR Code' },
+      { field: 'latitude', label: 'Latitude' },
+      { field: 'longitude', label: 'Longitude' }
+    ];
+
+    // Filter out required fields based on category
+    if (selectedCategory === "Rent" || selectedCategory === "Commercial for Rent") {
+      requiredFields.push({ field: 'numberOfCheques', label: 'Number of Cheques' });
+    }
+
+    // Check for empty required fields
+    const missingFields = requiredFields.filter(item => {
+      const value = formData[item.field];
+      return value === undefined || value === null || value === '' || 
+             (typeof value === 'number' && (isNaN(value) || value <= 0));
+    });
+
+    if (missingFields.length > 0) {
+      const missingFieldsText = missingFields.map(item => item.label).join(', ');
+      alert(`Please fill in all required fields: ${missingFieldsText}`);
+      return;
     }
 
     // Call the onSubmit callback with the prepared form data
