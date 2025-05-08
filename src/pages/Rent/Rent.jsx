@@ -36,10 +36,16 @@ const Rent = () => {
 
     const queryParams = new URLSearchParams(location.search);
     const filtered = properties.filter(property => {
-      // Location filter (using propertyAddress)
+      // Location filter (using propertyAddress and other location fields)
       if (queryParams.get('location')) {
         const searchLocation = queryParams.get('location').toLowerCase();
-        if (!property.propertyAddress.toLowerCase().includes(searchLocation)) {
+        const addressMatch = property.propertyAddress?.toLowerCase().includes(searchLocation);
+        const cityMatch = property.propertyState?.toLowerCase().includes(searchLocation);
+        const countryMatch = property.propertyCountry?.toLowerCase().includes(searchLocation);
+        const titleMatch = property.propertyTitle?.toLowerCase().includes(searchLocation);
+        
+        // If none of the location fields match, exclude this property
+        if (!(addressMatch || cityMatch || countryMatch || titleMatch)) {
           return false;
         }
       }
