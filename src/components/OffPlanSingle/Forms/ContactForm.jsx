@@ -58,7 +58,7 @@ const ContactForm = ({ property }) => {
               placeholder="Name"
               value={formState.name}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-[10px] border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full px-4 py-3 rounded-[10px] border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-400"
               required
             />
           </div>
@@ -70,7 +70,7 @@ const ContactForm = ({ property }) => {
               placeholder="E-mail"
               value={formState.email}
               onChange={handleChange}
-              className="w-full px-4 py-3 rounded-[10px] border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-full px-4 py-3 rounded-[10px] border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-400"
               required
             />
           </div>
@@ -78,7 +78,7 @@ const ContactForm = ({ property }) => {
           <div className="flex items-center gap-2">
             <select 
               name="countryCode"
-              className="w-auto px-2 py-3 rounded-[10px] border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="w-auto px-2 py-3 rounded-[10px] border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-400"
               defaultValue={property?.propertyCountry === 'UAE' ? '+971' : '+1'}
             >
               <option value="+1">🇺🇸 +1</option>
@@ -92,7 +92,7 @@ const ContactForm = ({ property }) => {
               placeholder="(201) 555-0123"
               value={formState.phone}
               onChange={handleChange}
-              className="flex-1 px-4 py-3 rounded-[10px] border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="flex-1 px-4 py-3 rounded-[10px] border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-400"
               required
             />
           </div>
@@ -108,7 +108,7 @@ const ContactForm = ({ property }) => {
               required
             />
             <label htmlFor="privacyConsent" className="text-sm text-gray-600">
-              By accepting and providing my personal information I am consenting to Metropolitan Group <a href="#" className="text-blue-500 hover:underline">Privacy Policy</a>, the applicable data protection laws and <a href="#" className="text-blue-500 hover:underline">Terms of Use</a>.
+              By accepting and providing my personal information I am consenting to Metropolitan Group <a href="#" className="text-red-500 hover:underline">Privacy Policy</a>, the applicable data protection laws and <a href="#" className="text-red-500 hover:underline">Terms of Use</a>.
             </label>
           </div>
           
@@ -128,7 +128,7 @@ const ContactForm = ({ property }) => {
           
           <button
             type="submit"
-            className="cursor-pointer w-full bg-blue-400 hover:bg-blue-500 text-white py-3 px-6 rounded-[15px] transition-colors font-medium"
+            className="cursor-pointer w-full bg-red-500 hover:bg-red-600 text-white py-3 px-6 rounded-[15px] transition-colors font-medium"
           >
             {property ? 'Request Property Details' : 'Get a consultation'}
           </button>

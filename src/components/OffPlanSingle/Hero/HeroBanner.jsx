@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Calendar, MapPin, Building, Tag, Download, X, ExternalLink, Heart } from 'lucide-react';
+import { 
+  ArrowRight, 
+  Calendar, 
+  ChevronLeft,
+  ChevronRight,
+  Download, 
+  ExternalLink, 
+  Heart, 
+  MapPin, 
+  Tag, 
+  Building, 
+  X 
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const HeroBanner = ({ property }) => {
@@ -177,7 +189,7 @@ const HeroBanner = ({ property }) => {
                 <button 
                   key={index}
                   onClick={() => setCurrentIndex(index)}
-                  className={`relative h-16 w-24 rounded-lg overflow-hidden transition-all ${currentIndex === index ? 'ring-2 ring-blue-500 scale-105' : 'opacity-70'}`}
+                  className={`relative h-16 w-24 rounded-lg overflow-hidden transition-all ${currentIndex === index ? 'ring-2 ring-red-500 scale-105' : 'opacity-70'}`}
                 >
                   <img 
                     src={img.src} 
@@ -191,27 +203,38 @@ const HeroBanner = ({ property }) => {
         )}
       </AnimatePresence>
       
-      {/* New Hero Banner Design */}
-      <section className="mb-8">
+      {/* Modern Hero Banner Design - Similar to Previous */}
+      <section className="mb-8 relative">
         {/* Main Hero Section */}
-        <div className="relative rounded-[20px] overflow-hidden mb-6">
+        <div className="relative rounded-[30px] overflow-hidden mb-6 shadow-xl">
           {/* Main Image */}
           {images ? (
-            <div className="relative h-[70vh] w-full">
-              <motion.img 
-                src={images[currentIndex].src} 
-                alt={images[currentIndex].alt}
-                className="w-full h-full object-cover"
-                initial={{ opacity: 0, scale: 1.05 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.7 }}
-                onLoad={() => setIsLoading(false)}
-              />
+            <div className="relative h-[75vh] w-full group">
+              <div className="w-full h-full overflow-hidden relative">
+                <motion.div
+                  className="w-full h-full absolute inset-0 flex"
+                  animate={{ x: `-${currentIndex * 100}%` }}
+                  transition={{ duration: 0.7, ease: "easeInOut" }}
+                >
+                  {images.map((image, index) => (
+                    <div key={index} className="w-full h-full flex-shrink-0">
+                      <img 
+                        src={image.src} 
+                        alt={image.alt}
+                        className="w-full h-full object-cover"
+                        onLoad={() => setIsLoading(false)}
+                      />
+                    </div>
+                  ))}
+                </motion.div>
+              </div>
               
-              {/* Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30"></div>
+              {/* Gradient Overlay - Enhanced with red accent */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent">
+                <div className="absolute inset-0 bg-gradient-to-br from-red-900/30 via-transparent to-transparent mix-blend-overlay"></div>
+              </div>
               
-              {/* Image Navigation */}
+              {/* Image Navigation Dots */}
               {images.length > 1 && (
                 <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-3 z-10">
                   {images.map((_, index) => (
@@ -225,142 +248,150 @@ const HeroBanner = ({ property }) => {
                 </div>
               )}
               
-              {/* Fullscreen Button */}
-              <button 
-                onClick={toggleFullscreen}
-                className="absolute top-4 right-4 bg-black/30 hover:bg-black/50 p-2 rounded-full text-white transition-all backdrop-blur-sm"
-                aria-label="View fullscreen"
-              >
-                <ExternalLink size={20} />
-              </button>
-              
-              {/* Favorite Button */}
-              <button 
-                onClick={toggleFavorite}
-                className={`absolute top-4 right-16 p-2 rounded-full transition-all backdrop-blur-sm ${isFavorite ? 'bg-red-500 text-white' : 'bg-black/30 hover:bg-black/50 text-white'}`}
-                aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-              >
-                <Heart size={20} fill={isFavorite ? 'currentColor' : 'none'} />
-              </button>
-              
-              {/* Property Category Badge */}
-              {property?.category && (
-                <div className="absolute top-4 left-4 px-4 py-2 bg-blue-500 text-white font-medium rounded-full text-sm backdrop-blur-sm">
-                  {property.category === 'Off Plan' ? 'New Launch' : property.category}
-                </div>
+              {/* Arrow Navigation Buttons - Appear on Hover */}
+              {images.length > 1 && (
+                <>
+                  <button 
+                    onClick={() => setCurrentIndex(prev => (prev === 0 ? images.length - 1 : prev - 1))}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-md border border-white/20 z-10"
+                    aria-label="Previous image"
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+                  <button 
+                    onClick={() => setCurrentIndex(prev => (prev === images.length - 1 ? 0 : prev + 1))}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-md border border-white/20 z-10"
+                    aria-label="Next image"
+                  >
+                    <ChevronRight size={24} />
+                  </button>
+                </>
               )}
               
+              {/* Top badges area with property category and tags */}
+              <div className="absolute top-6 left-6 flex flex-wrap items-center gap-3 z-10">
+                {/* Property Category Badge */}
+                {property?.category && (
+                  <div className={`px-4 py-2 ${property.category === 'Off Plan' ? 'bg-red-600' : 
+                                  property.category === 'Ready' ? 'bg-red-500' : 
+                                  property.category === 'Secondary' ? 'bg-red-700' : 
+                                  'bg-red-500'} text-white font-semibold rounded-full text-sm shadow-lg border border-white/30`}>
+                    {property.category === 'Off Plan' ? 'New Launch' : property.category}
+                  </div>
+                )}
+                
+                {/* Property Tags beside launch type - Improved visibility */}
+                {tags && tags.length > 0 && tags.slice(0, 3).map((tag, index) => (
+                  <span key={index} className="inline-flex items-center gap-1 px-3 py-1.5 bg-black/50 backdrop-blur-md text-white text-sm font-medium rounded-full shadow-md border border-white/30">
+                    <Tag size={12} className="text-red-400" />
+                    {tag}
+                  </span>
+                ))}
+              </div>
+              
+              {/* Control buttons - Improved visibility */}
+              <div className="absolute top-6 right-6 flex space-x-3 z-10">
+                <button 
+                  onClick={toggleFullscreen}
+                  className="bg-black/50 hover:bg-black/70 p-3 rounded-full text-white transition-all backdrop-blur-md shadow-lg border border-white/30"
+                  aria-label="View fullscreen"
+                >
+                  <ExternalLink size={18} className="text-red-100" />
+                </button>
+                <button 
+                  onClick={toggleFavorite}
+                  className={`p-3 rounded-full transition-all backdrop-blur-md shadow-lg border border-white/30 ${isFavorite ? 'bg-red-600 text-white' : 'bg-black/50 hover:bg-black/70 text-white'}`}
+                  aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  <Heart size={18} fill={isFavorite ? 'currentColor' : 'none'} className="text-red-100" />
+                </button>
+              </div>
+              
               {/* Property Info Overlay */}
-              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+              <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
                 >
-                  {/* Developer Logo/Name */}
-                  <div className="mb-4">
-                    {property?.developerImage ? (
-                      <img 
-                        src={property.developerImage}
-                        alt={developer ? `${developer} Logo` : 'Developer logo'} 
-                        className="h-10 w-auto object-contain bg-white/10 backdrop-blur-sm p-2 rounded-lg" 
-                      />
-                    ) : developer ? (
-                      <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-2 rounded-lg">
-                        <Building size={16} />
-                        <span className="font-medium">{developer}</span>
-                      </div>
-                    ) : null}
-                  </div>
-                  
                   {/* Property Title */}
                   {projectName && (
-                    <h1 className="text-3xl md:text-5xl font-bold mb-3">
+                    <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">
                       {projectName}
                     </h1>
                   )}
                   
-                  {/* Property Location */}
-                  {location && (
-                    <div className="flex items-center gap-2 text-white/90 mb-4">
-                      <MapPin size={18} />
-                      <span className="text-lg">{location}</span>
-                    </div>
-                  )}
+                  {/* Location removed as requested */}
                   
-                  {/* Property Key Info */}
-                  <div className="flex flex-wrap gap-x-6 gap-y-2 mb-6">
+                  {/* Property Key Info - Enhanced with red accents and blurry background */}
+                  <div className="flex flex-wrap gap-x-4 gap-y-3 mb-8">
                     {price && (
-                      <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-lg">
-                        <span className="font-medium">{price}</span>
+                      <div className="flex items-center gap-2 bg-black/30 backdrop-blur-lg px-5 py-2.5 rounded-xl shadow-lg border border-red-500/30">
+                        <span className="font-semibold text-lg">{price}</span>
                       </div>
                     )}
                     {area && (
-                      <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-lg">
-                        <span className="font-medium">{area}</span>
+                      <div className="flex items-center gap-2 bg-black/30 backdrop-blur-lg px-5 py-2.5 rounded-xl shadow-lg border border-red-500/30">
+                        <span className="font-semibold">{area}</span>
                       </div>
                     )}
                     {bedrooms && (
-                      <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-lg">
-                        <span className="font-medium">{bedrooms} Bed</span>
+                      <div className="flex items-center gap-2 bg-black/30 backdrop-blur-lg px-5 py-2.5 rounded-xl shadow-lg border border-red-500/30">
+                        <span className="font-semibold">{bedrooms} Bed</span>
                       </div>
                     )}
                     {completionDate && (
-                      <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-lg">
-                        <Calendar size={16} />
-                        <span className="font-medium">{formattedCompletionDate}</span>
+                      <div className="flex items-center gap-2 bg-black/30 backdrop-blur-lg px-5 py-2.5 rounded-xl shadow-lg border border-red-500/30">
+                        <Calendar size={18} className="text-red-300" />
+                        <span className="font-semibold">{formattedCompletionDate}</span>
                       </div>
                     )}
                   </div>
                   
-                  {/* Action Buttons */}
-                  <div className="flex flex-wrap gap-4 mt-6">
+                  {/* Action Buttons - Updated with red color scheme */}
+                  <div className="flex flex-wrap gap-5 mt-8">
                     {brochureFile && (
                       <motion.a 
                         href={brochureFile} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="cursor-pointer bg-blue-500 hover:bg-blue-600 text-white py-3 px-6 rounded-full transition-colors text-center flex items-center gap-2"
+                        className="cursor-pointer bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white py-4 px-8 rounded-xl transition-all text-center flex items-center gap-3 shadow-lg font-medium border border-red-400/30"
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <Download size={18} />
+                        <Download size={20} />
                         Download Brochure
                       </motion.a>
                     )}
                     <motion.button 
-                      className="cursor-pointer bg-white/20 hover:bg-white/30 text-white py-3 px-6 rounded-full transition-colors flex items-center gap-2 backdrop-blur-sm"
+                      className="cursor-pointer bg-white/10 hover:bg-white/20 text-white py-4 px-8 rounded-xl transition-all flex items-center gap-3 backdrop-blur-md shadow-lg font-medium border border-white/20"
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.98 }}
                     >
                       Get a consultation
+                      <ArrowRight size={20} className="text-red-300" />
                     </motion.button>
                   </div>
                 </motion.div>
               </div>
             </div>
           ) : (
-            <div className="h-[70vh] bg-gray-200 flex items-center justify-center">
-              <p className="text-gray-500">No images available</p>
+            <div className="h-[75vh] bg-gradient-to-r from-gray-100 to-gray-200 flex items-center justify-center rounded-[30px]">
+              <p className="text-gray-500 font-medium text-lg">No images available</p>
             </div>
           )}
         </div>
         
-        {/* Property Tags */}
-        {tags && tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-6">
-            {tags.map((tag, index) => (
-              <span key={index} className="inline-flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-full">
-                <Tag size={14} />
+        {/* Additional tags - Only show if there are more than 3 tags */}
+        {tags && tags.length > 3 && (
+          <div className="flex flex-wrap gap-3 mb-6 mt-4">
+            {tags.slice(3).map((tag, index) => (
+              <span key={index} className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors shadow-sm border border-red-200">
+                <Tag size={14} className="text-red-500" />
                 {tag}
               </span>
             ))}
           </div>
-        )}
-        
-        {/* License Number */}
-        {licenseNumber && (
-          <p className="text-gray-500 text-sm">License number: {licenseNumber}</p>
         )}
       </section>
     </>

@@ -2,7 +2,7 @@ import React from 'react';
 
 const PricesSection = () => {
   return (
-    <section className="bg-blue-400 rounded-xl shadow-md overflow-hidden mb-8 text-white p-8">
+    <section className="bg-red-500 rounded-xl shadow-md overflow-hidden mb-8 text-white p-8">
       <h2 className="text-3xl font-bold mb-6">Property prices</h2>
       
       <p className="text-white/90 leading-relaxed">

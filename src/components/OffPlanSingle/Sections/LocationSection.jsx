@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin, ExternalLink } from 'lucide-react';
 
 const LocationSection = ({ property }) => {
   // Default map location (Dubai) if property doesn't have coordinates
@@ -8,15 +8,15 @@ const LocationSection = ({ property }) => {
   // Get property location or default
   const location = property?.location || defaultLocation;
   
-  // Generate Google Maps URL
-  const getGoogleMapsUrl = () => {
+  // Generate OpenStreetMap URL
+  const getOpenStreetMapUrl = () => {
     if (property?.propertyAddress) {
-      return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(property.propertyAddress)}`;
+      return `https://www.openstreetmap.org/search?query=${encodeURIComponent(property.propertyAddress)}`;
     }
     if (location) {
-      return `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`;
+      return `https://www.openstreetmap.org/#map=15/${location.lat}/${location.lng}`;
     }
-    return `https://www.google.com/maps/search/?api=1&query=Dubai`;
+    return `https://www.openstreetmap.org/#map=12/25.2048/55.2708`; // Dubai
   };
 
   return (
@@ -25,25 +25,26 @@ const LocationSection = ({ property }) => {
       
       <div className="mb-6">
         <div className="flex items-start gap-2 mb-4">
-          <MapPin className="text-blue-500 mt-1" size={20} />
+          <MapPin className="text-red-500 mt-1" size={20} />
           <p className="text-gray-700">
             {property?.propertyAddress || property?.propertyState || 'Location details not available'}
           </p>
         </div>
         
         <a 
-          href={getGoogleMapsUrl()} 
+          href={getOpenStreetMapUrl()} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="text-blue-500 font-medium hover:text-blue-700 transition-colors flex items-center gap-1"
+          className="text-red-500 font-medium hover:text-red-600 transition-colors flex items-center gap-1"
         >
-          View on Google Maps
+          <ExternalLink size={16} />
+          View on OpenStreetMap
         </a>
       </div>
       
-      <div className="rounded-xl overflow-hidden h-[400px] border border-gray-200">
+      <div className="rounded-xl overflow-hidden h-[400px] border border-red-200">
         <iframe 
-          src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyBMH4w3iEYGEPDGNcC6br9_HxO9Sj5Y1QQ&q=${property?.propertyAddress || property?.propertyState || 'Dubai'}`}
+          src={`https://www.openstreetmap.org/export/embed.html?bbox=${property?.propertyLongitude || 55.2708 - 0.1},${property?.propertyLatitude || 25.2048 - 0.1},${property?.propertyLongitude || 55.2708 + 0.1},${property?.propertyLatitude || 25.2048 + 0.1}&layer=mapnik&marker=${property?.propertyLatitude || 25.2048},${property?.propertyLongitude || 55.2708}`}
           width="100%" 
           height="100%" 
           style={{ border: 0 }} 

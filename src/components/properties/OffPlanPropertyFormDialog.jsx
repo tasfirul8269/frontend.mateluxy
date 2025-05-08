@@ -50,6 +50,10 @@ export const OffPlanPropertyFormDialog = ({ isOpen, onClose }) => {
         propertyFeaturedImage: data.exteriorsGallery?.[0] || data.propertyFeaturedImage || "https://via.placeholder.com/600x400?text=Property",
         media: [...(data.exteriorsGallery || []), ...(data.interiorsGallery || [])],
         
+        // Explicitly add the galleries as separate arrays
+        exteriorsGallery: data.exteriorsGallery || [],
+        interiorsGallery: data.interiorsGallery || [],
+        
         // Category and type
         category: "Off Plan",
         propertyType: data.propertyType, // Use selected property type

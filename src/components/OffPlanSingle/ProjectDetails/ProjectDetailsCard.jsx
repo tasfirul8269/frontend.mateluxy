@@ -13,27 +13,27 @@ const ProjectDetailsCard = ({ property }) => {
     { 
       label: 'Starting Price', 
       value: property?.propertyPrice ? `AED ${property.propertyPrice.toLocaleString()}` : 'Price not specified',
-      icon: <DollarSign size={18} className="text-blue-500" />
+      icon: <DollarSign size={18} className="text-red-500" />
     },
     { 
       label: 'Area from', 
       value: property?.propertySize ? `${property.propertySize} sq. ft` : 'Size not specified',
-      icon: <Ruler size={18} className="text-blue-500" />
+      icon: <Ruler size={18} className="text-red-500" />
     },
     { 
       label: 'Number of Bedrooms', 
       value: property?.propertyBedrooms ?? 'Not specified',
-      icon: <Bed size={18} className="text-blue-500" />
+      icon: <Bed size={18} className="text-red-500" />
     },
     { 
       label: 'Location', 
       value: property?.propertyState || property?.propertyAddress || 'Location not specified',
-      icon: <MapPin size={18} className="text-blue-500" />
+      icon: <MapPin size={18} className="text-red-500" />
     },
     { 
       label: 'Completion Date', 
       value: formattedCompletionDate,
-      icon: <Calendar size={18} className="text-blue-500" />
+      icon: <Calendar size={18} className="text-red-500" />
     }
   ];
 
@@ -53,7 +53,7 @@ const ProjectDetailsCard = ({ property }) => {
               {detail.icon}
               <span className="text-gray-600">{detail.label}</span>
             </div>
-            <span className="font-medium text-[14px] text-blue-400">
+            <span className="font-medium text-[14px] text-red-400">
               {detail.value}
             </span>
           </div>
@@ -65,7 +65,7 @@ const ProjectDetailsCard = ({ property }) => {
           href={property.brochureFile} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="cursor-pointer w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-6 rounded-[15px] transition-colors font-medium mt-6 block text-center flex items-center justify-center gap-2"
+          className="cursor-pointer w-full bg-red-500 hover:bg-red-600 text-white py-3 px-6 rounded-[15px] transition-colors font-medium mt-6 block text-center flex items-center justify-center gap-2"
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.98 }}
         >

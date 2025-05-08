@@ -10,11 +10,46 @@ const GallerySection = ({ property }) => {
   const [activeTab, setActiveTab] = useState('exteriors');
   const [currentIndex, setCurrentIndex] = useState(0);
   
-  // Get images from property data (default to empty array if not available)
-  const images = property?.media?.length > 0 
-    ? property.media.map(img => ({ src: img, alt: property.propertyTitle || 'Property image' }))
+  // Get exteriors and interiors galleries from property data
+  const exteriorsImages = property?.exteriorsGallery?.length > 0 
+    ? property.exteriorsGallery.map(img => ({ src: img, alt: `${property.propertyTitle || 'Property'} exterior` }))
+    : [];
+    
+  const interiorsImages = property?.interiorsGallery?.length > 0 
+    ? property.interiorsGallery.map(img => ({ src: img, alt: `${property.propertyTitle || 'Property'} interior` }))
     : [];
 
+  // Fallback to media array if specific galleries are not available
+  if (exteriorsImages.length === 0 && property?.media?.length > 0) {
+    // Assume first half of media is exteriors
+    const halfIndex = Math.ceil(property.media.length / 2);
+    for (let i = 0; i < halfIndex; i++) {
+      exteriorsImages.push({ 
+        src: property.media[i], 
+        alt: `${property.propertyTitle || 'Property'} exterior` 
+      });
+    }
+  }
+
+  if (interiorsImages.length === 0 && property?.media?.length > 0) {
+    // Assume second half of media is interiors
+    const halfIndex = Math.ceil(property.media.length / 2);
+    for (let i = halfIndex; i < property.media.length; i++) {
+      interiorsImages.push({ 
+        src: property.media[i], 
+        alt: `${property.propertyTitle || 'Property'} interior` 
+      });
+    }
+  }
+    
+  // Use the appropriate gallery based on active tab
+  const images = activeTab === 'exteriors' ? exteriorsImages : interiorsImages;
+
+  // Reset current index when tab changes
+  React.useEffect(() => {
+    setCurrentIndex(0);
+  }, [activeTab]);
+  
   const goToNext = () => {
     if (images.length > 0) {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
@@ -42,7 +77,7 @@ const GallerySection = ({ property }) => {
             }}
             className={`py-3 px-8 text-center transition-colors ${
               activeTab === tab.id
-                ? 'text-blue-500 border-b-2 border-blue-500 font-medium'
+                ? 'text-red-500 border-b-2 border-red-500 font-medium'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -54,11 +89,22 @@ const GallerySection = ({ property }) => {
       {/* Image Gallery - now using property.media */}
       {images.length > 0 ? (
         <div className="relative h-[400px] md:h-[500px] lg:h-[600px] rounded-[15px] overflow-hidden">
-          <img 
-            src={images[currentIndex].src} 
-            alt={images[currentIndex].alt} 
-            className="w-full h-full object-cover transition-opacity duration-300"
-          />
+          <div className="w-full h-full relative overflow-hidden">
+            <div 
+              className="w-full h-full absolute inset-0 flex transition-transform duration-700 ease-in-out"
+              style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+            >
+              {images.map((image, index) => (
+                <div key={index} className="w-full h-full flex-shrink-0">
+                  <img 
+                    src={image.src} 
+                    alt={image.alt} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
           
           <button 
             onClick={goToPrevious}

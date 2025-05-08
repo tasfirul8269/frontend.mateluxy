@@ -133,37 +133,6 @@ const OffPlanSinglePage = () => {
   return (
     <div className="bg-gray-50 min-h-screen">
       <main>
-        {/* Navigation and action bar */}
-        <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-gray-100 py-4 px-4">
-          <div className="container mx-auto flex justify-between items-center">
-            <button 
-              onClick={() => window.history.back()}
-              className="flex items-center gap-2 text-gray-700 hover:text-blue-500 transition-colors"
-            >
-              <ArrowLeft size={20} />
-              <span className="font-medium">Back</span>
-            </button>
-            
-            <div className="flex items-center gap-3">
-              <button 
-                onClick={shareProperty}
-                className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition-all"
-                aria-label="Share property"
-              >
-                <Share2 size={20} />
-              </button>
-              
-              <button 
-                onClick={toggleSave}
-                className={`p-2 rounded-full ${isSaved ? 'bg-blue-100 text-blue-500' : 'bg-gray-100 text-gray-700'} hover:bg-blue-100 hover:text-blue-500 transition-all`}
-                aria-label={isSaved ? 'Remove from saved' : 'Save property'}
-              >
-                {isSaved ? <Bookmark size={20} fill="currentColor" /> : <Bookmark size={20} />}
-              </button>
-            </div>
-          </div>
-        </div>
-        
         <div className="container mx-auto px-4 py-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
