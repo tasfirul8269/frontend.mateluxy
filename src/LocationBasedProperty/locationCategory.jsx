@@ -48,17 +48,17 @@ const cardStyles = [
   {
     color: "from-[#FF4B2B]/90 to-[#FF416C]/90", // Red
     hoverColor: "from-[#FF3B1B]/90 to-[#FF316C]/90",
-    image: "https://images.pexels.com/photos/2467558/pexels-photo-2467558.jpeg" // City skyline
+    image: "https://images.pexels.com/photos/2467558/pexels-photo-2467558.jpeg",
   },
   {
     color: "from-[#00B4DB]/90 to-[#0083B0]/90", // Blue
     hoverColor: "from-[#00A4CB]/90 to-[#0073A0]/90",
-    image: "https://images.pexels.com/photos/2193300/pexels-photo-2193300.jpeg" // Modern architecture
+    image: "https://images.pexels.com/photos/2193300/pexels-photo-2193300.jpeg",
   },
   {
     color: "from-[#11998e]/90 to-[#38ef7d]/90", // Green
     hoverColor: "from-[#10897e]/90 to-[#28df6d]/90",
-    image: "https://images.pexels.com/photos/2044434/pexels-photo-2044434.jpeg" // Coastal view
+    image: "https://images.pexels.com/photos/2044434/pexels-photo-2044434.jpeg",
   },
   {
     color: "from-[#8E2DE2]/90 to-[#4A00E0]/90", // Purple
