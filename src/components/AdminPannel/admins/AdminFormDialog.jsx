@@ -456,19 +456,19 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
       console.log('With data:', adminData);
 
       try {
-        const response = await fetch(url, {
-          method: isEditing ? 'PUT' : 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(adminData),
-          credentials: 'include',
-        });
+      const response = await fetch(url, {
+        method: isEditing ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(adminData),
+        credentials: 'include',
+      });
 
         const contentType = response.headers.get("content-type");
         let errorData;
-        
-        if (!response.ok) {
+
+      if (!response.ok) {
           // Try to get detailed error message
           if (contentType && contentType.includes("application/json")) {
             errorData = await response.json();
@@ -494,7 +494,7 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
             const errorText = await response.text();
             console.error('Response error text:', errorText);
             throw new Error(`Failed to ${isEditing ? 'update' : 'add'} admin: ${response.status} ${response.statusText}`);
-          }
+      }
         }
 
         // Handle successful response
@@ -509,8 +509,8 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
 
         // Handle various response formats
         const responseData = data._doc || data || {};
-        
-        const updatedAdmin = {
+
+      const updatedAdmin = {
           id: responseData._id || admin?.id || 'temp-' + Date.now(),
           fullName: responseData.fullName || adminData.fullName,
           email: responseData.email || adminData.email,
@@ -519,11 +519,11 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
           lastLogin: responseData.lastLogin ? new Date(responseData.lastLogin) : new Date(),
           adminId: responseData.adminId || `ADM${Math.floor(1000 + Math.random() * 9000)}`,
           createdAt: responseData.createdAt ? new Date(responseData.createdAt) : new Date(),
-        };
+      };
 
-        if (isEditing && onAdminUpdated) {
-          onAdminUpdated(updatedAdmin);
-          toast.success("Admin updated successfully!");
+      if (isEditing && onAdminUpdated) {
+        onAdminUpdated(updatedAdmin);
+        toast.success("Admin updated successfully!");
           // Add notification for admin update
           addNotification(
             'ADMIN_UPDATED',
@@ -531,9 +531,9 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
             updatedAdmin.id,
             updatedAdmin.fullName
           );
-        } else if (!isEditing && onAdminAdded) {
-          onAdminAdded(updatedAdmin);
-          toast.success("Admin added successfully!");
+      } else if (!isEditing && onAdminAdded) {
+        onAdminAdded(updatedAdmin);
+        toast.success("Admin added successfully!");
           // Add notification for new admin
           addNotification(
             'ADMIN_ADDED',
@@ -541,12 +541,12 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
             updatedAdmin.id,
             updatedAdmin.fullName
           );
-        }
+      }
 
-        form.reset();
-        setSelectedFile(null);
-        setPreviewUrl("");
-        onOpenChange(false);
+      form.reset();
+      setSelectedFile(null);
+      setPreviewUrl("");
+      onOpenChange(false);
       } catch (fetchError) {
         console.error('Fetch error:', fetchError);
         throw fetchError;

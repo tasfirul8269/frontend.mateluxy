@@ -8,6 +8,7 @@ const API_URL = import.meta.env.VITE_API_URL || '';
 
 // Notification types and their configurations
 export const NOTIFICATION_TYPES = {
+  // Property notifications
   PROPERTY_ADDED: {
     icon: '🏠',
     color: 'bg-green-500',
@@ -23,6 +24,8 @@ export const NOTIFICATION_TYPES = {
     color: 'bg-red-500',
     title: 'Property Deleted'
   },
+  
+  // Agent notifications
   AGENT_ADDED: {
     icon: '👤',
     color: 'bg-green-500',
@@ -38,6 +41,8 @@ export const NOTIFICATION_TYPES = {
     color: 'bg-red-500',
     title: 'Agent Deleted'
   },
+  
+  // Admin notifications
   ADMIN_ADDED: {
     icon: '👑',
     color: 'bg-green-500',
@@ -53,6 +58,8 @@ export const NOTIFICATION_TYPES = {
     color: 'bg-red-500',
     title: 'Admin Deleted'
   },
+  
+  // System notifications
   SYSTEM: {
     icon: '⚙️',
     color: 'bg-gray-500',
@@ -97,6 +104,11 @@ const formatTime = (timestamp) => {
 
 // Add a new notification
 export const addNotification = async (type, message, entityId = null, entityName = null) => {
+  if (!type || !message) {
+    console.error('Invalid notification: type and message are required');
+    return null;
+  }
+  
   console.log(`Adding notification: ${type} - ${message}`);
   
   try {
@@ -104,8 +116,8 @@ export const addNotification = async (type, message, entityId = null, entityName
     const notificationData = {
       type,
       message,
-      entityId,
-      entityName
+      entityId: entityId || null,
+      entityName: entityName || null
     };
     
     // Try to save to the backend first
@@ -122,16 +134,22 @@ export const addNotification = async (type, message, entityId = null, entityName
       // If successful, get the created notification from the response
       const createdNotification = await response.json();
       
+      // Get the first notification if an array is returned (multiple recipients)
+      const mainNotification = Array.isArray(createdNotification) ? 
+        createdNotification[0] : createdNotification;
+      
       // Dispatch event to notify components about the new notification
       window.dispatchEvent(new CustomEvent('notification', { 
-        detail: { action: 'add', notification: createdNotification[0] }
+        detail: { action: 'add', notification: mainNotification }
       }));
       
-      console.log("Successfully added notification to backend:", createdNotification);
-      return createdNotification[0];
+      console.log("Successfully added notification to backend:", mainNotification);
+      return mainNotification;
     } else {
       // If backend save fails, fall back to local storage
       console.warn("Failed to save notification to backend, using local storage instead");
+      const errorText = await response.text();
+      console.error("Backend error:", errorText);
       
       // Fall back to local storage
       const notifications = loadNotificationsFromStorage();
@@ -201,9 +219,6 @@ export const addNotification = async (type, message, entityId = null, entityName
 // Get all notifications
 export const getNotifications = async () => {
   try {
-    // Check if notifications were previously cleared
-    const wasCleared = localStorage.getItem('notifications_cleared') === 'true';
-    
     // Try to get notifications from backend
     const response = await fetch(`${API_URL}/api/notifications`, {
       method: 'GET',
@@ -213,15 +228,7 @@ export const getNotifications = async () => {
     if (response.ok) {
       const notifications = await response.json();
       
-      // If we previously cleared notifications but backend returned some,
-      // it means they were added after clearing or another user made changes
-      if (notifications.length > 0) {
-        // Reset the cleared flag
-        localStorage.removeItem('notifications_cleared');
-      } else if (wasCleared) {
-        // If backend returned empty AND we have a cleared flag, return empty
-        return [];
-      }
+      console.log(`Received ${notifications.length} notifications from backend`);
       
       // Format time strings for display
       const formattedNotifications = notifications.map(notification => ({
@@ -243,16 +250,12 @@ export const getNotifications = async () => {
     } else {
       console.warn("Failed to fetch notifications from backend, using local storage");
       
-      // If notifications were previously cleared, return empty array
-      if (wasCleared) {
-        return [];
-      }
-      
       // Fall back to local storage if API call fails
       const notifications = loadNotificationsFromStorage();
+        
       return notifications.map(notification => ({
         ...notification,
-        time: formatTime(notification.timestamp),
+        time: formatTime(notification.timestamp || notification.createdAt),
         // Ensure createdByName is preserved from local storage
         createdByName: notification.createdByName || null
       }));
@@ -260,17 +263,12 @@ export const getNotifications = async () => {
   } catch (error) {
     console.error("Error fetching notifications:", error);
     
-    // Check if notifications were previously cleared
-    const wasCleared = localStorage.getItem('notifications_cleared') === 'true';
-    if (wasCleared) {
-      return [];
-    }
-    
     // Fall back to local storage if API call fails
     const notifications = loadNotificationsFromStorage();
+      
     return notifications.map(notification => ({
       ...notification,
-      time: formatTime(notification.timestamp),
+      time: formatTime(notification.timestamp || notification.createdAt),
       // Ensure createdByName is preserved from local storage
       createdByName: notification.createdByName || null
     }));
@@ -367,100 +365,16 @@ export const markAllAsRead = async () => {
   }
 };
 
-// Delete a notification
-export const deleteNotification = async (id) => {
-  try {
-    // Try to delete on backend first
-    const response = await fetch(`${API_URL}/api/notifications/${id}`, {
-      method: 'DELETE',
-      credentials: 'include'
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to delete notification');
-    }
-    
-    // Update local storage as well
-    const notifications = loadNotificationsFromStorage();
-    const updatedNotifications = notifications.filter(notification => notification.id !== id);
-    saveNotificationsToStorage(updatedNotifications);
-    
-    // Dispatch event to notify components
-    window.dispatchEvent(new CustomEvent('notification', { 
-      detail: { action: 'delete', id }
-    }));
-    
-    return updatedNotifications;
-  } catch (error) {
-    console.error("Error deleting notification:", error);
-    
-    // Fall back to local storage update only
-    const notifications = loadNotificationsFromStorage();
-    const updatedNotifications = notifications.filter(notification => notification.id !== id);
-    saveNotificationsToStorage(updatedNotifications);
-    
-    // Dispatch event to notify components
-    window.dispatchEvent(new CustomEvent('notification', { 
-      detail: { action: 'delete', id }
-    }));
-    
-    return updatedNotifications;
-  }
-};
-
-// Clear all notifications
-export const clearAllNotifications = async () => {
-  try {
-    console.log("Attempting to clear all notifications from backend");
-    
-    // Try to clear on backend first
-    const response = await fetch(`${API_URL}/api/notifications/clear-all`, {
-      method: 'DELETE',
-      credentials: 'include'
-    });
-    
-    console.log("Clear all notifications response status:", response.status);
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Clear all error response:", errorText);
-      throw new Error(`Failed to clear all notifications: ${response.status} ${response.statusText}`);
-    }
-    
-    const result = await response.json();
-    console.log("Clear all notifications successful:", result);
-    
-    // Clear local storage as well and store a flag to indicate notifications were cleared
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.setItem('notifications_cleared', 'true');
-    
-    // Dispatch event to notify components
-    window.dispatchEvent(new CustomEvent('notification', { 
-      detail: { action: 'clearAll' }
-    }));
-    
-    return [];
-  } catch (error) {
-    console.error("Error clearing all notifications:", error);
-    
-    // Fall back to local storage update only
-    console.log("Falling back to clearing local storage only");
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.setItem('notifications_cleared', 'true');
-    
-    // Dispatch event to notify components
-    window.dispatchEvent(new CustomEvent('notification', { 
-      detail: { action: 'clearAll' }
-    }));
-    
-    return [];
-  }
-};
-
 // Count unread notifications
 export const getUnreadCount = () => {
-  const notifications = loadNotificationsFromStorage();
-  return notifications.filter(n => !n.read).length;
+  try {
+    // Get notifications from local storage
+    const notifications = loadNotificationsFromStorage();
+    return notifications.filter(n => !n.read).length;
+  } catch (error) {
+    console.error("Error getting unread count:", error);
+    return 0;
+  }
 };
 
 // Sample function to create some initial notifications (for testing)

@@ -5,12 +5,12 @@ import { Navigate, Outlet, useNavigate } from 'react-router-dom';
 import { toast } from '@/components/AdminPannel/ui/sonner';
 
 export const ProtectedAdminRoute = () => {
-  const [authorized, setAuthorized] = useState(null);
+    const [authorized, setAuthorized] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const checkAuth = async () => {
+    useEffect(() => {
+      const checkAuth = async () => {
       try {
         const loggedIn = await isLoggedIn();
         setAuthorized(loggedIn);
@@ -26,16 +26,16 @@ export const ProtectedAdminRoute = () => {
       } finally {
         setAuthChecked(true);
       }
-    };
-
-    checkAuth();
+      };
+  
+      checkAuth();
     
     // Set up periodic authentication check every 5 minutes
     const authInterval = setInterval(checkAuth, 5 * 60 * 1000);
     
     return () => clearInterval(authInterval);
   }, [navigate]);
-
+  
   if (!authChecked) return <div className="flex justify-center items-center h-screen">
     <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
   </div>;
@@ -44,11 +44,11 @@ export const ProtectedAdminRoute = () => {
 };
 
 export const PublicRoute = () => {
-  const [authorized, setAuthorized] = useState(null);
+    const [authorized, setAuthorized] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const checkAuth = async () => {
+    useEffect(() => {
+      const checkAuth = async () => {
       try {
         const loggedIn = await isLoggedIn();
         setAuthorized(loggedIn);
@@ -61,14 +61,14 @@ export const PublicRoute = () => {
         console.error("Auth check error:", error);
         setAuthorized(false);
       }
-    };
-
-    checkAuth();
+      };
+  
+      checkAuth();
   }, [navigate]);
-
+  
   if (authorized === null) return <div className="flex justify-center items-center h-screen">
     <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
   </div>;
-
+  
   return !authorized ? <Outlet /> : null; // Using null as navigate is already called
 };

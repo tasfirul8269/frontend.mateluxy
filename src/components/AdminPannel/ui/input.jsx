@@ -10,20 +10,20 @@ const Input = React.forwardRef(({ className, type, error, icon, ...props }, ref)
           {icon}
         </div>
       )}
-      <input
-        type={type}
-        className={cn(
+    <input
+      type={type}
+      className={cn(
           "flex h-11 w-full rounded-md border-2 border-gray-200 bg-white px-4 py-2 text-base shadow-sm transition-all duration-200",
           "placeholder:text-gray-400 placeholder:text-opacity-80",
           "focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200",
           "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50",
           error && "border-red-500 focus:border-red-500 focus:ring-red-200 pr-10",
           icon && "pl-10",
-          className
-        )}
-        ref={ref}
-        {...props}
-      />
+        className
+      )}
+      ref={ref}
+      {...props}
+    />
       {error && (
         <div className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">

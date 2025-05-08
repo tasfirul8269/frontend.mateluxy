@@ -12,6 +12,28 @@ import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { addNotification } from "@/services/notificationService";
 
+/**
+ * Persistent Form State Pattern
+ * 
+ * This module implements a persistent form state pattern to preserve form data
+ * when the dialog is closed or when form submission fails.
+ * 
+ * How it works:
+ * 1. We use a module-level object (persistentFormState) that persists between component renders
+ * 2. When the form data changes, we update this object via the onFormChange callback
+ * 3. When the dialog is opened again, we initialize the form with the persisted data
+ * 4. We only clear the persistent data when the form is successfully submitted
+ * 
+ * This ensures that users don't lose their progress when they accidentally close
+ * the dialog or when there's an error during submission.
+ */
+
+// Create a persistent form state object to store form data between dialog opens/closes
+const persistentFormState = {
+  formData: null,
+  selectedCategory: null
+};
+
 export const PropertyFormDialog = ({ 
   isOpen, 
   onClose, 
@@ -22,7 +44,9 @@ export const PropertyFormDialog = ({
 }) => {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(isEditing && property ? property.category : null);
+  const [selectedCategory, setSelectedCategory] = useState(
+    isEditing && property ? property.category : persistentFormState.selectedCategory
+  );
 
   // Update selected category if property changes
   useEffect(() => {
@@ -30,6 +54,13 @@ export const PropertyFormDialog = ({
       setSelectedCategory(property.category);
     }
   }, [isEditing, property]);
+
+  // Save selected category to persistent state when it changes
+  useEffect(() => {
+    if (!isEditing) {
+      persistentFormState.selectedCategory = selectedCategory;
+    }
+  }, [selectedCategory, isEditing]);
 
   const categories = [
     { id: "Buy", label: "Buy", icon: "🏠" },
@@ -45,6 +76,10 @@ export const PropertyFormDialog = ({
       ? "Property updated successfully!" 
       : "Property added successfully!";
       
+    // Clear persistent form state after successful submission
+    persistentFormState.formData = null;
+    persistentFormState.selectedCategory = null;
+    
     // Close the dialog
     onClose();
     
@@ -72,6 +107,11 @@ export const PropertyFormDialog = ({
   const handleSubmit = async (data) => {
     try {
       setIsSubmitting(true);
+      
+      // Store form data in persistent state in case submission fails
+      if (!isEditing) {
+        persistentFormState.formData = data;
+      }
       
       // Ensure all required fields are set
       const propertyData = { 
@@ -169,8 +209,13 @@ export const PropertyFormDialog = ({
               onSubmit={handleSubmit} 
               onCancel={onClose} 
               selectedCategory={selectedCategory}
-              initialData={isEditing ? property : null}
+              initialData={isEditing ? property : persistentFormState.formData}
               isEditing={isEditing}
+              onFormChange={(formData) => {
+                if (!isEditing) {
+                  persistentFormState.formData = formData;
+                }
+              }}
             />
           </motion.div>
         ) : (

@@ -133,7 +133,7 @@ const MapPreview = React.memo(({ latitude, longitude, zoomLevel, onMapClick }) =
   );
 });
 
-export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategory, initialData = null, isEditing = false }) {
+export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategory, initialData = null, isEditing = false, onFormChange = null }) {
   const [activeTab, setActiveTab] = useState(0);
   const [agents, setAgents] = useState([]);
 
@@ -317,6 +317,13 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
       setForm(getInitialFormState());
     }
   }, [initialData, selectedCategory]);
+
+  // Call onFormChange whenever form changes
+  useEffect(() => {
+    if (onFormChange) {
+      onFormChange(form);
+    }
+  }, [form, onFormChange]);
 
   // Upload states
   const [uploading, setUploading] = useState(false);

@@ -35,7 +35,7 @@ export const logout = async () => {
     return res.ok;
   } catch (err) {
     console.error("Logout failed:", err);
-    return false;
-  }
-};
+      return false;
+    }
+  };
   

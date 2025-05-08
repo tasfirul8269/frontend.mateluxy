@@ -11,6 +11,11 @@ import { propertyApi } from "@/services/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { LoadingSpinner } from "@/components/AdminPannel/ui/loading-spinner";
 
+// Create a persistent form state for Off Plan properties
+const persistentOffPlanFormState = {
+  formData: null
+};
+
 export const OffPlanPropertyFormDialog = ({ isOpen, onClose }) => {
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -18,6 +23,9 @@ export const OffPlanPropertyFormDialog = ({ isOpen, onClose }) => {
   const handleSubmit = async (data) => {
     try {
       setIsSubmitting(true);
+      
+      // Store form data in persistent state in case submission fails
+      persistentOffPlanFormState.formData = data;
 
       // Ensure all required fields are present
       const ensureRequiredFields = {
@@ -97,6 +105,9 @@ export const OffPlanPropertyFormDialog = ({ isOpen, onClose }) => {
       // Send data to the API
       await propertyApi.createProperty(propertyData);
       
+      // Clear persistent form state after successful submission
+      persistentOffPlanFormState.formData = null;
+      
       // Show success message
       toast.success("Off Plan property added successfully!");
       
@@ -130,6 +141,10 @@ export const OffPlanPropertyFormDialog = ({ isOpen, onClose }) => {
             onSubmit={handleSubmit}
             onCancel={onClose}
             selectedCategory="Off Plan"
+            initialData={persistentOffPlanFormState.formData}
+            onFormChange={(formData) => {
+              persistentOffPlanFormState.formData = formData;
+            }}
           />
         )}
       </DialogContent>

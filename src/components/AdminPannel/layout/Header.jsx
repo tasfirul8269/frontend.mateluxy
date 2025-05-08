@@ -21,8 +21,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/AdminPannel/ui/label";
 import { Input } from "@/components/AdminPannel/ui/input";
 import { logout } from "@/utils/isLoggedIn";
-import { getNotifications, markAsRead, markAllAsRead, deleteNotification, getUnreadCount, clearAllNotifications } from "@/services/notificationService";
+import { getNotifications, markAsRead, markAllAsRead, getUnreadCount } from "@/services/notificationService";
 import { NotificationDetailDialog } from "@/components/AdminPannel/notifications/NotificationDetailDialog";
+import { motion } from "framer-motion";
 
 export function Header({ searchPlaceholder, onSearch }) {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -45,6 +46,12 @@ export function Header({ searchPlaceholder, onSearch }) {
     confirmPassword: "",
     profileImage: ""
   });
+  
+  // Add notification filter state
+  const [notificationFilter, setNotificationFilter] = useState('all');
+  const [filteredNotifications, setFilteredNotifications] = useState([]);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
+  
   const searchInputRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -69,6 +76,39 @@ export function Header({ searchPlaceholder, onSearch }) {
   // Add state for selected notification and dialog
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  
+  // Filter notifications based on the selected filter
+  useEffect(() => {
+    if (notifications.length > 0) {
+      switch (notificationFilter) {
+        case 'unread':
+          setFilteredNotifications(notifications.filter(n => !n.read));
+          break;
+        case 'properties':
+          setFilteredNotifications(notifications.filter(n => n.type && n.type.startsWith('PROPERTY')));
+          break;
+        default:
+          setFilteredNotifications(notifications);
+      }
+    } else {
+      setFilteredNotifications([]);
+    }
+  }, [notifications, notificationFilter]);
+  
+  // Calculate counts for each filter category
+  const getFilterCounts = () => {
+    const unreadCount = notifications.filter(n => !n.read).length;
+    const propertiesCount = notifications.filter(n => n.type && n.type.startsWith('PROPERTY')).length;
+    
+    return {
+      all: notifications.length,
+      unread: unreadCount,
+      properties: propertiesCount
+    };
+  };
+  
+  // Get counts for the filter tabs
+  const filterCounts = getFilterCounts();
   
   // Load notifications from service
   useEffect(() => {
@@ -98,6 +138,7 @@ export function Header({ searchPlaceholder, onSearch }) {
   // Function to load notifications
   const loadNotifications = async () => {
     try {
+      setIsLoadingNotifications(true);
       // Get notifications from the service (which now communicates with backend)
       const allNotifications = await getNotifications();
       console.log("Loaded notifications in Header:", allNotifications);
@@ -107,18 +148,30 @@ export function Header({ searchPlaceholder, onSearch }) {
       const unreadNotificationCount = getUnreadCount();
       setUnreadCount(unreadNotificationCount);
       
+      // Update filtered notifications based on current filter
+      // This will be handled by the filter effect, but we'll set empty initially
+      if (allNotifications.length === 0) {
+        setFilteredNotifications([]);
+      }
+      
       // If we have the selected notification open in the dialog, update its read status
       if (selectedNotification && isDetailDialogOpen) {
         const updatedNotification = allNotifications.find(n => n.id === selectedNotification.id);
         if (updatedNotification) {
           setSelectedNotification(updatedNotification);
         } else {
-          // If the notification was deleted, close the dialog
+          // If the notification was deleted or cleared, close the dialog
           setIsDetailDialogOpen(false);
         }
       }
     } catch (error) {
       console.error("Error loading notifications:", error);
+      // Even on error, ensure we reset the state if needed
+      setUnreadCount(0);
+      setNotifications([]);
+      setFilteredNotifications([]);
+    } finally {
+      setIsLoadingNotifications(false);
     }
   };
   
@@ -330,36 +383,6 @@ export function Header({ searchPlaceholder, onSearch }) {
     setIsNotificationsOpen(false);
   };
   
-  // Handle clear all notifications
-  const handleClearAll = async () => {
-    try {
-      console.log("Clearing all notifications");
-      
-      // First close the popover to improve user experience
-      setIsNotificationsOpen(false);
-      
-      // Show loading toast
-      const toastId = toast.loading("Clearing notifications...");
-      
-      // Call the service to clear all notifications
-      await clearAllNotifications();
-      
-      // Update toast on success
-      toast.success("All notifications cleared", { id: toastId });
-      
-      // Reload notifications (should be empty now)
-      await loadNotifications();
-    } catch (error) {
-      console.error("Error clearing all notifications:", error);
-      
-      // Show detailed error message
-      toast.error(`Failed to clear notifications: ${error.message || "Unknown error"}`);
-      
-      // Try to reload notifications anyway to ensure UI is in sync
-      await loadNotifications();
-    }
-  };
-
   // Handle marking all as read
   const handleMarkAllAsRead = async () => {
     try {
@@ -368,18 +391,6 @@ export function Header({ searchPlaceholder, onSearch }) {
       await loadNotifications(); // Reload notifications after marking all as read
     } catch (error) {
       console.error("Error marking all notifications as read:", error);
-    }
-  };
-
-  // Handle deleting a notification
-  const handleDeleteNotification = async (e, id) => {
-    e.stopPropagation(); // Prevent triggering parent click handlers
-    try {
-      console.log(`Deleting notification ${id}`);
-      await deleteNotification(id);
-      await loadNotifications(); // Reload notifications after deletion
-    } catch (error) {
-      console.error("Error deleting notification:", error);
     }
   };
 
@@ -571,6 +582,69 @@ export function Header({ searchPlaceholder, onSearch }) {
     return 'Recently';
   };
 
+  // Helper function to get color class based on notification type
+  const getNotificationColorClass = (notification) => {
+    if (!notification || !notification.type) return "bg-gray-100 text-gray-500";
+    
+    // Get the entity type from the notification type (e.g., PROPERTY_ADDED -> PROPERTY)
+    const type = notification.type.split('_')[0]; 
+    
+    switch (type) {
+      case 'PROPERTY':
+        return "bg-green-100 text-green-600";
+      case 'AGENT':
+        return "bg-blue-100 text-blue-600";
+      case 'ADMIN':
+        return "bg-purple-100 text-purple-600";
+      case 'SYSTEM':
+        return "bg-gray-100 text-gray-600";
+      default:
+        return "bg-gray-100 text-gray-500";
+    }
+  };
+
+  // Get notification title based on type
+  const getNotificationTitle = (notification) => {
+    if (notification.title) return notification.title;
+    
+    if (!notification.type) return "Notification";
+    
+    const parts = notification.type.split('_');
+    if (parts.length !== 2) return "Notification";
+    
+    const entity = parts[0].charAt(0) + parts[0].slice(1).toLowerCase();
+    const action = parts[1].charAt(0) + parts[1].slice(1).toLowerCase();
+    
+    return `${entity} ${action}`;
+  };
+  
+  // Get appropriate icon for notification
+  const getNotificationIcon = (notification) => {
+    if (notification.icon) return notification.icon;
+    
+    if (!notification.type) return "📢";
+    
+    const type = notification.type.split('_')[0];
+    const action = notification.type.split('_')[1];
+    
+    // Default icons based on entity type and action
+    switch (type) {
+      case 'PROPERTY':
+        return action === 'ADDED' ? "🏠" : (action === 'DELETED' ? "🗑️" : "🔄");
+      case 'AGENT':
+        return action === 'ADDED' ? "👤" : (action === 'DELETED' ? "🗑️" : "🔄");
+      case 'ADMIN':
+        return action === 'ADDED' ? "👑" : (action === 'DELETED' ? "🗑️" : "🔄");
+      default:
+        return "📢";
+    }
+  };
+
+  // Function to handle filter change
+  const handleFilterChange = (filter) => {
+    setNotificationFilter(filter);
+  };
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 py-3 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
       <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">{pageTitle}</h1>
@@ -648,78 +722,197 @@ export function Header({ searchPlaceholder, onSearch }) {
 
         <Popover open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
           <PopoverTrigger asChild>
-            <button className="relative p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-200">
+            <button 
+              className="relative p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-200"
+              aria-label="Notifications"
+            >
               <Bell size={20} />
               {unreadCount > 0 && (
-                <span className="absolute top-0 right-0 flex h-4 w-4">
+                <span className="absolute top-0 right-0 flex h-5 w-5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 items-center justify-center text-[9px] text-white font-bold">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                  <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 items-center justify-center text-[10px] text-white font-medium">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
                 </span>
               )}
             </button>
           </PopoverTrigger>
-          <PopoverContent className="w-[350px] p-0 mr-4 shadow-xl border-gray-200 overflow-hidden" align="end">
-            <div className="flex justify-between items-center p-3 border-b border-gray-100">
-              <h3 className="font-semibold text-lg">Notifications</h3>
-              <div className="flex gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleMarkAllAsRead}
-                  className="text-sm font-normal h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+          <PopoverContent 
+            className="w-[380px] p-0 mr-4 shadow-xl border border-gray-200 rounded-xl overflow-hidden"
+            align="end"
+            sideOffset={8}
+          >
+            {/* Header with title and actions */}
+            <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
+              <div className="flex justify-between items-center px-4 py-3">
+                <h3 className="font-semibold text-lg text-gray-900">Notifications</h3>
+                <div className="flex gap-1">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleMarkAllAsRead}
+                    className="text-xs font-medium h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg"
+                    disabled={!notifications.some(n => !n.read)}
+                  >
+                    Mark all read
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Filter tabs */}
+              <div className="flex border-b border-gray-100">
+                <button 
+                  className={cn(
+                    "flex-1 py-2.5 px-4 text-sm font-medium border-b-2 transition-colors flex items-center justify-center gap-1.5",
+                    notificationFilter === 'all' 
+                      ? "text-gray-900 border-blue-500" 
+                      : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
+                  )}
+                  onClick={() => handleFilterChange('all')}
                 >
-                  Mark all as read
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleClearAll}
-                  className="text-sm font-normal h-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  All
+                  {filterCounts.all > 0 && (
+                    <span className="inline-flex items-center justify-center rounded-full text-xs bg-gray-100 px-1.5 min-w-[1.25rem] h-5">
+                      {filterCounts.all}
+                    </span>
+                  )}
+                </button>
+                <button 
+                  className={cn(
+                    "flex-1 py-2.5 px-4 text-sm font-medium border-b-2 transition-colors flex items-center justify-center gap-1.5",
+                    notificationFilter === 'unread' 
+                      ? "text-gray-900 border-blue-500" 
+                      : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
+                  )}
+                  onClick={() => handleFilterChange('unread')}
                 >
-                  Clear all
-                </Button>
+                  Unread
+                  {filterCounts.unread > 0 && (
+                    <span className="inline-flex items-center justify-center rounded-full text-xs bg-blue-100 text-blue-700 px-1.5 min-w-[1.25rem] h-5">
+                      {filterCounts.unread}
+                    </span>
+                  )}
+                </button>
+                <button 
+                  className={cn(
+                    "flex-1 py-2.5 px-4 text-sm font-medium border-b-2 transition-colors flex items-center justify-center gap-1.5",
+                    notificationFilter === 'properties' 
+                      ? "text-gray-900 border-blue-500" 
+                      : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
+                  )}
+                  onClick={() => handleFilterChange('properties')}
+                >
+                  Properties
+                  {filterCounts.properties > 0 && (
+                    <span className="inline-flex items-center justify-center rounded-full text-xs bg-green-100 text-green-700 px-1.5 min-w-[1.25rem] h-5">
+                      {filterCounts.properties}
+                    </span>
+                  )}
+                </button>
               </div>
             </div>
-            <div className="max-h-[350px] overflow-y-auto">
-              {notifications.length > 0 ? (
-                notifications.map(notification => (
-                  <div 
-                    key={notification.id} 
-                    className={cn(
-                      "p-4 border-b border-gray-100 flex items-start hover:bg-gray-50 transition-colors cursor-pointer",
-                      notification.read ? "opacity-75" : "bg-blue-50/40"
-                    )}
-                    onClick={() => handleNotificationClick(notification)}
-                  >
-                    <div className={`w-2 h-2 mt-1.5 mr-3 rounded-full flex-shrink-0 ${notification.read ? 'bg-gray-300' : 'bg-blue-500'}`}></div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <div className="flex items-center gap-1">
-                          <span className="text-xl leading-none">{notification.icon}</span>
-                          <h4 className="font-medium text-gray-900">{notification.title}</h4>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(e) => handleDeleteNotification(e, notification.id)}
-                          className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                      <p className="text-sm text-gray-600 my-1">{notification.message}</p>
-                      <div className="text-xs text-gray-500">{formatNotificationTime(notification)}</div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="p-8 text-center">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Bell size={24} className="text-gray-400" />
-                  </div>
-                  <p className="text-gray-500">No notifications</p>
-                  <p className="text-xs text-gray-400 mt-2">You're all caught up!</p>
+            
+            {/* Notification list */}
+            <div className="bg-gray-50 max-h-[400px] overflow-y-auto">
+              {isLoadingNotifications && (
+                <div className="flex justify-center items-center py-8">
+                  <div className="animate-spin w-8 h-8 border-2 border-blue-500 rounded-full border-t-transparent"></div>
                 </div>
               )}
+              
+              {!isLoadingNotifications && filteredNotifications.length > 0 ? (
+                <div className="divide-y divide-gray-100">
+                  {filteredNotifications.map(notification => (
+                    <motion.div 
+                      key={notification.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className={cn(
+                        "p-4 flex gap-3 hover:bg-gray-100/50 transition-all cursor-pointer",
+                        notification.read ? "bg-white" : "bg-blue-50/50"
+                      )}
+                      onClick={() => handleNotificationClick(notification)}
+                    >
+                      {/* Notification icon with color */}
+                      <div className={cn(
+                        "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
+                        getNotificationColorClass(notification)
+                      )}>
+                        <span className="text-lg">{getNotificationIcon(notification)}</span>
+                      </div>
+                      
+                      {/* Notification content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex justify-between items-start">
+                          <h4 className="font-medium text-gray-900 text-sm truncate pr-4">
+                            {getNotificationTitle(notification)}
+                          </h4>
+                          <div className="flex items-center gap-1">
+                            {!notification.read && (
+                              <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                            )}
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600 line-clamp-2 my-0.5">{notification.message}</p>
+                        <div className="text-xs text-gray-400 flex items-center gap-2">
+                          <span>{formatNotificationTime(notification)}</span>
+                          {notification.entityName && (
+                            <>
+                              <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                              <span className="truncate max-w-[150px]">{notification.entityName}</span>
+                            </>
+                          )}
+                          {notification.createdByName && (
+                            <>
+                              <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                              <span className="truncate max-w-[100px]">By: {notification.createdByName}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-12 px-4 flex flex-col items-center justify-center text-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <Bell size={24} className="text-gray-400" />
+                  </div>
+                  <h4 className="font-medium text-gray-800 mb-1">
+                    {notificationFilter === 'all' && "No notifications yet"}
+                    {notificationFilter === 'unread' && "No unread notifications"}
+                    {notificationFilter === 'properties' && "No property notifications"}
+                  </h4>
+                  <p className="text-sm text-gray-500 max-w-[250px]">
+                    {notificationFilter === 'all' && "When you get notifications, they'll show up here"}
+                    {notificationFilter === 'unread' && "You've read all your notifications"}
+                    {notificationFilter === 'properties' && "No property updates to show"}
+                  </p>
+                  {notificationFilter !== 'all' && (
+                    <button
+                      className="mt-4 px-4 py-1.5 rounded-md bg-gray-100 text-xs font-medium text-gray-700 hover:bg-gray-200 transition-colors"
+                      onClick={() => handleFilterChange('all')}
+                    >
+                      View all notifications
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            {/* Footer with link to all notifications */}
+            <div className="bg-white border-t border-gray-100 p-3">
+              <button 
+                onClick={() => {
+                  // Close the popover and navigate to all notifications
+                  setIsNotificationsOpen(false);
+                  // You could add navigate("/admin/notifications") here if you have a dedicated page
+                }}
+                className="w-full py-2 rounded-lg bg-gray-100 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
+              >
+                View All Notifications
+              </button>
             </div>
           </PopoverContent>
         </Popover>
@@ -749,8 +942,8 @@ export function Header({ searchPlaceholder, onSearch }) {
                   ) : (
                     <User size={24} />
                   )}
-                </div>
-                <div className="flex flex-col">
+              </div>
+              <div className="flex flex-col">
                   <span className="font-semibold text-gray-800 text-lg">
                     {adminData?.fullName || 'Admin User'}
                   </span>
@@ -772,14 +965,14 @@ export function Header({ searchPlaceholder, onSearch }) {
               >
                 <Settings size={16} className="mr-2 text-blue-500" />
                 <span>Account Settings</span>
-              </DropdownMenuItem>
+            </DropdownMenuItem>
               <DropdownMenuItem 
                 className="cursor-pointer px-4 py-2.5 hover:bg-red-50 text-red-600 transition-colors"
                 onClick={handleSignOut}
               >
-                <LogOut size={16} className="mr-2" />
+              <LogOut size={16} className="mr-2" />
                 <span>Sign Out</span>
-              </DropdownMenuItem>
+            </DropdownMenuItem>
             </div>
             
             <div className="bg-gray-50 px-4 py-3 text-xs text-center text-gray-500 border-t border-gray-100">

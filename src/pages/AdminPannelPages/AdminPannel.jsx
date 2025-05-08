@@ -22,17 +22,17 @@ const AdminPannelPage = () => {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+     
         <MainLayout>
           <Outlet />  
         </MainLayout>
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 };
 
 export default AdminPannelPage;

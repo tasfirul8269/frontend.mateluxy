@@ -20,7 +20,7 @@ import {
 } from "@/components/AdminPannel/ui/form";
 import { Input } from "@/components/AdminPannel/ui/input";
 import { Button } from "@/components/AdminPannel/ui/button";
-import { toast } from "sonner";
+import { customToast } from "@/components/AdminPannel/ui/sonner";
 import { addNotification } from "@/services/notificationService";
 import { User, Info, Phone, Lock, Globe, Languages, Check, X, Plus, Trash2, XCircle, FileText, Link } from "lucide-react";
 import {
@@ -261,7 +261,7 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
       if (file.type.startsWith("image/")) {
         handleImageSelection(file);
       } else {
-        toast.error("Please select an image file");
+        customToast.error("Please select an image file");
       }
     }
   };
@@ -273,7 +273,7 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
       if (file.type.startsWith("image/")) {
         handleImageSelection(file);
       } else {
-        toast.error("Please select an image file");
+        customToast.error("Please select an image file");
       }
     }
   };
@@ -361,7 +361,7 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
         setNewSocialUrl("");
         setAddingSocialLink(false);
       } else {
-        toast.error("Please enter a URL for the social link");
+        customToast.error("Please enter a URL for the social link");
       }
     } else {
       setAddingSocialLink(true);
@@ -438,9 +438,9 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
       const file = e.target.files[0];
       if (file.type === "application/pdf") {
         setSelectedVCardFile(file);
-        toast.info("PDF selected. Click 'Upload' to upload the file.");
+        customToast.info("PDF selected. Click 'Upload' to upload the file.");
       } else {
-        toast.error("Please select a PDF file");
+        customToast.error("Please select a PDF file");
       }
     }
   };
@@ -448,7 +448,7 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
   // Upload vCard to Cloudinary
   const uploadVCardToCloudinary = async () => {
     if (!selectedVCardFile) {
-      toast.error("Please select a PDF file first");
+      customToast.error("Please select a PDF file first");
       return;
     }
 
@@ -458,7 +458,7 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
       formData.append("file", selectedVCardFile);
       formData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
       
-      toast.info("Uploading vCard...");
+      customToast.info("Uploading vCard...");
       
       const response = await fetch(
         `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/upload`,
@@ -478,11 +478,11 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
       // Set the vCard URL in the form
       form.setValue("vcard", vCardUrl);
       
-      toast.success("vCard uploaded successfully!");
+      customToast.success("vCard uploaded successfully!");
       return vCardUrl;
     } catch (error) {
       console.error("vCard upload error:", error);
-      toast.error("Failed to upload vCard");
+      customToast.error("Failed to upload vCard");
     } finally {
       setIsUploadingVCard(false);
       setSelectedVCardFile(null);
@@ -492,7 +492,7 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
   // Form submission handler
   async function onSubmit(values) {
     if (isUsernameAvailable === false) {
-      toast.error("Please choose a different username");
+      customToast.error("Please choose a different username");
       return;
     }
 
@@ -520,7 +520,7 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
         JSON.stringify(socialLinks) !== JSON.stringify(agent.socialLinks);
 
       if (!hasChanges) {
-        toast.info("No changes were made");
+        customToast.info("No changes were made");
         onOpenChange(false);
         return;
       }
@@ -531,10 +531,10 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
       let imageUrl = values.profileImage;
       if (selectedFile) {
         try {
-          toast.info("Uploading image...");
+          customToast.info("Uploading image...");
           imageUrl = await uploadToCloudinary(selectedFile);
         } catch (error) {
-          toast.error("Image upload failed. Using existing image.");
+          customToast.error("Image upload failed. Using existing image.");
           console.error("Image upload error:", error);
         }
       }
@@ -616,7 +616,7 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
 
       if (isEditing && onAgentUpdated) {
         onAgentUpdated(updatedAgent);
-        toast.success("Agent updated successfully!");
+        customToast.success("Agent updated successfully!");
         
         // Add notification for agent update
         addNotification(
@@ -627,7 +627,7 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
         );
       } else if (!isEditing && onAgentAdded) {
         onAgentAdded(updatedAgent);
-        toast.success("Agent added successfully!");
+        customToast.success("Agent added successfully!");
         
         // Add notification for new agent
         addNotification(
@@ -647,7 +647,7 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
       onOpenChange(false);
     } catch (error) {
       console.error('Error:', error);
-      toast.error(error.message || "Operation failed. Please try again.");
+      customToast.error(error.message || "Operation failed. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
