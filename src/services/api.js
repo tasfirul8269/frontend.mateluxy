@@ -49,7 +49,13 @@ export const propertyApi = {
   // Get all properties
   getProperties: async () => {
     try {
-      const response = await fetch(`${API_URL}/properties`);
+      const response = await fetch(`${API_URL}/properties`, {
+        credentials: 'include', // Add credentials to include cookies for authentication
+        headers: {
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache'
+        }
+      });
       if (!response.ok) throw new Error('Failed to fetch properties');
       return response.json();
     } catch (error) {

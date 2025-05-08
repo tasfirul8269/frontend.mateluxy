@@ -90,34 +90,18 @@ export const PropertyFormDialog = ({
       
       if (isEditing && property) {
         // Update existing property
-        const response = await propertyApi.updateProperty(property._id, propertyData);
+        const updatedProperty = await propertyApi.updateProperty(property._id, propertyData);
+        console.log("Property updated:", updatedProperty);
         
-        // Handle API call result
-        if (response.ok) {
-          const updatedProperty = await response.json();
-          console.log("Property updated:", updatedProperty);
-          
-          // Call the success handler with property data and edit status
-          successHandler(updatedProperty, true);
-        } else {
-          console.error("Error updating property:", response.statusText);
-          toast.error("Failed to update property. Please try again.");
-        }
+        // Call the success handler with property data and edit status
+        successHandler(updatedProperty, true);
       } else {
         // Create new property
-        const response = await propertyApi.createProperty(propertyData);
+        const newProperty = await propertyApi.createProperty(propertyData);
+        console.log("Property added:", newProperty);
         
-        // Handle API call result
-        if (response.ok) {
-          const newProperty = await response.json();
-          console.log("Property added:", newProperty);
-          
-          // Call the success handler with property data and edit status
-          successHandler(newProperty, false);
-        } else {
-          console.error("Error adding property:", response.statusText);
-          toast.error("Failed to add property. Please try again.");
-        }
+        // Call the success handler with property data and edit status
+        successHandler(newProperty, false);
       }
       
       // Refresh the properties list
