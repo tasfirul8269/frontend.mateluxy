@@ -43,6 +43,30 @@ const locationData = {
   }
 };
 
+// Card styles array to ensure 4 different colored cards with distinct images
+const cardStyles = [
+  {
+    color: "from-[#FF4B2B]/90 to-[#FF416C]/90", // Red
+    hoverColor: "from-[#FF3B1B]/90 to-[#FF316C]/90",
+    image: "https://images.pexels.com/photos/2467558/pexels-photo-2467558.jpeg" // City skyline
+  },
+  {
+    color: "from-[#00B4DB]/90 to-[#0083B0]/90", // Blue
+    hoverColor: "from-[#00A4CB]/90 to-[#0073A0]/90",
+    image: "https://images.pexels.com/photos/2193300/pexels-photo-2193300.jpeg" // Modern architecture
+  },
+  {
+    color: "from-[#11998e]/90 to-[#38ef7d]/90", // Green
+    hoverColor: "from-[#10897e]/90 to-[#28df6d]/90",
+    image: "https://images.pexels.com/photos/2044434/pexels-photo-2044434.jpeg" // Coastal view
+  },
+  {
+    color: "from-[#8E2DE2]/90 to-[#4A00E0]/90", // Purple
+    hoverColor: "from-[#7E1DD2]/90 to-[#3A00D0]/90",
+    image: "https://images.pexels.com/photos/3052361/pexels-photo-3052361.jpeg" // Night cityscape
+  }
+];
+
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -126,8 +150,6 @@ function LocationCategory() {
             name: state,
             count: data.count,
             image: locationData[state]?.image || locationData["Dubai"].image,
-            color: locationData[state]?.color || locationData["Dubai"].color,
-            hoverColor: locationData[state]?.hoverColor || locationData["Dubai"].hoverColor
           }))
           .sort((a, b) => b.count - a.count)
           .slice(0, 4); // Limit to 4 locations
@@ -143,9 +165,7 @@ function LocationCategory() {
           name: state,
           count: 0,
           image: data.image,
-          color: data.color,
-          hoverColor: data.hoverColor
-        })));
+        })).slice(0, 4));
         setLoading(false);
       }
     };
@@ -194,7 +214,7 @@ function LocationCategory() {
         animate="visible"
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
       >
-        {locations.map((location) => (
+        {locations.map((location, index) => (
           <motion.div
             key={location.id}
             variants={cardVariants}
@@ -203,14 +223,14 @@ function LocationCategory() {
             onClick={() => handleLocationClick(location.name)}
           >
             <div className="h-[400px] rounded-2xl overflow-hidden relative">
-              {/* Background Image */}
+              {/* Background Image - Using a different image from the cardStyles array for each card */}
               <div 
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                style={{ backgroundImage: `url(${location.image})` }}
+                style={{ backgroundImage: `url(${cardStyles[index % 4].image})` }}
               />
               
-              {/* Gradient Overlay */}
-              <div className={`absolute inset-0 bg-gradient-to-t ${location.color} group-hover:${location.hoverColor} transition-all duration-300`} />
+              {/* Gradient Overlay - Using a different color from the cardStyles array for each card */}
+              <div className={`absolute inset-0 bg-gradient-to-t ${cardStyles[index % 4].color} group-hover:${cardStyles[index % 4].hoverColor} transition-all duration-300`} />
               
               {/* Content */}
               <div className="relative h-full p-6 flex flex-col justify-between">
