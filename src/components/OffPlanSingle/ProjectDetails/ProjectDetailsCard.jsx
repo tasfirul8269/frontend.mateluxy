@@ -1,13 +1,26 @@
 import React from 'react';
 
-const details = [
-  { label: 'Starting Price', value: 'AED 6M (USD 1.63M)' },
-  { label: 'Area from', value: '3,595 sq. ft' },
-  { label: 'Number of Bedrooms', value: '3-8' },
-  { label: 'Location', value: 'Hudayriyat Island' }
-];
+const ProjectDetailsCard = ({ property }) => {
+  // Dynamic details derived from property data
+  const details = [
+    { 
+      label: 'Starting Price', 
+      value: property?.propertyPrice ? `AED ${property.propertyPrice.toLocaleString()}` : 'Price not specified' 
+    },
+    { 
+      label: 'Area from', 
+      value: property?.propertySize ? `${property.propertySize} sq. ft` : 'Size not specified' 
+    },
+    { 
+      label: 'Number of Bedrooms', 
+      value: property?.propertyBedrooms ?? 'Not specified' 
+    },
+    { 
+      label: 'Location', 
+      value: property?.propertyState || property?.propertyAddress || 'Location not specified' 
+    }
+  ];
 
-const ProjectDetailsCard = () => {
   return (
     <div className="bg-white rounded-[30px] border border-[#e6e6e6] p-6 mb-6">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Project details</h2>
@@ -23,9 +36,16 @@ const ProjectDetailsCard = () => {
         ))}
       </div>
       
-      <button className="cursor-pointer w-full bg-blue-400 hover:bg-blue-500 text-white py-3 px-6 rounded-[15px] transition-colors font-medium mt-6">
-        Download Brochure
-      </button>
+      {property?.brochureFile && (
+        <a 
+          href={property.brochureFile} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="cursor-pointer w-full bg-blue-400 hover:bg-blue-500 text-white py-3 px-6 rounded-[15px] transition-colors font-medium mt-6 block text-center"
+        >
+          Download Brochure
+        </a>
+      )}
     </div>
   );
 };

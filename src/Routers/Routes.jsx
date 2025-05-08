@@ -49,6 +49,7 @@ const router = createBrowserRouter([
             },
             {
                 path: "/off-plan-properties",
+                loader:  () => fetch(`${import.meta.env.VITE_API_URL}/api/properties`),
                 element: <OffPlanListingPage></OffPlanListingPage>
             },
 
