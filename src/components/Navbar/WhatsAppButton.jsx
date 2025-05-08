@@ -24,8 +24,8 @@ const WhatsAppButton = () => {
         href="https://wa.me/1234567890"
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-0  bg-transparent
-                   text-green-400 px-0 py-0 rounded-full transition-all duration-300 
+        className="flex items-center gap-0 bg-transparent
+                   text-[#25D366] px-0 py-0 rounded-full transition-all duration-300 
                    transform hover:scale-105"
       >
         <MessageCircle className="h-5 w-5" />
@@ -34,7 +34,7 @@ const WhatsAppButton = () => {
         href="https://wa.me/1234567890"
         target="_blank"
         rel="noopener noreferrer"
-        className="flex items-center gap-2 bg-green-400 hover:bg-green-500
+        className="flex items-center gap-2 bg-[#25D366] hover:bg-[#128C7E]
                    text-white px-4 py-2 rounded-full transition-all duration-300 shadow-md hover:shadow-lg 
                    transform hover:scale-105"
       >

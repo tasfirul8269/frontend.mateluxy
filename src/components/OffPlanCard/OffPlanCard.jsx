@@ -28,7 +28,7 @@ const OffPlanCard = ({ property }) => {
         </h3>
         {property.propertyType =="Villa" ? <button className="py-[5px] px-[10px] ml-[10px] bg-[#FFF5E7] text-[#FF9B17] rounded-[10px]">
           {property?.propertyType}
-        </button> :  <button className="py-[5px] px-[10px] ml-[10px] bg-[#E8F7FF] text-[#256fff] rounded-[10px]">
+        </button> :  <button className="py-[5px] px-[10px] ml-[10px] bg-[#FFF0F0] text-[#FF2626] rounded-[10px]">
           {property?.propertyType ? property.propertyType : property.type}
         </button>}
        
@@ -93,10 +93,11 @@ const OffPlanCard = ({ property }) => {
         <button  className="w-[80px] flex justify-center items-center gap-2 text-[#8D8D8D] bg-[#E6E6E6] px-16 py-[10px] rounded-[10px]">
           <span className="font-medium">Call</span>
         </button>
-        <button  className="w[auto] flex justify-center items-center gap-2 text-[#00BD6E] bg-[#E5FFF1] px-8 py-[10px] rounded-[10px]">
+        <button className="w[auto] flex justify-center items-center gap-2 text-[#FF2626] bg-[#FFF0F0] hover:bg-[#FFE5E5] px-8 py-[10px] rounded-[10px]">
+          <FaWhatsapp className="text-xl" />
           <span className="font-medium">Whatsapp</span>
         </button>
-        <button  className={`w-[auto] ${location.pathname === "/off-plan-properties" ? "hidden" : "flex"}  justify-center items-center gap-2 text-[#256FFF] bg-[#EBF8FF] px-[20px] py-[10px] rounded-[10px] `}>
+        <button  className={`w-[auto] ${location.pathname === "/off-plan-properties" ? "hidden" : "flex"}  justify-center items-center gap-2 text-[#FF2626] bg-[#FFF0F0] px-[20px] py-[10px] rounded-[10px] `}>
           <span className="font-medium">Book a view</span>
         </button>
       </div>

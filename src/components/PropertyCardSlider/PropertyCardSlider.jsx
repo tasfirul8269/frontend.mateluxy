@@ -64,7 +64,7 @@ const PropertyCardSlider = () => {
           className={`absolute top-1/2 left-[10px] w-10 h-10 bg-white text-black text-2xl 
           rounded-full shadow-md z-10 flex items-center justify-center -translate-y-1/2
           transition-all hover:scale-110 disabled:opacity-30 disabled:cursor-default
-          ${!isLeftDisabled && 'hover:bg-green-500'}`}
+          ${!isLeftDisabled && 'hover:bg-red-500'}`}
           onClick={() => slideTo(index - 1)}
           disabled={isLeftDisabled}
         >
@@ -93,7 +93,7 @@ const PropertyCardSlider = () => {
           className={`absolute top-1/2 right-[10px] w-10 h-10 bg-white text-black text-2xl 
           rounded-full shadow-md z-10 flex items-center justify-center -translate-y-1/2
           transition-all hover:scale-110 disabled:opacity-30 disabled:cursor-default
-          ${!isRightDisabled && 'hover:bg-green-500'}`}
+          ${!isRightDisabled && 'hover:bg-red-500'}`}
           onClick={() => slideTo(index + 1)}
           disabled={isRightDisabled}
         >

@@ -68,7 +68,7 @@ const CommunitySlider = ({ onCommunityClick }) => {
             <SwiperSlide key={index}>
               <div
                 onClick={() => onCommunityClick(community.name)}
-                className="block p-6 text-center text-lg font-semibold text-gray-800 hover:text-blue-600 transition-colors duration-300 animate__animated animate__fadeIn cursor-pointer"
+                className="block p-6 text-center text-lg font-semibold text-gray-800 hover:text-red-600 transition-colors duration-300 animate__animated animate__fadeIn cursor-pointer"
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <div className="bg-white rounded-xl shadow-md border border-gray-300 px-6 py-3 h-full flex items-center justify-center">

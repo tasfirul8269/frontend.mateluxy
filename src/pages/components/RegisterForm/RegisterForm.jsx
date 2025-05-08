@@ -70,8 +70,8 @@ const RegisterForm = () => {
                 <p className='text-sm font-medium'>
                     To find out about availability, contact a member of our team or fill out the form and we’ll be in touch
                 </p>
-                <button className='flex items-center py-10 gap-3  cursor-pointer hover:underline px-4 rounded-lg transition-all'>
-                    <FaWhatsapp className='text-green-500' /> 
+                <button className='flex items-center py-10 gap-3 cursor-pointer hover:underline px-4 rounded-lg transition-all'>
+                    <FaWhatsapp className='text-[#FF2626]' /> 
                     {"  "} Click to Whatsapp
                 </button>
                 <div className="border border-0.5 border-gray-200 my-6 md:my-5"></div>

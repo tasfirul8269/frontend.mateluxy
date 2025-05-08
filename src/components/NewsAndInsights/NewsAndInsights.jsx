@@ -42,7 +42,7 @@ const NewsAndInsights = () => {
                 {/* Header Section */}
                 <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-8 space-y-4 md:space-y-0 px-4'>
                     <h1 className='text-2xl md:text-3xl font-bold'>News and Insights</h1>
-                    <button className='text-[#256fff] bg-[#E8F7FF] px-4 py-2 md:px-5 md:py-3 font-medium rounded-[10px] text-sm md:text-base'>
+                    <button className='text-[#FF2626] bg-[#FFF0F0] px-4 py-2 md:px-5 md:py-3 font-medium rounded-[10px] text-sm md:text-base'>
                         All News
                     </button>
                 </div>

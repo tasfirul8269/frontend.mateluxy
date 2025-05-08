@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FaMapMarkerAlt, FaBuilding, FaChevronRight } from "react-icons/fa";
+import { FaMapMarkerAlt, FaBuilding, FaChevronRight, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -94,7 +94,8 @@ const cardVariants = {
     }
   },
   hover: {
-    scale: 1.05,
+    scale: 1.03,
+    y: -5,
     transition: {
       type: "spring",
       stiffness: 400,
@@ -182,7 +183,7 @@ function LocationCategory() {
     return (
       <div className="w-full max-w-[1335px] mx-auto px-4 py-16 flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
           <p className="text-gray-600">Loading locations...</p>
         </div>
       </div>
@@ -190,7 +191,7 @@ function LocationCategory() {
   }
 
   return (
-    <section className="w-full max-w-[1335px] mx-auto px-4 py-16 bg-gradient-to-b from-gray-50 to-white">
+    <section className="w-full max-w-[1335px] mx-auto px-4 py-16 my-10">
       <motion.div
         variants={textVariants}
         initial="hidden"
@@ -198,7 +199,10 @@ function LocationCategory() {
         className="text-center mb-16"
       >
         <h1 className="font-['Montserrat',Helvetica] font-bold text-gray-900 text-4xl md:text-5xl leading-tight mb-4">
-          Discover Properties by State
+          Discover Properties by <span className="text-red-600 relative inline-block">
+            State
+            <span className="absolute bottom-0 left-0 w-full h-1 bg-red-600/30 rounded-full"></span>
+          </span>
         </h1>
         <p className="text-gray-600 text-lg max-w-2xl mx-auto">
           Explore our curated selection of premium properties across the UAE
@@ -212,7 +216,7 @@ function LocationCategory() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-2"
       >
         {locations.map((location, index) => (
           <motion.div
@@ -222,7 +226,7 @@ function LocationCategory() {
             className="relative group cursor-pointer"
             onClick={() => handleLocationClick(location.name)}
           >
-            <div className="h-[400px] rounded-2xl overflow-hidden relative">
+            <div className="h-[400px] rounded-2xl overflow-hidden relative shadow-lg hover:shadow-xl transition-shadow duration-300">
               {/* Background Image - Using a different image from the cardStyles array for each card */}
               <div 
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
@@ -241,22 +245,22 @@ function LocationCategory() {
                     transition={{ delay: 0.2, type: "spring" }}
                     className="flex items-center gap-2 text-white"
                   >
-                    <FaMapMarkerAlt className="text-2xl" />
-                    <h3 className="text-2xl font-bold">{location.name}</h3>
+                    <FaMapMarkerAlt className="text-2xl drop-shadow-md" />
+                    <h3 className="text-2xl font-bold drop-shadow-md">{location.name}</h3>
                   </motion.div>
                 </div>
                 
                 <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-white/90">
+                  <div className="flex items-center gap-2 text-white/90 backdrop-blur-sm bg-white/10 px-3 py-1.5 rounded-full w-fit">
                     <FaBuilding className="text-xl" />
-                    <span>{location.count} Properties</span>
+                    <span className="font-medium">{location.count} Properties</span>
                   </div>
                   
                   <motion.div
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: 0.3 }}
-                    className="flex items-center gap-2 text-white group-hover:gap-3 transition-all duration-300"
+                    className="flex items-center gap-2 text-white group-hover:gap-3 transition-all duration-300 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-white/30 w-fit"
                   >
                     <span className="font-medium">Explore Properties</span>
                     <FaChevronRight className="transform group-hover:translate-x-1 transition-transform" />
@@ -285,9 +289,9 @@ function LocationCategory() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate('/rent')}
-          className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+          className="px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 mx-auto"
         >
-          View All Properties
+          <FaSearch className="text-lg" /> View All Properties
         </motion.button>
       </motion.div>
     </section>

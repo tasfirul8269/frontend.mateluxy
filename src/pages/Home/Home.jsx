@@ -10,18 +10,20 @@ import NewsAndInsights from "../../components/NewsAndInsights/NewsAndInsights";
 const Home = () => {
   return (
     <div className="mb-10 pt-10">
-      <div className="md:relative">
-        <Banner></Banner>
-        <div className=" md:absolute md:-bottom-14 md:left-1/2 md:transform md:-translate-x-1/2  w-full max-w-4xl px-4 bg-white rounded-[20px] shadow-lg mx-auto z-40 p-4">
-          <SearchField></SearchField>
+      <div className="max-w-[1440px] mx-auto">
+        <div className="md:relative">
+          <Banner></Banner>
+          <div className="md:absolute md:-bottom-14 md:left-1/2 md:transform md:-translate-x-1/2 w-full max-w-4xl px-4 bg-white rounded-[20px] shadow-lg mx-auto z-40 p-4">
+            <SearchField></SearchField>
+          </div>
         </div>
-      </div>
-      <div className=" md:px-[60px] px-5  mx-auto">
-      <Services></Services>
-      <FindConsultant></FindConsultant>
-      <TopProperties></TopProperties>
-      <LocationCategory></LocationCategory>
-      <NewsAndInsights></NewsAndInsights>
+        <div className="md:px-[60px] px-5 mx-auto">
+          <Services></Services>
+          <FindConsultant></FindConsultant>
+          <TopProperties></TopProperties>
+          <LocationCategory></LocationCategory>
+          <NewsAndInsights></NewsAndInsights>
+        </div>
       </div>
     </div>
   );

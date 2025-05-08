@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FaChevronDown, FaSearch } from "react-icons/fa";
 import { FaLocationCrosshairs } from "react-icons/fa6";
 import { RiArrowDropDownLine } from "react-icons/ri";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
 // Property types array from the codebase
 const propertyTypes = [
@@ -45,13 +46,13 @@ const PropertySearch = () => {
       {/* Toggle Buttons */}
       <div className="flex p-1 gap-2">
         <button 
-          className={`flex-1 py-2 px-4 transition-colors ${activeTab === 'rent' ? 'bg-white text-blue-600 border-b-2 border-[#256fff]' : 'text-gray-600 hover:bg-gray-200'}`}
+          className={`flex-1 py-2 px-4 transition-colors ${activeTab === 'rent' ? 'bg-white text-red-600 border-b-2 border-[#FF2626]' : 'text-gray-600 hover:bg-gray-200'}`}
           onClick={() => setActiveTab('rent')}
         >
           Rent
         </button>
         <button 
-          className={`flex-1 py-2 px-4 transition-colors ${activeTab === 'buy' ? 'bg-white text-blue-600 border-b-2 border-[#256fff]' : 'text-gray-600 hover:bg-gray-200'}`}
+          className={`flex-1 py-2 px-4 transition-colors ${activeTab === 'buy' ? 'bg-white text-red-600 border-b-2 border-[#FF2626]' : 'text-gray-600 hover:bg-gray-200'}`}
           onClick={() => setActiveTab('buy')}
         >
           Buy
@@ -72,9 +73,9 @@ const PropertySearch = () => {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="w-full py-2 px-0 pr-8 border-0 border-b border-transparent focus:outline-none focus:border-b-2 focus:border-blue-500 bg-transparent"
+              className="w-full py-2 px-0 pr-8 border-0 border-b border-transparent focus:outline-none focus:border-b-2 focus:border-red-500 bg-transparent"
             />
-            <FaLocationCrosshairs className="absolute right-0 top-1/2 transform -translate-y-1/2 text-blue-400" />
+            <FaLocationCrosshairs className="absolute right-0 top-1/2 transform -translate-y-1/2 text-red-400" />
           </div>
         </div>
 
@@ -86,10 +87,10 @@ const PropertySearch = () => {
           <div className="relative">
             <div 
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="w-full py-2 px-0 border-0 border-b text-gray-500 border-transparent focus:outline-none focus:border-b-2 focus:border-blue-500 pr-8 bg-transparent cursor-pointer flex justify-between items-center"
+              className="w-full py-2 px-0 border-0 border-b text-gray-500 border-transparent focus:outline-none focus:border-b-2 focus:border-red-500 pr-8 bg-transparent cursor-pointer flex justify-between items-center"
             >
               <span>{propertyType || "Select property type"}</span>
-              <RiArrowDropDownLine className="text-blue-400 text-4xl absolute right-0" />
+              <RiArrowDropDownLine className="text-red-400 text-4xl absolute right-0" />
             </div>
             
             {isDropdownOpen && (
@@ -97,7 +98,7 @@ const PropertySearch = () => {
                 {propertyTypes.map((type) => (
                   <div 
                     key={type} 
-                    className="px-4 py-2 hover:bg-blue-50 cursor-pointer text-left"
+                    className="px-4 py-2 hover:bg-red-50 cursor-pointer text-left"
                     onClick={() => {
                       setPropertyType(type);
                       setIsDropdownOpen(false);
@@ -115,7 +116,7 @@ const PropertySearch = () => {
         <div className="flex items-center justify-end">
           <button 
             onClick={handleSearch}
-            className="px-6 bg-blue-600 w-[200px] cursor-pointer hover:bg-blue-700 text-white py-4 rounded-[15px] flex items-center justify-center transition-colors"
+            className="px-6 bg-red-600 w-[200px] cursor-pointer hover:bg-red-700 text-white py-4 rounded-[15px] flex items-center justify-center transition-colors"
           >
             <FaSearch className="mr-2" />
             Search

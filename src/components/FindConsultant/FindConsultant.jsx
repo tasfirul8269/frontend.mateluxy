@@ -34,7 +34,7 @@ const FindConsultant = () => {
   ];
 
   return (
-    <div className="mx-[auto] p-4 md:p-6 animate__animated animate__fadeInUp flex flex-col md:flex-row justify-between items-center gap-4 md:gap-8 container rounded-[20px] bg-gradient-to-b from-[#B4E4FF]  to-[#256fff]">
+    <div className="mx-[auto] p-4 md:p-6 animate__animated animate__fadeInUp flex flex-col md:flex-row justify-between items-center gap-4 md:gap-8 container rounded-[20px] bg-gradient-to-b from-[#FFCACA]  to-[#FF2626]">
       {/* Agent Images - Mobile first stack */}
       <div className="flex flex-wrap justify-center gap-0 md:gap-0px px-10 order-1 md:order-none">
         {agents.map((agent, index) => (
@@ -58,7 +58,7 @@ const FindConsultant = () => {
       </div>
 
       {/* Search Button - Full width on mobile */}
-      <button className="w-full md:w-auto order-2 md:order-none rounded-[15px] h-12 px-4 md:px-6 text-lg sm:text-[xl] bg-[#ffffffaa] hover:bg-gray-50 text-[#fff] hover:text-blue-700 cursor-pointer transition-all flex items-center font-semibold  justify-center gap-2  ">
+      <button className="w-full md:w-auto order-2 md:order-none rounded-[15px] h-12 px-4 md:px-6 text-lg sm:text-[xl] bg-[#ffffffaa] hover:bg-gray-50 text-[#fff] hover:text-red-700 cursor-pointer transition-all flex items-center font-semibold  justify-center gap-2  ">
        
         <span>Find</span>
       </button>

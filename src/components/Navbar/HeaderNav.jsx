@@ -36,9 +36,9 @@ const HeaderNav = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
   const linkBaseClasses = `px-4 py-2 transition-all duration-300 whitespace-nowrap`;
   const linkClasses = (active) => `
     ${linkBaseClasses} 
-    ${active ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'} 
+    ${active ? 'text-red-600' : 'text-gray-700 hover:text-red-600'} 
     relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 
-    after:bg-blue-600 after:transition-transform after:duration-300
+    after:bg-red-600 after:transition-transform after:duration-300
     ${active ? 'after:scale-x-100' : 'after:scale-x-0 hover:after:scale-x-100'}
   `;
 
@@ -98,7 +98,7 @@ const HeaderNav = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
             <div key={index} className="py-2 border-b border-gray-100">
               {item.children ? (
                 <>
-                  <div className={`text-lg font-medium mb-2 ${isActive(item.path) ? 'text-blue-600' : 'text-gray-900'}`}>
+                  <div className={`text-lg font-medium mb-2 ${isActive(item.path) ? 'text-red-600' : 'text-gray-900'}`}>
                     {item.label}
                   </div>
                   <div className="pl-4 space-y-2">
@@ -109,8 +109,8 @@ const HeaderNav = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
                         className={`
                           block py-1 transition-all duration-200
                           ${isActive(child.path) 
-                            ? 'text-blue-600 pl-6' 
-                            : 'text-gray-600 hover:text-blue-600 hover:pl-6'}
+                            ? 'text-red-600 pl-6' 
+                            : 'text-gray-600 hover:text-red-600 hover:pl-6'}
                         `}
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
@@ -125,8 +125,8 @@ const HeaderNav = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
                   className={`
                     block text-lg font-medium py-1 transition-all duration-200
                     ${isActive(item.path)
-                      ? 'text-blue-600 pl-2'
-                      : 'text-gray-900 hover:text-blue-600 hover:pl-2'}
+                      ? 'text-red-600 pl-2'
+                      : 'text-gray-900 hover:text-red-600 hover:pl-2'}
                   `}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >

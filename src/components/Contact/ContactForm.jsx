@@ -37,7 +37,7 @@ export const ContactForm = () => {
   };
 
   return (
-    <section className="bg-[rgba(37,111,255,1)] self-stretch flex md:flex-row flex-col items-stretch w-full items-center gap-[40px_54px] overflow-hidden justify-between  mt-12 pl-[110px] pr-[30px] py-[30px] max-md:max-w-full max-md:mt-10 max-md:px-5">
+    <section className="bg-[rgba(255,38,38,1)] self-stretch flex md:flex-row flex-col items-stretch w-full items-center gap-[40px_54px] overflow-hidden justify-between  mt-12 pl-[110px] pr-[30px] py-[30px] max-md:max-w-full max-md:mt-10 max-md:px-5">
       <div className="self-stretch flex min-w-60 flex-col items-stretch justify-center w-[479px] my-auto max-md:max-w-full">
         <h2 className="text-white text-4xl font-semibold max-md:max-w-full font-['Montserrat']">
           Book a Free Consultation
@@ -61,13 +61,13 @@ export const ContactForm = () => {
               type="text"
               placeholder="First Name"
               {...register("firstName", { required: true })}
-              className="bg-[rgba(246,247,255,1)] grow shrink-0 basis-0 w-fit px-[11px] py-3.5 rounded-[10px] max-md:pr-5 focus:outline-none focus:ring-2 focus:ring-[rgba(37,111,255,1)]"
+              className="bg-[rgba(246,247,255,1)] grow shrink-0 basis-0 w-fit px-[11px] py-3.5 rounded-[10px] max-md:pr-5 focus:outline-none focus:ring-2 focus:ring-[rgba(255,38,38,1)]"
             />
             <input
               type="text"
               placeholder="Last name"
               {...register("lastName", { required: true })}
-              className="bg-[rgba(246,247,255,1)] grow shrink-0 basis-0 w-fit px-[23px] py-3.5 rounded-[10px] max-md:px-3 focus:outline-none focus:ring-2 focus:ring-[rgba(37,111,255,1)]"
+              className="bg-[rgba(246,247,255,1)] grow shrink-0 basis-0 w-fit px-[23px] py-3.5 rounded-[10px] max-md:px-3 focus:outline-none focus:ring-2 focus:ring-[rgba(255,38,38,1)]"
             />
           </div>
 
@@ -79,13 +79,13 @@ export const ContactForm = () => {
                 required: true,
                 pattern: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
               })}
-              className="bg-[rgba(246,247,255,1)] whitespace-nowrap grow shrink-0 basis-0 w-fit px-[11px] py-3.5 rounded-[10px] max-md:pr-5 focus:outline-none focus:ring-2 focus:ring-[rgba(37,111,255,1)]"
+              className="bg-[rgba(246,247,255,1)] whitespace-nowrap grow shrink-0 basis-0 w-fit px-[11px] py-3.5 rounded-[10px] max-md:pr-5 focus:outline-none focus:ring-2 focus:ring-[rgba(255,38,38,1)]"
             />
             <input
               type="tel"
               placeholder="Phone Number"
               {...register("phone", { required: true })}
-              className="bg-[rgba(246,247,255,1)] grow shrink-0 basis-0 w-fit px-[23px] py-3.5 rounded-[10px] max-md:px-3 focus:outline-none focus:ring-2 focus:ring-[rgba(37,111,255,1)]"
+              className="bg-[rgba(246,247,255,1)] grow shrink-0 basis-0 w-fit px-[23px] py-3.5 rounded-[10px] max-md:px-3 focus:outline-none focus:ring-2 focus:ring-[rgba(255,38,38,1)]"
             />
           </div>
 
@@ -93,7 +93,7 @@ export const ContactForm = () => {
             <textarea
               placeholder="Message"
               {...register("message", { required: true })}
-              className="bg-[rgba(246,247,255,1)] w-full pt-[13px] pb-[82px] px-[11px] rounded-[10px] max-md:max-w-full max-md:pr-5 max-md:pb-[110px] focus:outline-none focus:ring-2 focus:ring-[rgba(37,111,255,1)]"
+              className="bg-[rgba(246,247,255,1)] w-full pt-[13px] pb-[82px] px-[11px] rounded-[10px] max-md:max-w-full max-md:pr-5 max-md:pb-[110px] focus:outline-none focus:ring-2 focus:ring-[rgba(255,38,38,1)]"
             />
           </div>
 
@@ -106,7 +106,7 @@ export const ContactForm = () => {
                 onValueChange={(value) => setValue("interest", value)}
                 defaultValue=""
               >
-                <SelectTrigger className="bg-[rgba(246,247,255,1)] w-[265px] rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[rgba(37,111,255,1)] border-0">
+                <SelectTrigger className="bg-[rgba(246,247,255,1)] w-[265px] rounded-[10px] focus:outline-none focus:ring-2 focus:ring-[rgba(255,38,38,1)] border-0">
                   <SelectValue placeholder="Select your interest..." />
                 </SelectTrigger>
                 <SelectContent  className="bg-white rounded-[20px] border border-[#e6e6e6]">
@@ -137,7 +137,7 @@ export const ContactForm = () => {
                         value={method}
                         checked={contactMethod === method}
                         onChange={() => setValue("contactMethod", method)}
-                        className="peer appearance-none h-4 w-4 rounded border border-gray-300 checked:bg-[#256fff] checked:border-0"
+                        className="peer appearance-none h-4 w-4 rounded border border-gray-300 checked:bg-[#FF2626] checked:border-0"
                       />
                       <Check className="absolute h-3 w-3 text-white pointer-events-none opacity-0 peer-checked:opacity-100 left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2" />
                     </div>
@@ -156,7 +156,7 @@ export const ContactForm = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="bg-[rgba(198,234,255,0.4)] inline-flex justify-center w-auto min-w-[200px] gap-2.5 text-[18px] text-[rgba(37,111,255,1)] font-medium text-center px-10 py-5 rounded-[15px] hover:bg-[rgba(198,234,255,0.6)] transition-colors disabled:opacity-70 font-['Montserrat'] self-start"
+              className="bg-[rgba(255,224,224,0.4)] inline-flex justify-center w-auto min-w-[200px] gap-2.5 text-[18px] text-[rgba(255,38,38,1)] font-medium text-center px-10 py-5 rounded-[15px] hover:bg-[rgba(255,224,224,0.6)] transition-colors disabled:opacity-70 font-['Montserrat'] self-start"
             >
               {isSubmitting ? "Sending..." : "Send Message"}
             </button>

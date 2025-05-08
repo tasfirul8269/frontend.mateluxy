@@ -26,9 +26,9 @@ const DropdownMenu = ({ item, isActive }) => {
   const linkBaseClasses = `px-4 py-2 flex items-center gap-1 whitespace-nowrap transition-all duration-300`;
   const linkClasses = `
     ${linkBaseClasses} 
-    ${isActive || hasActiveChild ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'} 
+    ${isActive || hasActiveChild ? 'text-red-600' : 'text-gray-700 hover:text-red-600'} 
     relative after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 
-    after:bg-blue-600 after:transition-transform after:duration-300
+    after:bg-red-600 after:transition-transform after:duration-300
     ${isActive || hasActiveChild ? 'after:scale-x-100' : 'after:scale-x-0 group-hover:after:scale-x-100'}
   `;
 
@@ -70,8 +70,8 @@ const DropdownMenu = ({ item, isActive }) => {
                 className={`
                   block px-4 py-2 text-sm transition-all duration-300
                   ${isChildActive 
-                    ? 'text-blue-600 bg-blue-50 pl-6' 
-                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600 hover:pl-6'}
+                    ? 'text-red-600 bg-red-50 pl-6' 
+                    : 'text-gray-700 hover:bg-red-50 hover:text-red-600 hover:pl-6'}
                 `}
               >
                 {child.label}

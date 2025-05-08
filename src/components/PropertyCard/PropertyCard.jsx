@@ -147,7 +147,7 @@ const PropertyCard = ({ property, loading, error }) => {
 
           <button
             onClick={() => window.location.href = "https://wa.me/1234567890"}
-            className="flex cursor-pointer justify-center items-center gap-2 text-[#00BD6E] bg-[#E5FFF1] px-4 py-3 rounded-[10px]"
+            className="flex cursor-pointer justify-center items-center gap-2 text-[#FF2626] bg-[#FFF0F0] hover:bg-[#FFE5E5] px-4 py-3 rounded-[10px]"
           >
             <FaWhatsapp />
             <span className="font-semibold">Whatsapp</span>

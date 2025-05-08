@@ -200,7 +200,7 @@ const Navbar = () => {
 
           {/* WhatsApp contact section */}
           <div
-            className={`flex items-center space-x-4 animate__animated animate__fadeIn animate__delay-0.8s rounded-full  bg-[#CEFFD5]  text-green-400 font-medium`}
+            className={`flex items-center space-x-4 animate__animated animate__fadeIn animate__delay-0.8s rounded-full bg-[#25D366] hover:bg-[#128C7E] text-white font-medium`}
           >
             <Link
               to="https://wa.me/+1234567890"
@@ -208,8 +208,8 @@ const Navbar = () => {
               rel="noopener noreferrer"
               className="flex justify-center items-center gap-1.5 px-5 py-3"
             >
-              <FaWhatsapp className="text-xl text-[#00BD1C]" />{" "}
-              <span className="text-[#00BD1C]">Whatsapp</span>
+              <FaWhatsapp className="text-xl" />{" "}
+              <span className="text-white">Whatsapp</span>
             </Link>
           </div>
         </div>
@@ -238,7 +238,7 @@ const Navbar = () => {
               to="https://wa.me/+8801640301028"
               target="_blank"
               rel="noopener noreferrer"
-              className={` text-green-500 hover:text-green-600`}
+              className={`text-[#FF2626] hover:text-[#FF0000]`}
             >
               <FaWhatsapp className="text-xl" />
             </Link>

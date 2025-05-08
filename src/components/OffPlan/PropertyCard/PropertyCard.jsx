@@ -70,8 +70,8 @@ const PropertyCard = ({ property }) => {
           <button className="w-[auto] flex-grow flex justify-center items-center gap-2 text-[#256fff] bg-[#EBF8FF] px-[5px] py-[10px] rounded-[15px]">
             <span className="font-medium text-[14px]">Download Brochure</span>
           </button>
-          <button className="w-[auto] flex-shrink flex justify-center items-center gap-2 text-[#00BD1C] bg-[#CEFFD5] px-[5px] py-[10px] rounded-[15px]">
-            <FaWhatsapp className="text-[14px] text-[#00BD1C]" />
+          <button className="w-[auto] flex-shrink flex justify-center items-center gap-2 text-[#FF2626] bg-[#FFF0F0] hover:bg-[#FFE5E5] px-[5px] py-[10px] rounded-[15px]">
+            <FaWhatsapp className="text-[14px]" />
             <span className="font-medium text-[14px]">WhatsApp</span>
           </button>
         </div>
