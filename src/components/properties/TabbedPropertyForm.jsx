@@ -904,7 +904,7 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                         </div>
                       </div>
                     ) : (
-                      <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-[#e5e7eb] rounded-xl cursor-pointer hover:border-[#ff4d4f] transition">
+                      <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-[#e5e7eb] rounded-xl cursor-pointer hover:border-[#ff4d4f] transition" onClick={() => document.getElementById('featured-image-input').click()}>
                         <span className="text-3xl text-gray-300 mb-2">+</span>
                         <span className="text-gray-400">Add Featured Image</span>
                       </label>
@@ -1448,7 +1448,7 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                         </div>
                       </div>
                     ) : (
-                      <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-[#e5e7eb] rounded-xl cursor-pointer hover:border-[#ff4d4f] transition">
+                      <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-[#e5e7eb] rounded-xl cursor-pointer hover:border-[#ff4d4f] transition" onClick={() => document.getElementById('featured-image-input').click()}>
                         <span className="text-3xl text-gray-300 mb-2">+</span>
                         <span className="text-gray-400">Add Featured Image</span>
                       </label>
