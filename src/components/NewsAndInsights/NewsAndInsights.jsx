@@ -65,7 +65,7 @@ const NewsAndInsights = () => {
     };
 
     return (
-        <div className='py-16 sm:py-20 md:py-24'>
+        <div className='py-0 sm:py-0 md:py-0'>
             <div className='mx-auto'>
                 {/* Header Section */}
                 <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 sm:mb-10 space-y-4 sm:space-y-0 px-4'>

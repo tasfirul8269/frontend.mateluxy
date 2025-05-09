@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { FaClock } from 'react-icons/fa';
+import { FaClock, FaSort } from 'react-icons/fa';
 import { RiArrowDropDownLine } from 'react-icons/ri';
+import { BsFilterRight } from 'react-icons/bs';
 
 const FilterDropdown = ({ onFilterChange }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -39,27 +40,32 @@ const FilterDropdown = ({ onFilterChange }) => {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Button - keeping your exact provided styling */}
+      {/* Button with enhanced styling */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center px-4 py-4 bg-white text-gray-800 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+        className="flex items-center px-4 py-2.5 bg-white text-gray-800 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all duration-200 hover:border-red-200 min-w-[180px] justify-between"
       >
-        <FaClock className="mr-2 text-gray-600" />
-        <span className="font-medium">{currentFilter}</span>
-        <RiArrowDropDownLine className="ml-2 text-gray-600 text-2xl" />
+        <div className="flex items-center">
+          <FaSort className="mr-2 text-red-500 text-sm" />
+          <span className="font-medium text-sm">{currentFilter}</span>
+        </div>
+        <RiArrowDropDownLine className="text-gray-600 text-2xl" />
       </button>
 
-      {/* Dropdown menu */}
+      {/* Dropdown menu with enhanced styling */}
       {isOpen && (
-        <div className="absolute z-50 mt-2 w-full origin-top-right bg-white rounded-lg shadow-lg border border-gray-200">
-          <div className="py-2">
+        <div className="absolute z-50 mt-1 w-full origin-top-right bg-white rounded-lg shadow-md border border-gray-100">
+          <div className="py-1">
             {filterOptions.map((option) => (
               <div
                 key={option.value}
-                className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+                className={`flex items-center px-4 py-2 text-sm hover:bg-gray-50 transition-colors cursor-pointer ${option.label === currentFilter ? 'text-red-600 font-medium' : 'text-gray-700'}`}
                 onClick={() => handleFilterSelect(option.value, option.label)}
               >
-                {option.label}
+                {option.label === currentFilter && (
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500 mr-2"></div>
+                )}
+                <span className={option.label === currentFilter ? 'ml-0' : 'ml-3.5'}>{option.label}</span>
               </div>
             ))}
           </div>

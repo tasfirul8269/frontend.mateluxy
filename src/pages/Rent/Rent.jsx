@@ -5,7 +5,7 @@ import PropertySearchBar from "../../components/PropertySearchBar/PropertySearch
 import axios from "axios";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import FilterDropdown from "../../components/FilterDropdown/FilterDropdown";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Rent = () => {
   const [properties, setProperties] = useState([]);
@@ -13,7 +13,9 @@ const Rent = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [checked, setChecked] = useState(false);
+  const [sortOrder, setSortOrder] = useState('recent');
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     axios
@@ -128,43 +130,53 @@ const Rent = () => {
   };
 
   const handleFilterChange = (filterValue) => {
+    setSortOrder(filterValue);
     const queryParams = new URLSearchParams(location.search);
     queryParams.set('sort', filterValue);
     window.history.pushState({}, '', `${location.pathname}?${queryParams.toString()}`);
-    setFilteredProperties(prev => [...prev]); // Trigger re-render
+    
+    // Apply sorting directly
+    const sortedProperties = sortProperties([...filteredProperties], filterValue);
+    setFilteredProperties(sortedProperties);
+  };
+  
+  // Navigate to map view
+  const handleMapViewClick = () => {
+    navigate('/map-view/rent');
   };
 
   return (
     <div>
-      <div className="pt-24 px-4 md:px-0">
+      <div className="pt-0 px-4 md:px-0">
         <PropertySearchBar />
         <CommunitySlider onCommunityClick={handleCommunityClick} />
 
-        <div className="container mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-6 md:mb-8">
-            <div className="w-full md:w-auto">
-              <h3 className="text-xl text-green-900 font-bold text-center md:text-left px-4 md:pl-[5%]">
+        <div className="container mt-5 mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-5 md:mb-5 bg-white p-4 rounded-lg  border border-[#e6e6e6]">
+        <div className="w-full md:w-auto">
+              <h3 className="text-xl text-red-600 font-bold text-center md:text-left">
                 Properties for rent in Dubai
               </h3>
-              <p className="text-center md:text-left text-gray-500 font-light mt-2 md:mt-0 px-4 md:pl-[5%]">
-                Results: {filteredProperties.length}
-              </p>
+              <div className="flex items-center mt-2">
+                <span className="text-gray-700 font-medium mr-1">Results:</span>
+                <span className="bg-red-50 text-red-600 px-2 py-0.5 rounded-md text-sm font-medium">
+                  {filteredProperties.length}
+                </span>
+              </div>
             </div>
 
-            <div className="w-full md:w-auto flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4 px-4 md:px-0">
-              <div className="w-full md:w-auto">
+            <div className="w-full md:w-auto flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4">
+              <div className="w-full md:w-auto relative">
                 <FilterDropdown onFilterChange={handleFilterChange} />
               </div>
 
-              <div className="w-[46%] md:w-auto flex items-center px-4 py-3 bg-white text-gray-800 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors duration-200 shadow-sm">
-                <img
-                  className="h-6 w-6 md:h-8 md:w-8 pr-2"
-                  src="https://i.ibb.co.com/PzmwQHck/map-717498.png"
-                  alt="MAP"
-                />
-                <FaMapMarkerAlt className="mr-2 text-gray-600 hidden md:block" />
+              <div 
+                onClick={handleMapViewClick}
+                className="w-[46%] md:w-auto flex items-center px-4 py-2.5 bg-white text-gray-800 rounded-lg border border-gray-200 hover:bg-gray-50 transition-all duration-200 hover:border-red-200 cursor-pointer"
+              >
+                <FaMapMarkerAlt className="mr-2 text-red-500" />
                 <span className="font-medium text-sm md:text-base">
-                  <span className="hidden md:inline">View on</span> Map
+                  View on Map
                 </span>
               </div>
             </div>

@@ -3,6 +3,7 @@ import Layout from "../Layout/Layout";
 import Home from "../pages/Home/Home";
 import Buy from "../pages/Buy/Buy";
 import Rent from "../pages/Rent/Rent";
+import MapView from "../pages/MapView/MapView";
 import PropertyDetails from "../pages/PropertyDetails/PropertyDetails";
 import AgentProfileCard from "../components/AgentProfileCard/AgentProfileCard";
 import Contact from "../components/Contact/Contact";
@@ -82,6 +83,10 @@ const router = createBrowserRouter([
                 path: "/off-plan-single/:id",
                 loader: ({params}) => fetch(`${import.meta.env.VITE_API_URL}/api/properties/${params.id}`),
                 element: <OffPlanSinglePage></OffPlanSinglePage>
+            },
+            {
+                path: "/map-view/:category",
+                element: <MapView />
             },
 
         ]

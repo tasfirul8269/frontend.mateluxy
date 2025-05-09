@@ -193,7 +193,7 @@ function LocationCategory() {
 
   if (loading) {
     return (
-      <div className="w-full max-w-[1335px] mx-auto px-4 py-16 flex items-center justify-center min-h-[400px]">
+      <div className="w-full max-w-[1335px] mx-auto px-4 py-0 flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
           <p className="text-gray-600">Loading locations...</p>
