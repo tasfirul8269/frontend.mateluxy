@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Building2, MapPin, Download } from 'lucide-react';
-import { FaWhatsapp } from 'react-icons/fa';
+import { Download, MapPin, Building2, Home } from 'lucide-react';
+import { FaWhatsapp, FaRegBuilding } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -86,77 +86,114 @@ const PropertyCard = ({ property }) => {
   }
 
   return (
-    <div onClick={handleClick} className="bg-white rounded-[20px] overflow-hidden hover:shadow-xl border border-[#e6e6e6] transition-all duration-300 cursor-pointer shadow-md">
-      <div className="relative">
-        <img 
-          src={property.propertyFeaturedImage} 
-          alt={property.propertyTitle}
-          className="w-full h-[240px] object-cover hover:scale-105 transition-transform duration-500"
-        />
-        <div className="absolute top-4 left-4 flex flex-wrap gap-2">
+    <div onClick={handleClick} className="group relative bg-white rounded-[16px] overflow-hidden border-0 transition-all duration-300 cursor-pointer shadow-xl hover:shadow-2xl transform hover:-translate-y-2">
+      <div className="relative overflow-hidden">
+        {/* Main image with parallax effect */}
+        <div className="overflow-hidden">
+          <img 
+            src={property.propertyFeaturedImage} 
+            alt={property.propertyTitle}
+            className="w-full h-[280px] object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
+          />
+        </div>
+        
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+        
+        {/* Launch type badge */}
+        <div className="absolute top-4 left-4">
+          <div className="bg-[#FF2626] text-white text-xs uppercase tracking-wider font-bold px-3 py-1 rounded-md">
+            {property.launchType || 'New Launch'}
+          </div>
+        </div>
+        
+        {/* Tags */}
+        <div className="absolute top-4 right-4 flex flex-wrap gap-2 justify-end">
           {property.tags?.map((tag, index) => (
             <span 
               key={index}
-              className="bg-white/90 backdrop-blur-sm text-sm px-4 py-1 rounded-full font-medium"
+              className="bg-white/90 backdrop-blur-sm text-xs px-3 py-1 rounded-md font-semibold text-gray-800 shadow-sm"
             >
               {tag}
             </span>
           ))}
         </div>
+        
+        {/* Property title and price overlay at bottom of image */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 to-black/0">
+          <h3 className="text-white font-bold text-xl mb-1 line-clamp-1">
+            {property?.propertyTitle}
+          </h3>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-1 text-white/90">
+              <MapPin size={14} />
+              <p className="text-sm font-medium truncate max-w-[180px]">{property.propertyAddress}</p>
+            </div>
+            <div className="bg-white text-[#FF2626] font-bold px-3 py-1 rounded-md shadow-md text-sm">
+              AED {property.propertyPrice?.toLocaleString() || property.propertyPrice}
+            </div>
+          </div>
+        </div>
 
       </div>
 
-      <div className="p-5 bg-white">
-        <div className="flex justify-between items-center mt-0">
-          <h3 className="flex-1 truncate text-[20px] font-medium">
-            {property?.propertyTitle}
-          </h3>
-          <div className="py-[5px] px-[10px] ml-[10px] bg-[#FFF0F0] w-fit text-[#FF2626] rounded-[10px] font-medium">
-            AED {property.propertyPrice}
+      <div className="p-6 bg-white">
+        {/* Property details section */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="bg-[#fff0f0] p-2 rounded-full flex items-center justify-center w-9 h-9">
+            <FaRegBuilding className="text-[#FF2626] text-base" />
           </div>
-        </div>
-
-        <div className="flex justify-start items-center gap-2 mt-2">
-          <div className="text-[#FF2626]">
-            <MapPin size={16} />
+          <div className="overflow-hidden">
+            <p className="text-xs text-gray-500 uppercase tracking-wider font-medium whitespace-nowrap">Developer</p>
+            <p className="text-gray-800 font-semibold truncate">{property.developer}</p>
           </div>
-          <p className="text-[#666666] font-medium text-[14px]">{property.propertyAddress}</p>
         </div>
         
-        <div className="flex items-center gap-4 mb-4 mt-3">
-          <div className="flex items-center gap-2 text-gray-500">
-            <Building2 className='text-[#FF2626]' size={16} />
-            <p className="text-[#666666] font-medium text-[14px]">Developer: {property.developer}</p>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="bg-[#fff0f0] p-2 rounded-full flex items-center justify-center w-9 h-9">
+            <Home className="text-[#FF2626] text-base" />
+          </div>
+          <div className="overflow-hidden">
+            <p className="text-xs text-gray-500 uppercase tracking-wider font-medium whitespace-nowrap">Property Type</p>
+            <p className="text-gray-800 font-semibold truncate">{property.propertyType || 'Residential'}</p>
           </div>
         </div>
-
+        
+        {/* Property specs - area and completion date side by side */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="border border-[#f2f2f2] rounded-[10px] px-[12px] py-[8px] hover:border-[#FF2626]/20 transition-colors">
-            <div className="text-[12px] font-medium text-gray-500">Area from</div>
-            <div className="text-[#FF2626] font-medium text-[14px]">{property.propertySize} sq.ft</div>
+          <div className="bg-gray-50 rounded-xl p-3 text-center border border-gray-100">
+            <p className="text-xs text-gray-500 font-medium whitespace-nowrap">Area (sq.ft)</p>
+            <p className="text-gray-800 font-bold whitespace-nowrap">{property.propertySize}</p>
           </div>
-          <div className="border border-[#f2f2f2] rounded-[10px] px-[12px] py-[8px] hover:border-[#FF2626]/20 transition-colors">
-            <div className="text-[12px] font-medium text-gray-500">Bedrooms</div>
-            <div className="text-[#FF2626] font-medium text-[14px]">{property.propertyBedrooms}</div>
+          <div className="bg-gray-50 rounded-xl p-3 text-center border border-gray-100">
+            <p className="text-xs text-gray-500 font-medium whitespace-nowrap">Completion</p>
+            <p className="text-gray-800 font-bold whitespace-nowrap">{property.completionDate?.split('-')[0] || '2025'}</p>
           </div>
         </div>
 
-        <div className="h-[1px] w-full bg-gradient-to-r from-[#FF2626]/10 via-[#FF2626]/20 to-[#FF2626]/10 my-4"></div>
-
-        <div className="grid grid-cols-2 gap-3">
+        {/* Action buttons with hover effects */}
+        <div className="flex gap-3">
           <button 
             onClick={handleDownloadBrochure}
-            className="w-[auto] flex-grow flex justify-center items-center gap-2 text-white bg-[#FF2626] hover:bg-[#FF2626]/80 cursor-pointer px-[5px] py-[10px] rounded-[10px] transition-colors"
+            className="flex-1 flex justify-center items-center gap-2 text-white bg-[#FF2626] hover:bg-[#FF2626]/90 cursor-pointer py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg group relative overflow-hidden"
           >
-            <span className="font-medium text-[14px]">Download Brochure</span>
+            <span className="absolute inset-0 w-full h-full transition-all duration-300 ease-out transform translate-x-full group-hover:translate-x-0 bg-gradient-to-r from-[#FF2626]/0 via-white/20 to-[#FF2626]/0"></span>
+            <Download size={16} className="relative z-10" />
+            <span className="font-semibold text-sm relative z-10">Brochure</span>
           </button>
           <button 
             onClick={handleWhatsAppClick}
-            className="w-[auto] flex-shrink cursor-pointer flex justify-center items-center gap-2 text-[#25D366] bg-transparent hover:bg-[#f0f9f0] px-[5px] py-[10px] rounded-[10px] border border-[#e6e6e6] transition-colors"
+            className="flex-1 cursor-pointer flex justify-center items-center gap-2 text-white bg-[#25D366] hover:bg-[#25D366]/90 py-3 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg group relative overflow-hidden"
           >
-            <FaWhatsapp className="text-[16px]" />
-            <span className="font-medium text-[14px]">WhatsApp</span>
+            <span className="absolute inset-0 w-full h-full transition-all duration-300 ease-out transform translate-x-full group-hover:translate-x-0 bg-gradient-to-r from-[#25D366]/0 via-white/20 to-[#25D366]/0"></span>
+            <FaWhatsapp className="text-lg relative z-10" />
+            <span className="font-semibold  text-sm relative z-10">WhatsApp</span>
           </button>
+        </div>
+        
+        {/* Subtle brand indicator */}
+        <div className="mt-4 flex justify-center">
+          <div className="h-1 w-10 bg-[#FF2626]/30 rounded-full"></div>
         </div>
       </div>
     </div>

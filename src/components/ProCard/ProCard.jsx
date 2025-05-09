@@ -4,6 +4,7 @@ import { FaMapMarkerAlt, FaPhone, FaWhatsapp, FaHeart, FaRegHeart } from 'react-
 import { FaKitchenSet } from 'react-icons/fa6';
 import { LiaBedSolid, LiaBathSolid } from 'react-icons/lia';
 import "animate.css";
+import { useNavigate } from 'react-router-dom';
 
 import locationImg from "../../assets/group-39519-2.svg";
 import bath from "../../assets/ic_bath.svg";
@@ -15,15 +16,45 @@ const ProCard = ({ property }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+  const navigate = useNavigate();
+  
+  const handleCardClick = (e) => {
+    // Prevent navigation if clicking on buttons or links
+    if (
+      e.target.tagName === 'BUTTON' || 
+      e.target.tagName === 'A' || 
+      e.target.closest('button') || 
+      e.target.closest('a')
+    ) {
+      return;
+    }
+    
+    // Check if we have a valid property ID
+    const propertyId = property?.id || property?._id;
+    
+    if (!propertyId) {
+      console.error('Property ID is undefined', property);
+      return;
+    }
+    
+    // Navigate based on property category
+    if (property?.category === 'Off Plan') {
+      navigate(`/off-plan-single/${propertyId}`);
+    } else {
+      // For Buy, Rent and other categories
+      navigate(`/property-details/${propertyId}`);
+    }
+  };
 
   return (
     <motion.div 
-      className="w-full h-[580px] p-[15px] my-5 md:my-0 border border-[#e6e6e6] rounded-[20px] bg-white shadow-sm hover:shadow-md transition-all duration-300 flex flex-col"
+      className="w-full h-[580px] p-[15px] my-5 md:my-0 border border-[#e6e6e6] rounded-[20px] bg-white shadow-sm hover:shadow-md transition-all duration-300 flex flex-col cursor-pointer"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
+      onClick={handleCardClick}
     >
       <div className="relative overflow-hidden rounded-[15px] group">
         <motion.img 

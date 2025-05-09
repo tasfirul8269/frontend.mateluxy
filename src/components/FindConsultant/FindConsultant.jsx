@@ -77,17 +77,17 @@ const FindConsultant = () => {
 
   return (
     <motion.div 
-      className="mx-auto my-12 p-6 md:p-8 container rounded-[30px] relative overflow-hidden bg-gray-900 shadow-xl"
+      className="mx-auto my-12 p-6 md:p-8 container rounded-[30px] relative  bg-gray-900 shadow-xl"
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       viewport={{ once: true }}
     >
       {/* Accent color strip */}
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-600 to-red-500"></div>
+      <div className="absolute top-0 left-0 w-full overflow-hidden rounded-[30px] h-0 bg-gradient-to-r from-red-600 to-red-500"></div>
       
       {/* Background pattern */}
-      <div className="absolute top-0 left-0 w-full h-full">
+      <div className="absolute top-0 rounded-[30px] overflow-hidden left-0 w-full h-full">
         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 opacity-50"></div>
         <div className="absolute top-0 right-0 w-40 h-40 rounded-full bg-red-500 opacity-5 blur-3xl"></div>
         <div className="absolute bottom-0 left-0 w-60 h-60 rounded-full bg-red-500 opacity-5 blur-3xl"></div>
@@ -129,7 +129,7 @@ const FindConsultant = () => {
                   <AnimatePresence>
                     {activeAgent === agent && (
                       <motion.div 
-                        className="absolute top-16 left-0 bg-gray-800 rounded-lg shadow-lg p-3 w-48 z-20 border border-gray-700"
+                        className="absolute -top-24 left-5 bg-gray-800 rounded-lg shadow-lg p-3 w-48 z-20 border border-gray-700"
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}

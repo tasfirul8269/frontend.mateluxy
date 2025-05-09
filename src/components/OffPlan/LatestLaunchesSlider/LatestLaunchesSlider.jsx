@@ -65,10 +65,10 @@ const LatestLaunchesSlider = ({ properties }) => {
     <div className="relative mb-12">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-3xl font-bold text-gray-800">Latest Project Launches</h2>
+          <h2 className="text-3xl font-semibold text-gray-800">Latest Project Launches</h2>
+          <p className="text-sm mt-2 text-gray-600 font-regular">Explore the latest off-plan projects making waves in UAE!</p>
           <div className="h-1 w-20 bg-[#FF2626] mt-2 rounded-full"></div>
         </div>
-        <div className="text-sm text-[#FF2626] font-medium">New properties added to our portfolio</div>
       </div>
       
       <div className="relative group">

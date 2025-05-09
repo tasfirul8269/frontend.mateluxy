@@ -5,6 +5,8 @@ import PropertyCardSkeleton from './PropertyCardSkeleton';
 import PropertyCard from './PropertyCard';
 import Banner from '../Banner/OffPlanBanner';
 import LatestLaunchesSlider from './LatestLaunchesSlider/LatestLaunchesSlider';
+import InvestmentHotspotsSlider from './InvestmentHotspotsSlider';
+import DeveloperLogoSlider from './DeveloperLogoSlider';
 
 const PropertyListing = ({ offPlanProjects }) => {
   const [loading, setLoading] = useState(true);
@@ -86,15 +88,13 @@ const PropertyListing = ({ offPlanProjects }) => {
         <h3 className="text-2xl font-bold text-gray-800 mt-2">
         Let Mateluxy help you find the perfect one.        </h3>
       </div>
+     
       <CategoryFilter 
         selectedCategory={selectedCategory} 
         onCategoryChange={handleCategoryChange} 
       />
       
-      {/* Latest Project Launches Slider */}
-      {!loading && allOffPlanProjects.length > 0 && (
-        <LatestLaunchesSlider properties={allOffPlanProjects} />
-      )}
+     
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12 p-2">
         {loading ? (
@@ -121,6 +121,8 @@ const PropertyListing = ({ offPlanProjects }) => {
         )}
       </div>
 
+      
+
       {hasMore && !loading && (
         <div className="text-center">
           <button 
@@ -129,10 +131,31 @@ const PropertyListing = ({ offPlanProjects }) => {
           >
             More projects
           </button>
+
+          
         </div>
+
+
+
+        
+        
       )}
-    </div>
-  );
-};
+        {/* Latest Project Launches Slider */}
+        {!loading && allOffPlanProjects.length > 0 && (
+          <LatestLaunchesSlider properties={allOffPlanProjects} />
+        )}
+        
+        {/* Top Investment Hotspots Slider */}
+        {/* {!loading && allOffPlanProjects.length > 0 && (
+          <InvestmentHotspotsSlider properties={allOffPlanProjects} />
+        )} */}
+        
+        {/* Developer Logo Slider - using all properties, not just Off Plan */}
+        {!loading && offPlanProjects.length > 0 && (
+          <DeveloperLogoSlider properties={offPlanProjects} />
+        )}
+      </div>
+    );
+  };
 
 export default PropertyListing;
