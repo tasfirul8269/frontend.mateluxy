@@ -18,8 +18,8 @@ const navigation = [
     label: 'Commercial',
     path: '/commercial',
     children: [
-      { label: 'Commercial Properties for Buy', path: '/buy' },
-      { label: 'Commercial Properties for Rent', path: '/rent' },
+      { label: 'Commercial Properties for Buy', path: '/commercial-buy' },
+      { label: 'Commercial Properties for Rent', path: '/commercial-rent' },
     ],
   },
   { label: 'Contact', path: '/contact' },

@@ -23,6 +23,8 @@ import AddPropertyPage from "../pages/AgentPannelPages/AddPropertyPage";
 import AgentsPage from "@/pages/AdminPannelPages/AgentsPage";
 import AdminsPage from "@/pages/AdminPannelPages/AdminsPage";
 import { AgentProvider } from '@/components/AdminPannelAgents/context/AgentContext';
+import CommercialBuy from "../pages/CommercialBuy/CommercialBuy";
+import CommercialRent from "../pages/CommercialRent/CommercialRent";
 
 const router = createBrowserRouter([
 
@@ -42,6 +44,14 @@ const router = createBrowserRouter([
             {
                 path: "/rent",
                 element: <Rent></Rent>
+            },
+            {
+                path: "/commercial-buy",
+                element: <CommercialBuy></CommercialBuy>
+            },
+            {
+                path: "/commercial-rent",
+                element: <CommercialRent></CommercialRent>
             },
             {
                 path: "/property-details/:id",
