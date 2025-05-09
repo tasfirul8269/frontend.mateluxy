@@ -10,12 +10,12 @@ const PropertySearchBar = () => {
   const [searchParams, setSearchParams] = useState({
     location: "",
     propertyType: "",
-    priceRange: [300000, 5000000],
+    priceRange: [100, 5000000], // Consistent range that works for both buy and rent
     beds: "",
     baths: "",
     amenities: [],
   });
-  const [minMaxPrices, setMinMaxPrices] = useState({ min: 300000, max: 5000000 });
+  const [minMaxPrices, setMinMaxPrices] = useState({ min: 100, max: 5000000 });
   const [amenitiesOptions, setAmenitiesOptions] = useState([]);
   
   const location = useLocation();
@@ -34,12 +34,21 @@ const PropertySearchBar = () => {
   useEffect(() => {
     const fetchPropertyData = async () => {
       try {
+        // Determine which property category to fetch based on the active tab
+        const category = activeTab === 0 ? 'Buy' : 'Rent';
+        console.log('Fetching properties for category:', category);
+        
+        // Fetch properties with the correct category filter
         const response = await fetch(`${import.meta.env.VITE_API_URL}/api/properties`);
         if (!response.ok) {
-          throw new Error('Failed to fetch properties');
+          throw new Error(`Failed to fetch properties`);
         }
         
-        const properties = await response.json();
+        const allProperties = await response.json();
+        
+        // Filter properties by category (Buy or Rent)
+        const properties = allProperties.filter(property => property.category === category);
+        console.log(`Filtered ${properties.length} properties with category: ${category}`);
         
         // Extract unique amenities
         const allAmenities = new Set();
@@ -62,28 +71,82 @@ const PropertySearchBar = () => {
         // Find min and max prices
         let minPrice = Number.MAX_SAFE_INTEGER;
         let maxPrice = 0;
+        let pricesFound = false;
+        
+        console.log('All property data:', properties);
+        console.log('Property price fields:', properties.map(p => p.price));
+        
+        // Check if we need to look for a different price field
+        // Sometimes the API might return prices in a different format or field name
+        const sampleProperty = properties[0];
+        console.log('Sample property:', sampleProperty);
+        
+        // Extract price information from the properties
+        const validPrices = [];
         
         properties.forEach(property => {
-          if (property.price) {
-            const price = parseFloat(property.price);
-            if (!isNaN(price)) {
-              minPrice = Math.min(minPrice, price);
-              maxPrice = Math.max(maxPrice, price);
+          if (property.propertyPrice !== undefined && property.propertyPrice !== null) {
+            // Handle price as number
+            const price = Number(property.propertyPrice);
+            
+            console.log('Processing property price:', property.propertyPrice, '→', price);
+            
+            if (!isNaN(price) && price > 0) {
+              validPrices.push(price);
+              pricesFound = true;
             }
           }
         });
         
-        // Set min/max prices if found, otherwise use defaults
-        if (minPrice !== Number.MAX_SAFE_INTEGER && maxPrice > 0) {
+        console.log('Found valid prices:', validPrices);
+        
+        // If we found valid prices, determine min and max
+        if (validPrices.length > 0) {
+          minPrice = Math.min(...validPrices);
+          maxPrice = Math.max(...validPrices);
+          console.log('Found valid prices:', validPrices);
+          console.log('Current min/max:', minPrice, maxPrice);
+        }
+        
+        console.log('Final min/max prices:', minPrice, maxPrice);
+        
+        // Set min/max prices if found, otherwise use sample values
+        if (pricesFound && minPrice !== Number.MAX_SAFE_INTEGER && maxPrice > 0) {
+          // Round to nearest whole numbers for better UX
+          const roundedMin = Math.floor(minPrice);
+          const roundedMax = Math.ceil(maxPrice);
+          
+          console.log('Setting price range:', roundedMin, roundedMax);
+          
+          // Force UI update by setting state
           setMinMaxPrices({
-            min: Math.floor(minPrice),
-            max: Math.ceil(maxPrice)
+            min: roundedMin,
+            max: roundedMax
           });
           
           // Update search params with the new range
           setSearchParams(prev => ({
             ...prev,
-            priceRange: [Math.floor(minPrice), Math.ceil(maxPrice)]
+            priceRange: [roundedMin, roundedMax]
+          }));
+          
+          console.log('Price range set to:', roundedMin, roundedMax);
+        } else {
+          // Use consistent fallback values
+          const fallbackMin = 100;
+          const fallbackMax = 5000000;
+          
+          console.warn('No valid prices found in properties data, using fallback values');
+          console.log('Setting fallback price range:', fallbackMin, fallbackMax);
+          
+          setMinMaxPrices({
+            min: fallbackMin,
+            max: fallbackMax
+          });
+          
+          setSearchParams(prev => ({
+            ...prev,
+            priceRange: [fallbackMin, fallbackMax]
           }));
         }
       } catch (error) {
@@ -92,7 +155,7 @@ const PropertySearchBar = () => {
     };
     
     fetchPropertyData();
-  }, []);
+  }, [activeTab]); // Re-fetch when activeTab changes
 
   // Property types for dropdown
   const propertyTypes = [
@@ -163,14 +226,22 @@ const PropertySearchBar = () => {
   };
   
   const clearFilters = () => {
-    setSearchParams({
-      location: "",
-      propertyType: "",
-      priceRange: [minMaxPrices.min, minMaxPrices.max],
+    // Reset only the more filters parameters (beds, baths, amenities)
+    setSearchParams(prev => ({
+      ...prev,
       beds: "",
       baths: "",
       amenities: [],
-    });
+    }));
+    
+    // Remove only beds, baths, and amenities filter parameters from the URL
+    const currentURL = new URL(window.location.href);
+    currentURL.searchParams.delete('beds');
+    currentURL.searchParams.delete('baths');
+    currentURL.searchParams.delete('amenities');
+    
+    // Update the URL without reloading the page
+    navigate(currentURL.pathname + currentURL.search, { replace: true });
   };
 
   // Count active filters
@@ -186,7 +257,8 @@ const PropertySearchBar = () => {
   };
   
   const formatPrice = (price) => {
-    return `AED ${price.toLocaleString()}`;
+    // Format price with commas and dollar sign
+    return `$${Math.round(price).toLocaleString()}`;
   };
 
   return (
@@ -290,7 +362,32 @@ const PropertySearchBar = () => {
               </DropdownMenu.DropdownMenuTrigger>
               
               <DropdownMenu.DropdownMenuContent className="w-72 p-4" sideOffset={5}>
-                <DropdownMenu.DropdownMenuLabel>Price Range</DropdownMenu.DropdownMenuLabel>
+                <div className="flex justify-between items-center">
+                  <DropdownMenu.DropdownMenuLabel>Price Range</DropdownMenu.DropdownMenuLabel>
+                  {(searchParams.priceRange[0] > minMaxPrices.min || searchParams.priceRange[1] < minMaxPrices.max) && (
+                    <button 
+                      onClick={() => {
+                        // Reset price range to min/max values
+                        setSearchParams(prev => ({
+                          ...prev,
+                          priceRange: [minMaxPrices.min, minMaxPrices.max]
+                        }));
+                        
+                        // Only remove price filter params from the URL
+                        const currentURL = new URL(window.location.href);
+                        currentURL.searchParams.delete('minPrice');
+                        currentURL.searchParams.delete('maxPrice');
+                        navigate(currentURL.pathname + currentURL.search, { replace: true });
+                      }}
+                      className="text-gray-500 hover:text-red-600 transition-colors"
+                      aria-label="Reset price filter"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    </button>
+                  )}
+                </div>
                 <DropdownMenu.DropdownMenuSeparator />
                 
                 <div className="mt-4 mb-8">
@@ -341,6 +438,20 @@ const PropertySearchBar = () => {
               
               <DropdownMenu.DropdownMenuContent className="w-72 p-4 max-h-[80vh] overflow-y-auto" sideOffset={5} align="end">
                 <div className="sticky top-0 bg-white pb-2 z-10">
+                  <div className="flex justify-between items-center mb-3">
+                    <button
+                      onClick={clearFilters}
+                      className="px-3 py-1.5 border border-gray-200 text-gray-700 text-xs rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      Reset
+                    </button>
+                    <button
+                      onClick={handleSearch}
+                      className="px-3 py-1.5 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                      Apply
+                    </button>
+                  </div>
                   <DropdownMenu.DropdownMenuLabel>Bedrooms</DropdownMenu.DropdownMenuLabel>
                   <DropdownMenu.DropdownMenuSeparator />
                 </div>
@@ -414,20 +525,6 @@ const PropertySearchBar = () => {
                 
                 <div className="sticky bottom-0 bg-white pt-3 mt-2 z-10">
                   <DropdownMenu.DropdownMenuSeparator />
-                  <div className="mt-3 flex justify-between">
-                    <button
-                      onClick={clearFilters}
-                      className="px-4 py-2 border border-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-100 transition-colors"
-                    >
-                      Reset
-                    </button>
-                    <button
-                      onClick={handleSearch}
-                      className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors"
-                    >
-                      Apply
-                    </button>
-                  </div>
                 </div>
               </DropdownMenu.DropdownMenuContent>
             </DropdownMenu.DropdownMenu>

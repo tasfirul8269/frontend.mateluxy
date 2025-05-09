@@ -1650,6 +1650,43 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                       />
                     </div>
                   </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div>
+                      <label className="block text-base font-medium mb-2">Country</label>
+                      <select
+                        name="propertyCountry"
+                        value={form.propertyCountry}
+                        onChange={handleInput}
+                        className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition appearance-none"
+                      >
+                        {COUNTRY_LIST.map((country) => (
+                          <option key={country} value={country}>
+                            {country}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-base font-medium mb-2">State</label>
+                      <input
+                        name="propertyState"
+                        value={form.propertyState}
+                        onChange={handleInput}
+                        placeholder="State"
+                        className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-base font-medium mb-2">ZIP Code</label>
+                      <input
+                        name="propertyZip"
+                        value={form.propertyZip}
+                        onChange={handleInput}
+                        placeholder="ZIP Code"
+                        className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
+                      />
+                    </div>
+                  </div>
                   <div className="mb-6">
                     <label className="block text-base font-medium mb-2">Location Description</label>
                     <textarea

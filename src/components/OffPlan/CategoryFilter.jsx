@@ -1,7 +1,8 @@
 import React from 'react';
 
 const CategoryFilter = ({ selectedCategory, onCategoryChange }) => {
-  const categories = ['All', 'Villas', 'Apartments', 'Penthouses', 'Townhouses', 'Plots', 'Commercial property'];
+  // Using exact property types as they appear in the database
+  const categories = ['All', 'Villa', 'Apartment', 'Penthouse', 'Townhouse', 'Plot', 'Commercial'];
   
   return (
     <div className="overflow-x-auto mb-8">

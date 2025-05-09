@@ -25,7 +25,7 @@ const Footer = () => {
       </div>
       
       {/* Main content */}
-      <div className="relative z-10 flex w-full max-w-[1440px] mx-auto items-start justify-around gap-[40px_100px] overflow-hidden text-base text-white font-medium flex-wrap px-6 sm:px-8 py-8 max-md:max-w-full">
+      <div className="relative z-10 flex w-full max-w-[1440px] mx-auto items-start justify-between gap-[40px_100px] overflow-hidden text-base text-white font-medium flex-wrap px-6 sm:px-8 py-8 max-md:max-w-full">
         <div className="self-stretch min-w-60 overflow-hidden font-normal my-auto p-2.5 max-md:max-w-full">
           <h3 className="text-white text-2xl font-semibold">Stay in the loop</h3>
           <p className="font-medium mt-2.5 max-md:max-w-full">
@@ -57,7 +57,7 @@ const Footer = () => {
           </p>
         </div>
 
-       <div className="flex justify-center items-center gap-5">
+       <div className="hidden md:flex lg:flex xl:flex justify-center items-center gap-5">
          <div className="self-stretch overflow-hidden my-auto p-2.5">
           <h3 className="text-white text-2xl font-semibold">Services</h3>
           <ul>
@@ -69,16 +69,7 @@ const Footer = () => {
           </ul>
         </div>
 
-        <div className="self-stretch overflow-hidden my-auto p-2.5">
-          <h3 className="text-white text-2xl font-semibold">Resources</h3>
-          <ul>
-            {["Real Estate Guides", "News & Insights", "Market Reports", "Instant Property Valuation", "Podcast"].map((item, idx) => (
-              <li key={idx} className="mt-2.5 hover:text-white/75 transition-colors">
-                <a href="#">{item}</a>
-              </li>
-            ))}
-          </ul>
-        </div>
+        
 
         <div className="self-stretch overflow-hidden my-auto p-2.5">
           <h3 className="text-white text-2xl font-semibold">About</h3>

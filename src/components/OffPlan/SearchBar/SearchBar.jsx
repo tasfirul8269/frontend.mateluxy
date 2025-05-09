@@ -50,7 +50,7 @@ const SearchBar = ({ onSearch }) => {
               placeholder="Location, Developer or Project"
               value={searchParams.searchTerm}
               onChange={handleInputChange}
-              className="w-full px-4 py-3 pl-12 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+              className="w-full px-4 py-3 pl-12 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent"
             />
           </div>
 
@@ -87,7 +87,7 @@ const SearchBar = ({ onSearch }) => {
           {/* Search Button */}
           <button
             type="submit"
-            className="bg-[#256fff] hover:bg-[#25afff] cursor-pointer text-white p-3 rounded-full h-12 w-12 flex items-center justify-center flex-shrink-0"
+            className="bg-[#FF2626] hover:bg-[#FF4040] cursor-pointer text-white p-3 rounded-full h-12 w-12 flex items-center justify-center flex-shrink-0"
           >
             <Search className="h-5 w-5" />
           </button>
@@ -108,7 +108,7 @@ const SearchBar = ({ onSearch }) => {
             <CompletionSelector
               value={searchParams.completion}
               onChange={handleCompletionChange}
-              className = "border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-700"
+              className = "border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 text-gray-700"
             />
           </div>
         )}
