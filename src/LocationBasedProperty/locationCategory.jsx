@@ -43,27 +43,39 @@ const locationData = {
   }
 };
 
-// Card styles array to ensure 4 different colored cards with distinct images
+// Card styles array with a dark-themed color scheme that complements the site's red theme
 const cardStyles = [
   {
-    color: "from-[#FF4B2B]/90 to-[#FF416C]/90", // Red
-    hoverColor: "from-[#FF3B1B]/90 to-[#FF316C]/90",
-    image: "https://images.pexels.com/photos/2467558/pexels-photo-2467558.jpeg",
+    color: "from-red-600/90 to-red-700/90", // Deep red
+    hoverColor: "from-red-700/95 to-red-800/95",
+    image: "https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=1296&auto=format&fit=crop",
+    textColor: "text-gray-100",
+    iconBg: "bg-red-500/30",
+    iconHoverBg: "hover:bg-red-500/40"
   },
   {
-    color: "from-[#00B4DB]/90 to-[#0083B0]/90", // Blue
-    hoverColor: "from-[#00A4CB]/90 to-[#0073A0]/90",
-    image: "https://images.pexels.com/photos/2193300/pexels-photo-2193300.jpeg",
+    color: "from-gray-900/90 to-gray-800/90", // Dark theme
+    hoverColor: "from-gray-900/95 to-gray-800/95",
+    image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=1470&auto=format&fit=crop",
+    textColor: "text-gray-100",
+    iconBg: "bg-red-500/30",
+    iconHoverBg: "hover:bg-red-500/40"
   },
   {
-    color: "from-[#11998e]/90 to-[#38ef7d]/90", // Green
-    hoverColor: "from-[#10897e]/90 to-[#28df6d]/90",
-    image: "https://images.pexels.com/photos/2044434/pexels-photo-2044434.jpeg",
+    color: "from-gray-700/90 to-gray-800/90", // Medium gray theme
+    hoverColor: "from-gray-800/95 to-gray-900/95",
+    image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1548&auto=format&fit=crop",
+    textColor: "text-gray-100",
+    iconBg: "bg-red-500/30",
+    iconHoverBg: "hover:bg-red-500/40"
   },
   {
-    color: "from-[#8E2DE2]/90 to-[#4A00E0]/90", // Purple
-    hoverColor: "from-[#7E1DD2]/90 to-[#3A00D0]/90",
-    image: "https://images.pexels.com/photos/3052361/pexels-photo-3052361.jpeg" // Night cityscape
+    color: "from-red-500/90 to-red-900/90", // Red gradient
+    hoverColor: "from-red-600/95 to-red-900/95",
+    image: "https://images.unsplash.com/photo-1533422902779-aff35862e462?q=80&w=1470&auto=format&fit=crop",
+    textColor: "text-gray-100",
+    iconBg: "bg-red-400/30",
+    iconHoverBg: "hover:bg-red-400/40"
   }
 ];
 
@@ -191,7 +203,7 @@ function LocationCategory() {
   }
 
   return (
-    <section className="w-full max-w-[1335px] mx-auto px-4 py-16 my-10">
+    <section className="w-full max-w-[1335px] mx-auto px-4 py-16 my-4">
       <motion.div
         variants={textVariants}
         initial="hidden"
@@ -200,12 +212,12 @@ function LocationCategory() {
       >
         <h1 className="font-['Montserrat',Helvetica] font-bold text-gray-900 text-4xl md:text-5xl leading-tight mb-4">
           Discover Properties by <span className="text-red-600 relative inline-block">
-            State
+            Location
             <span className="absolute bottom-0 left-0 w-full h-1 bg-red-600/30 rounded-full"></span>
           </span>
         </h1>
         <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-          Explore our curated selection of premium properties across the UAE
+          Explore our curated selection of premium properties across the UAE's most desirable locations
         </p>
         {error && (
           <p className="text-red-500 mt-2">{error}</p>
@@ -216,82 +228,108 @@ function LocationCategory() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-2"
+        className="relative px-2 py-8"
       >
-        {locations.map((location, index) => (
-          <motion.div
-            key={location.id}
-            variants={cardVariants}
-            whileHover="hover"
-            className="relative group cursor-pointer"
-            onClick={() => handleLocationClick(location.name)}
-          >
-            <div className="h-[400px] rounded-2xl overflow-hidden relative shadow-lg hover:shadow-xl transition-shadow duration-300">
-              {/* Background Image - Using a different image from the cardStyles array for each card */}
-              <div 
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
-                style={{ backgroundImage: `url(${cardStyles[index % 4].image})` }}
-              />
-              
-              {/* Gradient Overlay - Using a different color from the cardStyles array for each card */}
-              <div className={`absolute inset-0 bg-gradient-to-t ${cardStyles[index % 4].color} group-hover:${cardStyles[index % 4].hoverColor} transition-all duration-300`} />
-              
-              {/* Content */}
-              <div className="relative h-full p-6 flex flex-col justify-between">
-                <div className="space-y-4">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.2, type: "spring" }}
-                    className="flex items-center gap-2 text-white"
-                  >
-                    <FaMapMarkerAlt className="text-2xl drop-shadow-md" />
-                    <h3 className="text-2xl font-bold drop-shadow-md">{location.name}</h3>
-                  </motion.div>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-white/90 backdrop-blur-sm bg-white/10 px-3 py-1.5 rounded-full w-fit">
-                    <FaBuilding className="text-xl" />
-                    <span className="font-medium">{location.count} Properties</span>
-                  </div>
-                  
-                  <motion.div
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className="flex items-center gap-2 text-white group-hover:gap-3 transition-all duration-300 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full hover:bg-white/30 w-fit"
-                  >
-                    <span className="font-medium">Explore Properties</span>
-                    <FaChevronRight className="transform group-hover:translate-x-1 transition-transform" />
-                  </motion.div>
-                </div>
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-20 left-10 w-64 h-64 bg-red-500/5 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 right-10 w-80 h-80 bg-red-500/5 rounded-full blur-3xl"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-500/5 rounded-full blur-3xl"></div>
+        </div>
 
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.4 }}
-                  className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"
-                />
-              </div>
-            </div>
-          </motion.div>
-        ))}
+        {/* Dynamic staggered layout - limited to 4 locations */}
+        <div className="relative grid grid-cols-12 gap-4 md:gap-6">
+          {locations.slice(0, 4).map((location, index) => {
+            // Create a staggered layout with different sizes and positions
+            const layouts = [
+              "col-span-12 md:col-span-6 lg:col-span-8 h-[350px]", // Large card
+              "col-span-12 md:col-span-6 lg:col-span-4 h-[350px]", // Medium card
+              "col-span-12 md:col-span-6 lg:col-span-5 h-[350px]", // Medium-large card
+              "col-span-12 md:col-span-6 lg:col-span-7 h-[350px]"  // Large-medium card
+            ];
+            
+            return (
+              <motion.div
+                key={location.id}
+                variants={cardVariants}
+                whileHover="hover"
+                className={`relative group cursor-pointer ${layouts[index % 4]}`}
+                onClick={() => handleLocationClick(location.name)}
+              >
+                <div className="h-full rounded-2xl overflow-hidden relative shadow-lg hover:shadow-xl transition-shadow duration-300">
+                  {/* Background Image */}
+                  <div 
+                    className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
+                    style={{ backgroundImage: `url(${cardStyles[index % 4].image})` }}
+                  />
+                  
+                  {/* Gradient Overlay */}
+                  <div className={`absolute inset-0 bg-gradient-to-t ${cardStyles[index % 4].color} group-hover:${cardStyles[index % 4].hoverColor} transition-all duration-300`} />
+                  
+                  {/* Content */}
+                  <div className="relative h-full p-6 flex flex-col justify-between">
+                    <div className="space-y-4">
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.2, type: "spring" }}
+                        className={`flex items-center gap-2 ${cardStyles[index % 4].textColor}`}
+                      >
+                        <div className="bg-red-500 p-2 rounded-lg shadow-md">
+                          <FaMapMarkerAlt className="text-xl text-gray-100" />
+                        </div>
+                        <h3 className="text-2xl font-bold drop-shadow-md">{location.name}</h3>
+                      </motion.div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className={`flex items-center gap-2 ${cardStyles[index % 4].textColor} backdrop-blur-sm ${cardStyles[index % 4].iconBg} px-3 py-2 rounded-lg shadow-sm w-fit`}>
+                        <FaBuilding className="text-lg" />
+                        <span className="font-medium">{location.count} Properties</span>
+                      </div>
+                      
+                      <motion.div
+                        initial={{ x: -20, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className={`flex items-center gap-2 ${cardStyles[index % 4].textColor} group-hover:gap-3 transition-all duration-300 ${cardStyles[index % 4].iconBg} backdrop-blur-sm px-4 py-2.5 rounded-lg shadow-sm ${cardStyles[index % 4].iconHoverBg} w-fit`}
+                      >
+                        <span className="font-medium">Explore Properties</span>
+                        <FaChevronRight className="transform group-hover:translate-x-1 transition-transform" />
+                      </motion.div>
+                    </div>
+
+                    {/* Decorative blur element */}
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.4 }}
+                      className="absolute -bottom-10 -right-10 w-40 h-40 bg-red-500/10 rounded-full blur-2xl"
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
       </motion.div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1, duration: 0.5 }}
-        className="text-center mt-12"
+        className="text-center mt-4"
       >
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => navigate('/rent')}
-          className="px-8 py-4 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 mx-auto"
+          className="px-8 py-4 bg-transparent text-red-600 rounded-[20px] font-medium hover:bg-red-600 hover:text-white hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3 mx-auto "
         >
-          <FaSearch className="text-lg" /> View All Properties
+          <div className="bg-red-500 p-2 rounded-[20px]">
+            <FaSearch className="text-lg text-gray-100" />
+          </div>
+          <span>View All Properties</span>
         </motion.button>
       </motion.div>
     </section>

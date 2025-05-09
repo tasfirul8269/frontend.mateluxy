@@ -1,18 +1,66 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import ProCard from "../ProCard/ProCard";
-import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaChevronLeft, FaChevronRight, FaSpinner } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { propertyApi } from '../../services/api';
 
 const TopProperties = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [totalDots, setTotalDots] = useState(0);
   const [activeDot, setActiveDot] = useState(0);
+  const [properties, setProperties] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const containerRef = useRef(null);
   const scrollRef = useRef(null);
 
-  const properties = [
+  // Fetch properties from API
+  useEffect(() => {
+    const fetchProperties = async () => {
+      try {
+        setLoading(true);
+        const data = await propertyApi.getProperties();
+        
+        // Format properties for ProCard component
+        const formattedProperties = data.map(property => {
+          // Check if agent data is populated
+          const hasAgentData = property.agent && typeof property.agent === 'object';
+          
+          return {
+            id: property._id,
+            name: property.propertyTitle,
+            location: property.propertyState,
+            deliveryDate: property.category === 'Off Plan' ? formatDeliveryDate(property.completionDate) : 'Ready to Move',
+            price: `AED ${formatPrice(property.propertyPrice)}`,
+            developer: property.developer || '',
+            developerImage: property.developerImage || '',
+            image: property.propertyFeaturedImage,
+            propertyType: property.propertyType,
+            beds: property.propertyBedrooms,
+            baths: property.propertyBathrooms,
+            kitchens: property.propertyKitchen,
+            languages: hasAgentData && property.agent.languages ? property.agent.languages : ["English", "Arabic"],
+            bgColor: getRandomBgColor(),
+            agentName: hasAgentData ? property.agent.fullName : (property.agent || 'Agent'),
+            agentPosition: hasAgentData ? property.agent.position : '',
+            agentImage: hasAgentData && property.agent.profileImage ? 
+              property.agent.profileImage : 
+              "https://randomuser.me/api/portraits/" + (Math.random() > 0.5 ? 'women/' : 'men/') + Math.floor(Math.random() * 10) + '.jpg',
+            agentWhatsapp: hasAgentData && property.agent.whatsapp ? property.agent.whatsapp : '+971501234567',
+            agentPhone: hasAgentData && property.agent.contactNumber ? property.agent.contactNumber : '+971501234567',
+            category: property.category
+          };
+        });
+        
+        setProperties(formattedProperties);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching properties:', err);
+        setError('Failed to load properties. Please try again later.');
+        // Fallback to demo data if API fails
+        setProperties([
     {
       name: "The Acres",
       location: "Dubailand",
@@ -109,7 +157,39 @@ const TopProperties = () => {
       agentName: "John Smith",
       agentImage: "https://randomuser.me/api/portraits/men/7.jpg",
     },
-  ];
+  ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProperties();
+  }, []);
+  
+  // Helper function to format completion date
+  const formatDeliveryDate = (dateString) => {
+    if (!dateString) return 'TBA';
+    
+    try {
+      const date = new Date(dateString);
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return `${months[date.getMonth()]}. ${date.getFullYear()}`;
+    } catch (error) {
+      return dateString;
+    }
+  };
+
+  // Helper function to format price
+  const formatPrice = (price) => {
+    if (!price) return '0';
+    return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  };
+
+  // Helper function to get random background color
+  const getRandomBgColor = () => {
+    const colors = ['#f0f7f4', '#fff5e6', '#f9f2e8', '#e6f3ff'];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
 
   // Calculate total dots based on visible area
   useEffect(() => {
@@ -215,21 +295,42 @@ const TopProperties = () => {
 
       {/* Carousel container */}
       <div className="relative">
-        <div 
-          ref={scrollRef}
-          className="flex overflow-x-auto gap-[15px] pb-4 hide-scrollbar"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {properties.map((property, index) => (
-            <div 
-              key={index} 
-              className="property-card-container flex-shrink-0"
-              style={{ width: 'calc((100% - 15px * 3) / 4)', minWidth: '385px' }} // Added another 10px more width (total +20px)
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <FaSpinner className="animate-spin text-3xl text-red-600" />
+            <span className="ml-3 text-gray-600">Loading properties...</span>
+          </div>
+        ) : error ? (
+          <div className="text-center py-20 text-red-600">
+            <p>{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
-              <ProCard property={property} />
-            </div>
-          ))}
-        </div>
+              Try Again
+            </button>
+          </div>
+        ) : properties.length === 0 ? (
+          <div className="text-center py-20 text-gray-600">
+            <p>No properties available at the moment.</p>
+          </div>
+        ) : (
+          <div 
+            ref={scrollRef}
+            className="flex overflow-x-auto gap-[15px] pb-4 hide-scrollbar"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {properties.map((property, index) => (
+              <div 
+                key={property.id || index} 
+                className="property-card-container flex-shrink-0"
+                style={{ width: 'calc((100% - 15px * 3) / 4)', minWidth: '385px' }}
+              >
+                <ProCard property={property} />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       
       {/* Pagination dots */}

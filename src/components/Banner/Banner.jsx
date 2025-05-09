@@ -114,7 +114,7 @@ const Banner = () => {
       </div>
       
       {/* Add custom CSS for animations */}
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes fadeInUp {
           from {
             opacity: 0;
@@ -128,7 +128,7 @@ const Banner = () => {
         .animate-fadeInUp {
           animation: fadeInUp 0.8s ease-out forwards;
         }
-      `}</style>
+      `}} />
     </div>
   );
 };

@@ -1,12 +1,8 @@
-import React from "react";
-import {
-  FaPhone,
-  FaWhatsapp,
-  FaHeart,
-  FaRegHeart,
-  FaMapMarkerAlt
-} from "react-icons/fa";
-import { motion } from "framer-motion";
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaMapMarkerAlt, FaPhone, FaWhatsapp, FaHeart, FaRegHeart } from 'react-icons/fa';
+import { FaKitchenSet } from 'react-icons/fa6';
+import { LiaBedSolid, LiaBathSolid } from 'react-icons/lia';
 import "animate.css";
 
 import locationImg from "../../assets/group-39519-2.svg";
@@ -14,11 +10,11 @@ import bath from "../../assets/ic_bath.svg";
 import bed from "../../assets/ic_bed.svg";
 import kitchen from "../../assets/vector-1.svg";
 import divider from "../../assets/line-2.svg";
-import { LiaBathSolid, LiaBedSolid } from "react-icons/lia";
 
 const ProCard = ({ property }) => {
-  const [isHovered, setIsHovered] = React.useState(false);
-  const [isFavorite, setIsFavorite] = React.useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
 
   return (
     <motion.div 
@@ -50,9 +46,20 @@ const ProCard = ({ property }) => {
           </motion.button>
         </div>
         <div className="absolute bottom-3 left-3 z-10">
+        {property?.category === 'Off Plan' ?
+        <div>
           <span className="bg-red-600 text-white px-3 py-1 rounded-full text-xs font-medium">
+            {property?.category}
+          </span>
+          <span className="ml-5 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-medium">
             {property?.deliveryDate}
           </span>
+          </div>
+          
+          
+          : <span className="bg-red-600 text-white px-3 py-1 rounded-full text-xs font-medium">
+          {property?.category}
+        </span>}
         </div>
       </div>
       <div className="flex justify-between items-center mt-4">
@@ -71,13 +78,11 @@ const ProCard = ({ property }) => {
       <div className="flex justify-start items-center gap-2 mt-2">
         <FaMapMarkerAlt className="text-red-500" />
         <p className="text-[#999999] font-medium text-[14px]">{property?.location}</p>
-        <div className="ml-auto text-sm font-medium text-gray-700">
-          <span className="text-red-600">{property?.developer}</span>
-        </div>
+        
       </div>
 
       {/* features container */}
-      <div className="flex justify-start gap-[20px] items-center my-4 bg-gray-50 p-3 rounded-xl">
+      <div className="flex justify-start gap-[20px] items-center my-2 bg-gray-50 p-3 rounded-xl">
         <div className="text-gray-700 flex justify-start items-center gap-2">
           <LiaBedSolid className="w-[20px] h-[20px] text-gray-600" />
           <p className="font-medium text-[16px]">{property?.beds} <span className="text-xs text-gray-500">Beds</span></p>
@@ -93,40 +98,95 @@ const ProCard = ({ property }) => {
         <div className="h-4 w-[1.5px] bg-[#e6e6e6]"></div>
 
         <div className="text-gray-700 flex justify-start items-center gap-2">
-          <img className="w-5 h-5" src={kitchen} alt="Kitchen" />
+          <FaKitchenSet className="w-[20px] h-[20px] text-gray-600" />
           <p className="font-medium text-[16px]">{property?.kitchens} <span className="text-xs text-gray-500">Kitchen</span></p>
         </div>
       </div>
 
-      {/* Agent container */}
-      <div className="flex justify-between items-center my-4 gap-3 mb-5 bg-gray-50 p-3 rounded-xl">
-        <div className="flex gap-3 items-center">
-          <div className="relative">
-            <img
-              className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
-              src={property?.agentImage}
-              alt={property?.agentName}
-            />
-            <div className="absolute -bottom-1 -right-1 bg-green-500 w-3 h-3 rounded-full border-2 border-white"></div>
-          </div>
+      {/* Agent container or Developer container for Off Plan */}
+      <div className="flex justify-between items-center my-2 gap-3 mb-2 bg-gray-50 p-3 rounded-xl">
+        {property?.category === 'Off Plan' ? (
+          // Developer information for Off Plan properties
+          <div className="flex justify-between items-center w-full">
+            <div className="relative">
+              <img
+                className="w-30 h-12 object-contain"
+                src={property?.developerImage || 'https://via.placeholder.com/48?text=D'}
+                alt={property?.developer}
+              />
+            </div>
 
-          {/* agent name and languages container */}
-          <div>
-            <h3 className="text-md font-semibold text-gray-800">
-              {property?.agentName}
-            </h3>
-            <p className="text-[12px] text-gray-600">
-              Speaks {property?.languages?.slice(0,2).join(", ")}
-            </p>
+            {/* Developer name - positioned on the right */}
+            <div className="text-right">
+              <h3 className="text-md font-semibold text-gray-800">
+                Developed by
+              </h3>
+              <p className="text-[14px] text-gray-700 font-medium">
+                {property?.developer || 'Developer'}
+              </p>
+            </div>
           </div>
-        </div>
-        <motion.button 
-          className="w-[auto] flex justify-center items-center gap-2 text-gray-700 bg-white border border-gray-200 px-[15px] py-[10px] rounded-[10px] shadow-sm hover:shadow-md transition-all"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          <FaPhone className="text-[16px] text-gray-600" />
-        </motion.button>
+        ) : (
+          // Agent information for other property types
+          <div className="flex gap-3 items-center">
+            <div className="relative">
+              <img
+                className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
+                src={property?.agentImage}
+                alt={property?.agentName}
+              />
+              <div className="absolute -bottom-1 -right-1 bg-green-500 w-3 h-3 rounded-full border-2 border-white"></div>
+            </div>
+
+            {/* agent name and languages container */}
+            <div>
+              <div className="relative">
+                {/* Agent name with custom tooltip */}
+                <h3 
+                  className="text-md font-semibold text-gray-800 whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px] cursor-pointer group"
+                  onMouseEnter={() => setShowTooltip(true)}
+                  onMouseLeave={() => setShowTooltip(false)}
+                >
+                  {property?.agentName}
+                  {/* Custom tooltip */}
+                  <AnimatePresence>
+                    {showTooltip && (
+                      <motion.div 
+                        className="absolute z-50 left-0 -top-10 bg-gray-800 text-white text-xs rounded py-1 px-2 min-w-max"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {property?.agentName}
+                        <div className="absolute bottom-[-6px] left-3 w-3 h-3 bg-gray-800 transform rotate-45"></div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </h3>
+              </div>
+              {property?.agentPosition && (
+                <p className="text-[12px] text-gray-700 font-medium">
+                  {property?.agentPosition}
+                </p>
+              )}
+              <p className="text-[12px] text-gray-600">
+                Speaks {property?.languages?.slice(0,2).join(", ")}
+              </p>
+            </div>
+          </div>
+        )}
+        {/* Only show call button for non-off-plan properties */}
+        {property?.category !== 'Off Plan' && (
+          <motion.a 
+            href={`tel:${property?.agentPhone}`}
+            className="w-[auto] flex justify-center items-center gap-2 text-gray-700 bg-white border border-gray-200 px-[15px] py-[10px] rounded-[10px] shadow-sm hover:shadow-md transition-all"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <FaPhone className="text-[16px] text-gray-600" />
+          </motion.a>
+        )}
       </div>
 
       <div className="h-[1px] w-full bg-[#e6e6e6] my-4"></div>
@@ -135,16 +195,25 @@ const ProCard = ({ property }) => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-[22px] font-bold text-gray-900">{property?.price}</h2>
-          <p className="text-xs text-gray-500">Starting Price</p>
+          {property?.category === 'Off Plan' ? (
+            <p className="text-xs text-gray-500">Starting from</p>
+          ) : property?.category === 'Rent' || property?.category === 'Commercial for Rent' ? (
+            <p className="text-xs text-gray-500">Per year</p>
+          ) : (
+            <p className="text-xs text-gray-500">&nbsp;</p>
+          )}
         </div>
-        <motion.button 
+        <motion.a 
+          href={`https://wa.me/${property?.agentWhatsapp?.replace(/[^0-9]/g, '')}`}
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex justify-center items-center gap-2 text-[#FF2626] bg-[#FFF0F0] hover:bg-[#FFE5E5] px-[20px] py-[10px] rounded-[15px] shadow-sm hover:shadow-md transition-all"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
           <FaWhatsapp className="text-xl" />
           <span className="font-medium">WhatsApp</span>
-        </motion.button>
+        </motion.a>
       </div>
     </motion.div>
   );
