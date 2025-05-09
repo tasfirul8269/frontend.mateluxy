@@ -7,7 +7,7 @@ import { FaMapMarkerAlt } from "react-icons/fa";
 import FilterDropdown from "../../components/FilterDropdown/FilterDropdown";
 import { useLocation, useNavigate } from "react-router-dom";
 
-const Rent = () => {
+const CommercialRent = () => {
   const [properties, setProperties] = useState([]);
   const [filteredProperties, setFilteredProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,17 +16,21 @@ const Rent = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Fetch properties and apply initial filters/sort
+  // Fetch and filter properties
   useEffect(() => {
     axios
       .get(`${import.meta.env.VITE_API_URL}/api/properties`)
       .then((res) => {
-        const rentProperties = res.data.filter(property => property.category === 'Rent');
-        setProperties(rentProperties);
+        const category = location.pathname.includes('/commercial-rent') 
+          ? 'Commercial Rent' 
+          : 'Commercial Buy';
+        const categoryFiltered = res.data.filter(property => property.category === category);
         
-        // Apply URL filters/sort immediately
+        setProperties(categoryFiltered);
+        
+        // Apply URL filters immediately
         const queryParams = new URLSearchParams(location.search);
-        const sortedProperties = sortProperties(rentProperties, queryParams.get('sort'));
+        const sortedProperties = sortProperties(categoryFiltered, queryParams.get('sort'));
         setFilteredProperties(sortedProperties);
         setLoading(false);
       })
@@ -34,9 +38,9 @@ const Rent = () => {
         setError(err.message);
         setLoading(false);
       });
-  }, [location.search]); // React to URL changes
+  }, [location.pathname, location.search]);
 
-  // Filter and sort properties based on URL params
+  // Filter and sort properties when URL or properties change
   useEffect(() => {
     if (properties.length === 0) return;
 
@@ -68,39 +72,16 @@ const Rent = () => {
       if (minPrice !== null && property.propertyPrice < minPrice) return false;
       if (maxPrice !== null && property.propertyPrice > maxPrice) return false;
       
-      // Beds filter
-      if (queryParams.get('beds')) {
-        const bedsFilter = queryParams.get('beds');
-        if (bedsFilter === 'Studio') {
-          if (property.propertyBedrooms !== 0) return false;
-        } else if (bedsFilter.endsWith('+')) {
-          const minBeds = parseInt(bedsFilter, 10);
-          if (property.propertyBedrooms < minBeds) return false;
-        } else if (bedsFilter !== 'All') {
-          if (property.propertyBedrooms !== parseInt(bedsFilter, 10)) return false;
-        }
-      }
-      
-      // Baths filter
-      if (queryParams.get('baths')) {
-        const bathsFilter = queryParams.get('baths');
-        if (bathsFilter.endsWith('+')) {
-          const minBaths = parseInt(bathsFilter, 10);
-          if (property.propertyBathrooms < minBaths) return false;
-        } else if (bathsFilter !== 'All') {
-          if (property.propertyBathrooms !== parseInt(bathsFilter, 10)) return false;
-        }
-      }
-      
+      // Commercial-specific filters can be added here
       return true;
     });
     
-    // Apply sorting from URL
+    // Apply sorting
     const sortedProperties = sortProperties(filtered, queryParams.get('sort'));
     setFilteredProperties(sortedProperties);
   }, [location.search, properties]);
 
-  // Sort function
+  // Sorting function
   const sortProperties = (propertiesToSort, sortParam) => {
     if (!sortParam || sortParam === 'recent') {
       return [...propertiesToSort].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -112,17 +93,17 @@ const Rent = () => {
           return b.propertyPrice - a.propertyPrice;
         case 'price-asc':
           return a.propertyPrice - b.propertyPrice;
-        case 'bedrooms-desc':
-          return b.propertyBedrooms - a.propertyBedrooms;
-        case 'bedrooms-asc':
-          return a.propertyBedrooms - b.propertyBedrooms;
+        case 'size-desc':
+          return b.propertySize - a.propertySize; // Added for commercial properties
+        case 'size-asc':
+          return a.propertySize - b.propertySize; // Added for commercial properties
         default:
           return 0;
       }
     });
   };
 
-  // Handle community click (filter by location/community)
+  // Community filter handler
   const handleCommunityClick = (communityName) => {
     const searchTerm = communityName.toLowerCase();
     const filtered = properties.filter(property => 
@@ -133,17 +114,22 @@ const Rent = () => {
     setFilteredProperties(filtered);
   };
 
-  // Update URL when filter changes
+  // Filter change handler
   const handleFilterChange = (filterValue) => {
     const queryParams = new URLSearchParams(location.search);
     queryParams.set('sort', filterValue);
     navigate(`?${queryParams.toString()}`, { replace: true });
   };
   
-  // Navigate to map view
+  // Map view navigation
   const handleMapViewClick = () => {
-    navigate('/map-view/rent');
+    navigate('/map-view/commercial-rent');
   };
+
+  // Dynamic heading
+  const headingText = location.pathname.includes('/commercial-rent') 
+    ? "Commercial properties for rent in Dubai" 
+    : "Commercial properties for sale in Dubai";
 
   return (
     <div>
@@ -154,8 +140,8 @@ const Rent = () => {
         <div className="container mt-5 mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-5 md:mb-5 bg-white p-4 rounded-lg border border-[#e6e6e6]">
             <div className="w-full md:w-auto">
-              <h3 className="text-xl text-red-600 font-bold text-center md:text-left">
-                Properties for rent in Dubai
+              <h3 className="text-xl text-black font-bold text-center md:text-left">
+                {headingText}
               </h3>
               <div className="flex items-center mt-2">
                 <span className="text-gray-700 font-medium mr-1">Results:</span>
@@ -185,11 +171,11 @@ const Rent = () => {
 
         <div className="container mx-auto p-4 md:px-0">
           {loading ? (
-            <p>Loading properties...</p>
+            <p>Loading commercial properties...</p>
           ) : error ? (
             <p className="text-red-500">Error: {error}</p>
           ) : filteredProperties.length === 0 ? (
-            <p>No rental properties match your filters.</p>
+            <p>No commercial rental properties match your criteria.</p>
           ) : (
             filteredProperties.map((property) => (
               <PropertyCard
@@ -206,4 +192,4 @@ const Rent = () => {
   );
 };
 
-export default Rent;
+export default CommercialRent;
