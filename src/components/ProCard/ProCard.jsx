@@ -225,13 +225,13 @@ const ProCard = ({ property }) => {
       {/* buttons container */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-[22px] font-bold text-gray-900">{property?.price}</h2>
+          <h2 className="text-[20px] font-semibold text-gray-900">{property?.price}</h2>
           {property?.category === 'Off Plan' ? (
             <p className="text-xs text-gray-500">Starting from</p>
           ) : property?.category === 'Rent' || property?.category === 'Commercial for Rent' ? (
             <p className="text-xs text-gray-500">Per year</p>
           ) : (
-            <p className="text-xs text-gray-500">&nbsp;</p>
+            <p className="text-xs text-gray-500">Price</p>
           )}
         </div>
         <motion.a 

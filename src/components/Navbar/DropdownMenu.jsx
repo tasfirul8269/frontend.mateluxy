@@ -35,7 +35,7 @@ const DropdownMenu = ({ item, isActive }) => {
   return (
     <div 
       ref={dropdownRef} 
-      className="relative group"
+      className="relative z-900 group"
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
     >

@@ -21,7 +21,7 @@ const HeaderLogo = () => {
     const isMobile = useIsMobile();
 
     return (
-        <div className="flex items-center gap-2">
+        <div onClick={() => window.location.href = "/"} className="flex cursor-pointer items-center gap-2">
             {isMobile ? (<div className="flex justify-center items-center">
                 <img className="w-15" src={logo} alt="LOGO" />
                 <div>

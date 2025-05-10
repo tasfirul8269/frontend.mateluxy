@@ -60,7 +60,16 @@ const PropertyCard = ({ property }) => {
       e.stopPropagation();
       return;
     }
-    navigate(`/off-plan-single/${property._id || property.id}`); 
+    
+    // Ensure we have a valid ID before opening the link
+    const propertyId = property._id || property.id;
+    if (propertyId) {
+      // Open the off-plan-single page in a new tab
+      const url = `/off-plan-single/${propertyId}`;
+      window.open(url, '_blank');
+    } else {
+      console.error('No valid property ID found:', property);
+    }
   }
   
   const handleWhatsAppClick = (e) => {
