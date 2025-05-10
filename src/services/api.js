@@ -13,6 +13,8 @@ const ensureRequiredPropertyFields = (propertyData) => {
     agent: "1",
     latitude: 25.2048,
     longitude: 55.2708,
+    duringConstructionPercentage: 50,
+    onCompletionPercentage: 50,
   };
 
   // Fill in missing required fields with defaults
@@ -34,7 +36,8 @@ const ensureRequiredPropertyFields = (propertyData) => {
   
   // Ensure numeric fields are numbers
   ['propertyPrice', 'propertySize', 'propertyRooms', 'propertyBedrooms', 
-   'propertyKitchen', 'propertyBathrooms', 'latitude', 'longitude', 'brokerFee']
+   'propertyKitchen', 'propertyBathrooms', 'latitude', 'longitude', 'brokerFee',
+   'duringConstructionPercentage', 'onCompletionPercentage']
     .forEach(field => {
       if (completeData[field] !== undefined && typeof completeData[field] !== 'number') {
         completeData[field] = Number(completeData[field]) || 0;

@@ -71,6 +71,8 @@ export const OffPlanPropertyFormDialog = ({ isOpen, onClose }) => {
         tags: data.tags || [],
         completionDate: data.completionDate,
         paymentPlan: data.paymentPlan,
+        duringConstructionPercentage: parseInt(data.duringConstructionPercentage || 50, 10),
+        onCompletionPercentage: parseInt(data.onCompletionPercentage || 50, 10),
         
         // Property features
         propertySize: data.area,
