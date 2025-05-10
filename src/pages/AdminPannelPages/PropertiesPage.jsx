@@ -28,7 +28,6 @@ import { PropertyFormDialog } from "@/components/properties/PropertyFormDialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { propertyApi } from "@/services/api";
 import { toast } from "@/components/AdminPannel/ui/sonner";
-import { addNotification } from "@/services/notificationService";
 
 // Categories for the filter tabs
 const CATEGORIES = ["All", "Rent", "Buy", "Off Plan", "Commercial for Rent", "Commercial for Buy"];
@@ -197,16 +196,6 @@ const PropertiesPage = () => {
         
         // Show success message
         toast.success("Property deleted successfully!");
-        
-        // Add notification for property deletion
-        if (propertyToDelete) {
-          addNotification(
-            'PROPERTY_DELETED',
-            `Property "${propertyToDelete.propertyTitle}" was deleted`,
-            propertyId,
-            propertyToDelete.propertyTitle
-          );
-        }
         
         // Refetch properties to update the list
         queryClient.invalidateQueries({ queryKey: ['properties'] });

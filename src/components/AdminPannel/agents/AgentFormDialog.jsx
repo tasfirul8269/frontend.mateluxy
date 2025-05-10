@@ -21,7 +21,6 @@ import {
 import { Input } from "@/components/AdminPannel/ui/input";
 import { Button } from "@/components/AdminPannel/ui/button";
 import { customToast } from "@/components/AdminPannel/ui/sonner";
-import { addNotification } from "@/services/notificationService";
 import { User, Info, Phone, Lock, Globe, Languages, Check, X, Plus, Trash2, XCircle, FileText, Link } from "lucide-react";
 import {
   Select,
@@ -617,25 +616,9 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
       if (isEditing && onAgentUpdated) {
         onAgentUpdated(updatedAgent);
         customToast.success("Agent updated successfully!");
-        
-        // Add notification for agent update
-        addNotification(
-          'AGENT_UPDATED',
-          `Agent ${updatedAgent.fullName} was updated`,
-          updatedAgent.id,
-          updatedAgent.fullName
-        );
       } else if (!isEditing && onAgentAdded) {
         onAgentAdded(updatedAgent);
         customToast.success("Agent added successfully!");
-        
-        // Add notification for new agent
-        addNotification(
-          'AGENT_ADDED',
-          `New agent ${updatedAgent.fullName} was added`,
-          updatedAgent.id,
-          updatedAgent.fullName
-        );
       }
 
       // Reset form and close dialog

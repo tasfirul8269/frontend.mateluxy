@@ -9,18 +9,10 @@ import AgentsPage from "@/pages/AdminPannelPages/AgentsPage";
 import AdminsPage from "@/pages/AdminPannelPages/AdminsPage";
 import NotFound from "@/pages/AdminPannelPages/NotFound";
 import { Outlet } from "react-router-dom";
-import { useEffect } from "react";
-import { createSampleNotifications } from "@/services/notificationService";
 
 const queryClient = new QueryClient();
 
 const AdminPannelPage = () => {
-  // Initialize notification system
-  useEffect(() => {
-    console.log("Initializing notification system in AdminPannelPage");
-    createSampleNotifications();
-  }, []);
-
   return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>

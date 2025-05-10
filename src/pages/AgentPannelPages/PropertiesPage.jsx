@@ -3,7 +3,6 @@ import { Plus, Search, Filter } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { PropertyCard } from "@/components/AgentPannel/PropertyCard";
 import { toast } from "sonner";
-import { addNotification } from "@/services/notificationService";
 
 const PropertiesPage = () => {
   const [properties, setProperties] = useState([]);
@@ -88,16 +87,6 @@ const PropertiesPage = () => {
           // Successfully deleted, refetch properties
           fetchProperties();
           toast.success("Property deleted successfully");
-          
-          // Add notification for property deletion
-          if (propertyToDelete) {
-            addNotification(
-              'PROPERTY_DELETED',
-              `Property "${propertyToDelete.propertyTitle}" was deleted`,
-              propertyId,
-              propertyToDelete.propertyTitle
-            );
-          }
         } else {
           const errorData = await response.json();
           toast.error(errorData.message || "Failed to delete property");

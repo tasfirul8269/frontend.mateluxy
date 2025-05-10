@@ -10,7 +10,6 @@ import { toast } from "sonner";
 import { propertyApi } from "@/services/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { addNotification } from "@/services/notificationService";
 
 /**
  * Persistent Form State Pattern
@@ -85,16 +84,6 @@ export const PropertyFormDialog = ({
     
     // Show success toast
     toast.success(successMessage);
-    
-    // Add notification
-    addNotification(
-      isEdit ? 'PROPERTY_UPDATED' : 'PROPERTY_ADDED',
-      isEdit 
-        ? `Property "${propertyData.title}" was updated` 
-        : `New property "${propertyData.title}" was added`,
-      propertyData._id,
-      propertyData.title
-    );
     
     // Call the appropriate callback
     if (isEdit && onPropertyUpdated) {

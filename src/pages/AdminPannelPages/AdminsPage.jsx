@@ -19,7 +19,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/AdminPannel/ui/dropdown-menu";
 import { format, formatDistanceToNow, differenceInMinutes } from "date-fns";
-import { addNotification } from "@/services/notificationService";
 
 const AdminsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -203,16 +202,6 @@ const AdminsPage = () => {
       }
 
       toast.success('Admin deleted successfully');
-      
-      // Add notification for admin deletion
-      if (adminToDelete) {
-        addNotification(
-          'ADMIN_DELETED',
-          `Admin ${adminToDelete.fullName} was deleted`,
-          adminId,
-          adminToDelete.fullName
-        );
-      }
       
       setAdmins(prevAdmins => prevAdmins.filter(admin => admin.id !== adminId));
     } catch (error) {

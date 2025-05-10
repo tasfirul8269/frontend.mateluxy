@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminFormDialog } from "./AdminFormDialog";
-import { addNotification } from "@/services/notificationService";
 
 export function AdminCard({ admin, onAdminUpdated, onAdminDeleted }) {
   const [imgError, setImgError] = useState(false);
@@ -32,14 +31,6 @@ export function AdminCard({ admin, onAdminUpdated, onAdminDeleted }) {
       }
 
       toast.success('Admin deleted successfully');
-      
-      // Add notification for admin deletion
-      addNotification(
-        'ADMIN_DELETED',
-        `Admin ${admin.fullName} was deleted`,
-        admin.id,
-        admin.fullName
-      );
       
       if (onAdminDeleted) {
         onAdminDeleted(admin.id);

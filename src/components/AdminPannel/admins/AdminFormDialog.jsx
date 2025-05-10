@@ -29,7 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/AdminPannel/ui/select";
-import { addNotification } from "@/services/notificationService";
 
 const SOCIAL_PLATFORMS = [
   { value: 'facebook', label: 'Facebook', icon: '📘' },
@@ -524,23 +523,9 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
       if (isEditing && onAdminUpdated) {
         onAdminUpdated(updatedAdmin);
         toast.success("Admin updated successfully!");
-          // Add notification for admin update
-          addNotification(
-            'ADMIN_UPDATED',
-            `Admin ${updatedAdmin.fullName} was updated`,
-            updatedAdmin.id,
-            updatedAdmin.fullName
-          );
       } else if (!isEditing && onAdminAdded) {
         onAdminAdded(updatedAdmin);
         toast.success("Admin added successfully!");
-          // Add notification for new admin
-          addNotification(
-            'ADMIN_ADDED',
-            `New admin ${updatedAdmin.fullName} was added`,
-            updatedAdmin.id,
-            updatedAdmin.fullName
-          );
       }
 
       form.reset();

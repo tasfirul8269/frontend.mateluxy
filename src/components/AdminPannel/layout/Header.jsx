@@ -21,8 +21,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Label } from "@/components/AdminPannel/ui/label";
 import { Input } from "@/components/AdminPannel/ui/input";
 import { logout } from "@/utils/isLoggedIn";
-import { getNotifications, markAsRead, markAllAsRead, getUnreadCount } from "@/services/notificationService";
-import { NotificationDetailDialog } from "@/components/AdminPannel/notifications/NotificationDetailDialog";
 import { motion } from "framer-motion";
 
 export function Header({ searchPlaceholder, onSearch }) {
@@ -1097,14 +1095,6 @@ export function Header({ searchPlaceholder, onSearch }) {
           </form>
         </DialogContent>
       </Dialog>
-
-      {/* Add the notification detail dialog */}
-      <NotificationDetailDialog 
-        notification={selectedNotification}
-        open={isDetailDialogOpen}
-        onOpenChange={setIsDetailDialogOpen}
-        onNotificationChange={loadNotifications}
-      />
     </header>
   );
 }

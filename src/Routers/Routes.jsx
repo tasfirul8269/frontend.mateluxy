@@ -25,7 +25,14 @@ import AgentPropertiesPage from "../pages/AgentPannelPages/PropertiesPage";
 import AddPropertyPage from "../pages/AgentPannelPages/AddPropertyPage";
 import AgentsPage from "@/pages/AdminPannelPages/AgentsPage";
 import AdminsPage from "@/pages/AdminPannelPages/AdminsPage";
+import MessagesPage from "../pages/AdminPannelPages/MessagesPage";
 import { AgentProvider } from '@/components/AdminPannelAgents/context/AgentContext';
+
+// For debugging
+const DebugMessagesPage = () => {
+  console.log("Rendering MessagesPage component");
+  return <MessagesPage />;
+};
 
 const router = createBrowserRouter([
 
@@ -128,6 +135,10 @@ const router = createBrowserRouter([
                     {
                         path: "admins",
                         element: <AdminsPage></AdminsPage>
+                    },
+                    {
+                        path: "messages",
+                        element: <DebugMessagesPage /> // Using the debug wrapper
                     }
                 ]
             },
