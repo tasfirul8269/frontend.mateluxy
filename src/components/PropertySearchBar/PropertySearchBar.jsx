@@ -262,7 +262,7 @@ const PropertySearchBar = () => {
   };
 
   return (
-    <div className="relative bg-gray-50 flex justify-center z-50 w-full mx-auto">
+    <div className="relative bg-gray-50 flex justify-center  w-full mx-auto">
       {/* Main Search Bar */}
       <motion.div 
         initial={{ y: -20, opacity: 0 }}
