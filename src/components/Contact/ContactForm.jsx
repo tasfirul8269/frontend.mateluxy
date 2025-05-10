@@ -42,19 +42,50 @@ const ContactForm = () => {
     if (activeStep < steps.length - 1) { handleNext(); return; }
     setIsSubmitting(true);
     try {
+      // Create an array of preferred contact methods
+      const preferredContactMethods = [];
+      if (data.contactPhone) preferredContactMethods.push('phone');
+      if (data.contactWhatsApp) preferredContactMethods.push('whatsapp');
+      if (data.contactEmail) preferredContactMethods.push('email');
+      
+      // If no contact method is selected, default to email
+      if (preferredContactMethods.length === 0) {
+        preferredContactMethods.push('email');
+      }
+      
       const contactData = {
         name: data.name,
         email: data.email,
         phone: data.phone || '',
         subject: data.interest || 'General Inquiry',
         message: data.message,
-        preferredContact: data.contactPhone ? 'phone' : data.contactWhatsApp ? 'whatsapp' : 'email'
+        preferredContact: preferredContactMethods
       };
-      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/messages/submit`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(contactData),
+      
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/messages`, {
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(contactData),
       });
-      setFormSuccess(true); reset(); setTimeout(() => { setFormSuccess(false); setActiveStep(0); }, 5000);
-    } catch (error) {} finally { setIsSubmitting(false); }
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        setFormSuccess(true); 
+        reset(); 
+        setTimeout(() => { 
+          setFormSuccess(false); 
+          setActiveStep(0); 
+        }, 5000);
+      } else {
+        throw new Error(result.message || 'Failed to submit form');
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('There was a problem submitting your message. Please try again.');
+    } finally { 
+      setIsSubmitting(false); 
+    }
   };
 
   const formFields = [

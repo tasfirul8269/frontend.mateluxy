@@ -134,7 +134,8 @@ const MessageCard = ({ message, onClick, isSelected, onReply }) => {
     <motion.div
       variants={listItemVariant}
       whileHover={{ scale: 1.01, transition: { duration: 0.2 } }}
-      className={`p-4 rounded-lg mb-3 transition-all border ${isSelected ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-red-200'}`}
+      className={`p-4 rounded-lg mb-3 transition-all border cursor-pointer ${isSelected ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-red-200'}`}
+      onClick={() => onClick(message)}
     >
       <div className="flex justify-between items-start mb-2">
         <div className="flex items-center">
@@ -158,26 +159,27 @@ const MessageCard = ({ message, onClick, isSelected, onReply }) => {
         <span>{timeAgo}</span>
         <div className="flex items-center gap-2">
           {message.preferredContact && (
-            <span className="flex items-center">
-              {message.preferredContact === 'phone' ? 
-                <PhoneCall className="h-3 w-3 mr-1" /> : 
-                <Mail className="h-3 w-3 mr-1" />}
-              {message.preferredContact}
-            </span>
+            <div className="flex items-center gap-1">
+              {Array.isArray(message.preferredContact) ? (
+                message.preferredContact.map((contact, index) => (
+                  <span key={index} className="flex items-center bg-gray-100 px-1.5 py-0.5 rounded">
+                    {contact === 'phone' ? 
+                      <PhoneCall className="h-3 w-3 mr-1" /> : 
+                      <Mail className="h-3 w-3 mr-1" />}
+                    {contact}
+                  </span>
+                ))
+              ) : (
+                <span className="flex items-center bg-gray-100 px-1.5 py-0.5 rounded">
+                  {message.preferredContact === 'phone' ? 
+                    <PhoneCall className="h-3 w-3 mr-1" /> : 
+                    <Mail className="h-3 w-3 mr-1" />}
+                  {message.preferredContact}
+                </span>
+              )}
+            </div>
           )}
           <div className="flex gap-2 ml-2">
-            <motion.button 
-              whileHover={{ scale: 1.05 }} 
-              whileTap={{ scale: 0.95 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                onClick(message);
-              }}
-              className="p-1 rounded-full hover:bg-gray-100"
-              title="View details"
-            >
-              <Eye className="h-3.5 w-3.5 text-gray-500" />
-            </motion.button>
             <motion.button 
               whileHover={{ scale: 1.05 }} 
               whileTap={{ scale: 0.95 }}
@@ -258,7 +260,15 @@ const MessagesPage = () => {
       console.log("Messages data:", data);
       
       if (data.success) {
-        setMessages(data.data);
+        // Process messages to ensure preferredContact is always an array
+        const processedMessages = (data.data || []).map(message => ({
+          ...message,
+          preferredContact: Array.isArray(message.preferredContact) 
+            ? message.preferredContact 
+            : message.preferredContact ? [message.preferredContact] : ['email']
+        }));
+        
+        setMessages(processedMessages);
         setTotalPages(Math.ceil(data.count / messagesPerPage) || 1);
       } else {
         throw new Error(data.message || "Failed to fetch messages");
@@ -537,49 +547,47 @@ const MessagesPage = () => {
     sendEmailReply(inlineReplyData);
   };
   
-  // Helper function to send email reply via API
-  const sendEmailReply = async (replyData, callback) => {
+  // Helper function to open Gmail with pre-filled fields for reply
+  const sendEmailReply = (replyData, callback) => {
     try {
       setSendingReply(true);
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
       
-      const response = await fetch(`${apiUrl}/api/messages/reply`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(replyData)
-      });
+      // Get the recipient email, subject, and body from replyData
+      const { to, subject, text } = replyData;
       
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      if (!to) {
+        throw new Error("Recipient email is required");
       }
       
-      const data = await response.json();
+      // Encode the subject and body for the Gmail URL
+      const encodedSubject = encodeURIComponent(subject || "Re: Your Inquiry");
+      const encodedBody = encodeURIComponent(text || "");
+      const encodedTo = encodeURIComponent(to);
       
-      if (data.success) {
-        toast.success("Reply sent successfully");
-        setReplyText("");
+      // Create the Gmail compose URL (this directly opens Gmail)
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodedTo}&su=${encodedSubject}&body=${encodedBody}`;
+      
+      // Open Gmail in a new tab
+      window.open(gmailUrl, "_blank");
+      
+      toast.success("Gmail compose window opened");
+      setReplyText("");
+      
+      // If this is from the inline compose form
+      if (!callback) {
+        setIsComposing(false);
         
-        // If this is from the inline compose form
-        if (!callback) {
-          setIsComposing(false);
-          
-          // Update message status to in-progress if it was new
-          if (selectedMessage && selectedMessage.status === 'new') {
-            updateMessageStatus(selectedMessage._id, 'in-progress');
-          }
-        } else {
-          // Execute additional callback actions if provided
-          callback();
+        // Update message status to in-progress if it was new
+        if (selectedMessage && selectedMessage.status === 'new') {
+          updateMessageStatus(selectedMessage._id, 'in-progress');
         }
       } else {
-        throw new Error(data.message || "Failed to send reply");
+        // Execute additional callback actions if provided
+        callback();
       }
     } catch (err) {
-      console.error("Error sending reply:", err);
-      toast.error("Failed to send reply: " + err.message);
+      console.error("Error opening Gmail:", err);
+      toast.error("Failed to open Gmail: " + err.message);
     } finally {
       setSendingReply(false);
     }
@@ -801,7 +809,7 @@ const MessagesPage = () => {
                 opacity: viewMode === 'detail' ? 0 : 1
               }}
               transition={{ duration: 0.3 }}
-              className={`border-r border-gray-200 overflow-y-auto ${viewMode === 'detail' ? 'hidden' : 'block'}`}
+              className={`border-r border-gray-200 overflow-y-auto h-full ${viewMode === 'detail' ? 'hidden' : 'block'}`}
             >
               {currentMessages.length === 0 ? (
                 <motion.div 
@@ -822,7 +830,7 @@ const MessagesPage = () => {
                   variants={staggerContainer}
                   initial="hidden"
                   animate="visible"
-                  className="p-4"
+                  className="p-4 h-full overflow-y-auto max-h-[calc(100vh-220px)]"
                 >
                   {currentMessages.map((message) => (
                     <MessageCard 
@@ -919,7 +927,18 @@ const MessagesPage = () => {
                           </div>
                           <div className="flex items-center text-xs text-gray-500">
                             <MessageSquare className="h-3 w-3 mr-1" />
-                            Preferred contact: {selectedMessage.preferredContact || "Email"}
+                            Preferred contact: 
+                            {Array.isArray(selectedMessage.preferredContact) ? (
+                              <div className="flex gap-1 ml-1">
+                                {selectedMessage.preferredContact.map((contact, index) => (
+                                  <span key={index} className="bg-gray-100 px-1.5 py-0.5 rounded">
+                                    {contact}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              selectedMessage.preferredContact || "Email"
+                            )}
                           </div>
                         </div>
                       </div>
