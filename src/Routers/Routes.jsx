@@ -3,6 +3,8 @@ import Layout from "../Layout/Layout";
 import Home from "../pages/Home/Home";
 import Buy from "../pages/Buy/Buy";
 import Rent from "../pages/Rent/Rent";
+import CommercialBuy from "../pages/CommercialBuy/CommercialBuy";
+import CommercialRent from "../pages/CommercialRent/CommercialRent";
 import Properties from "../pages/Properties/Properties";
 import MapView from "../pages/MapView/MapView";
 import PropertyDetails from "../pages/PropertyDetails/PropertyDetails";
@@ -43,6 +45,14 @@ const router = createBrowserRouter([
             {
                 path: "/rent",
                 element: <Rent></Rent>
+            },
+            {
+                path: "/commercial/buy",
+                element: <CommercialBuy></CommercialBuy>
+            },
+            {
+                path: "/commercial/rent",
+                element: <CommercialRent></CommercialRent>
             },
             {
                 path: "/properties",

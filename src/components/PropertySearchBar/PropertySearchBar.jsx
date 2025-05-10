@@ -23,9 +23,9 @@ const PropertySearchBar = () => {
   
   // Set the active tab based on the current path
   useEffect(() => {
-    if (location.pathname.includes('/rent')) {
+    if (location.pathname.includes('/rent') || location.pathname.includes('/commercial/rent')) {
       setActiveTab(1);
-    } else if (location.pathname.includes('/buy')) {
+    } else if (location.pathname.includes('/buy') || location.pathname.includes('/commercial/buy')) {
       setActiveTab(0);
     }
   }, [location.pathname]);
@@ -34,8 +34,16 @@ const PropertySearchBar = () => {
   useEffect(() => {
     const fetchPropertyData = async () => {
       try {
-        // Determine which property category to fetch based on the active tab
-        const category = activeTab === 0 ? 'Buy' : 'Rent';
+        // Check if we're on a commercial page
+        const isCommercial = location.pathname.includes('/commercial');
+        
+        // Determine which property category to fetch based on the active tab and page type
+        let category;
+        if (isCommercial) {
+          category = activeTab === 0 ? 'Commercial for Buy' : 'Commercial for Rent';
+        } else {
+          category = activeTab === 0 ? 'Buy' : 'Rent';
+        }
         console.log('Fetching properties for category:', category);
         
         // Fetch properties with the correct category filter
@@ -46,7 +54,7 @@ const PropertySearchBar = () => {
         
         const allProperties = await response.json();
         
-        // Filter properties by category (Buy or Rent)
+        // Filter properties by category
         const properties = allProperties.filter(property => property.category === category);
         console.log(`Filtered ${properties.length} properties with category: ${category}`);
         
@@ -157,8 +165,8 @@ const PropertySearchBar = () => {
     fetchPropertyData();
   }, [activeTab]); // Re-fetch when activeTab changes
 
-  // Property types for dropdown
-  const propertyTypes = [
+  // Property types for dropdown - different for commercial and residential
+  const residentialPropertyTypes = [
     "Apartment",
     "Penthouse",
     "Villa",
@@ -166,6 +174,22 @@ const PropertySearchBar = () => {
     "Townhouse",
     "Duplex",
   ];
+  
+  const commercialPropertyTypes = [
+    "Office",
+    "Retail",
+    "Warehouse",
+    "Industrial",
+    "Shop",
+    "Showroom",
+    "Commercial Building",
+    "Business Center",
+    "Land",
+  ];
+  
+  // Determine which property types to use based on whether we're on a commercial page
+  const isCommercialPage = location.pathname.includes('/commercial');
+  const propertyTypes = isCommercialPage ? commercialPropertyTypes : residentialPropertyTypes;
 
   // Bed and bath options
   const bedOptions = ["Any", "Studio", "1", "2", "3", "4", "5", "6+"];
@@ -204,25 +228,40 @@ const PropertySearchBar = () => {
   };
 
   const handleSearch = () => {
-    const queryParams = new URLSearchParams();
-
-    // Add non-empty parameters to the query
-    Object.entries(searchParams).forEach(([key, value]) => {
-      if (key === 'priceRange') {
-        queryParams.append('minPrice', value[0]);
-        queryParams.append('maxPrice', value[1]);
-      } else if (key === 'amenities' && value.length > 0) {
-        queryParams.append('amenities', value.join(','));
-      } else if (value) {
-        queryParams.append(key, value);
-      }
-    });
-
-    // Determine the base path based on active tab
-    const basePath = activeTab === 0 ? "/buy" : "/rent";
-
-    // Navigate to the appropriate page with query parameters
-    navigate(`${basePath}?${queryParams.toString()}`);
+    // Construct the search query based on the search parameters
+    const searchQuery = new URLSearchParams();
+    
+    // Add all non-empty parameters to the search query
+    if (searchParams.location) searchQuery.append('location', searchParams.location);
+    if (searchParams.propertyType) searchQuery.append('propertyType', searchParams.propertyType);
+    if (searchParams.beds && searchParams.beds !== 'Any') searchQuery.append('beds', searchParams.beds);
+    if (searchParams.baths && searchParams.baths !== 'Any') searchQuery.append('baths', searchParams.baths);
+    
+    // Add price range if it's not the default
+    if (searchParams.priceRange[0] > minMaxPrices.min) {
+      searchQuery.append('minPrice', searchParams.priceRange[0]);
+    }
+    if (searchParams.priceRange[1] < minMaxPrices.max) {
+      searchQuery.append('maxPrice', searchParams.priceRange[1]);
+    }
+    
+    // Add amenities if any are selected
+    if (searchParams.amenities.length > 0) {
+      searchQuery.append('amenities', searchParams.amenities.join(','));
+    }
+    
+    // Determine the base path based on whether we're on a commercial page
+    let basePath;
+    const isCommercial = location.pathname.includes('/commercial');
+    
+    if (isCommercial) {
+      basePath = activeTab === 0 ? '/commercial/buy' : '/commercial/rent';
+    } else {
+      basePath = activeTab === 0 ? '/buy' : '/rent';
+    }
+    
+    // Navigate to the appropriate page with the search query
+    navigate(`${basePath}?${searchQuery.toString()}`);
   };
   
   const clearFilters = () => {
@@ -282,7 +321,12 @@ const PropertySearchBar = () => {
               }`}
               onClick={() => {
                 setActiveTab(0);
-                navigate("/buy");
+                // Check if we're on a commercial page
+                if (location.pathname.includes('/commercial')) {
+                  navigate("/commercial/buy");
+                } else {
+                  navigate("/buy");
+                }
               }}
             >
               Buy
@@ -295,7 +339,12 @@ const PropertySearchBar = () => {
               }`}
               onClick={() => {
                 setActiveTab(1);
-                navigate("/rent");
+                // Check if we're on a commercial page
+                if (location.pathname.includes('/commercial')) {
+                  navigate("/commercial/rent");
+                } else {
+                  navigate("/rent");
+                }
               }}
             >
               Rent

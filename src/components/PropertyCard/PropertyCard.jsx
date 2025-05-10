@@ -13,7 +13,16 @@ const PropertyCard = ({ property, loading, error }) => {
   const [agentLoading, setAgentLoading] = useState(false);
   const location = useLocation();
   const pathSegments = location.pathname.split('/');
-  const currentRoute = pathSegments[1]?.toLowerCase() || 'buy'; // Default to 'buy'
+
+  // Handle commercial routes specially
+  let currentRoute;
+  if (pathSegments[1]?.toLowerCase() === 'commercial') {
+    // For commercial routes, we need to check the second path segment
+    currentRoute = pathSegments[2]?.toLowerCase() === 'rent' ? 'Commercial for Rent' : 'Commercial for Buy';
+  } else {
+    // For regular routes, just use the first segment
+    currentRoute = pathSegments[1]?.toLowerCase() || 'buy'; // Default to 'buy'
+  }
 
   // Fetch agent data when property changes
   useEffect(() => {
@@ -57,8 +66,25 @@ const PropertyCard = ({ property, loading, error }) => {
   }
 
   // Skip rendering if property doesn't match route
-  if (!property || !property.category || 
-      property.category.toLowerCase() !== currentRoute) {
+  if (!property || !property.category) {
+    return null;
+  }
+  
+  // Check if the property category matches the current route
+  const propertyCategory = property.category;
+  const isMatch = 
+    // Direct match (for Buy and Rent)
+    propertyCategory.toLowerCase() === currentRoute.toLowerCase() ||
+    // Commercial route handling
+    (currentRoute === 'Commercial for Buy' && propertyCategory === 'Commercial for Buy') ||
+    (currentRoute === 'Commercial for Rent' && propertyCategory === 'Commercial for Rent');
+  
+  if (!isMatch) {
+    console.log('Property category mismatch:', { 
+      propertyCategory, 
+      currentRoute, 
+      pathname: location.pathname 
+    });
     return null;
   }
 
