@@ -260,15 +260,7 @@ const MessagesPage = () => {
       console.log("Messages data:", data);
       
       if (data.success) {
-        // Process messages to ensure preferredContact is always an array
-        const processedMessages = (data.data || []).map(message => ({
-          ...message,
-          preferredContact: Array.isArray(message.preferredContact) 
-            ? message.preferredContact 
-            : message.preferredContact ? [message.preferredContact] : ['email']
-        }));
-        
-        setMessages(processedMessages);
+        setMessages(data.data);
         setTotalPages(Math.ceil(data.count / messagesPerPage) || 1);
       } else {
         throw new Error(data.message || "Failed to fetch messages");

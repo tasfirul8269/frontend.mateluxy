@@ -48,7 +48,7 @@ const ContactForm = () => {
       if (data.contactWhatsApp) preferredContactMethods.push('whatsapp');
       if (data.contactEmail) preferredContactMethods.push('email');
       
-      // If no contact method is selected, default to email
+      // If no method selected, default to email
       if (preferredContactMethods.length === 0) {
         preferredContactMethods.push('email');
       }
