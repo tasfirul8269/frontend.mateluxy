@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +28,8 @@ import {
 import { Button } from "@/components/AdminPannel/ui/button";
 import { Badge } from "@/components/AdminPannel/ui/UIComponents";
 import { Input } from "@/components/AdminPannel/ui/input";
+import { Textarea } from "@/components/AdminPannel/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/AdminPannel/ui/select";
 import {
   Table,
   TableBody,
@@ -36,10 +39,167 @@ import {
   TableRow,
 } from "@/components/AdminPannel/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/AdminPannel/ui/tabs";
-import { EllipsisVertical, Trash2, Mail, ExternalLink, CheckCircle, Clock, Search, PhoneCall, MessageSquare } from "lucide-react";
+import { 
+  EllipsisVertical, 
+  Trash2, 
+  Mail, 
+  ExternalLink, 
+  CheckCircle, 
+  Clock, 
+  Search, 
+  PhoneCall, 
+  MessageSquare,
+  Filter,
+  RefreshCw,
+  Calendar,
+  Send,
+  Star,
+  StarOff,
+  AlertCircle,
+  Download,
+  MoreHorizontal,
+  ArrowUpDown,
+  ChevronDown,
+  X,
+  Reply,
+  User,
+  MailOpen,
+  Inbox,
+  Archive,
+  CheckCheck,
+  Eye,
+  Columns as LayoutSplitIcon
+} from "lucide-react";
+
+// Animation variants for elements
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.4 } }
+};
+
+const slideUp = {
+  hidden: { y: 20, opacity: 0 },
+  visible: { y: 0, opacity: 1, transition: { duration: 0.4 } }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const listItemVariant = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+};
+
+// Custom badge component with animation
+const AnimatedBadge = ({ status }) => {
+  const getStatusDetails = () => {
+    switch (status) {
+      case 'new':
+        return { bg: 'bg-yellow-100', text: 'text-yellow-700', icon: <MailOpen className="h-3 w-3 mr-1" /> };
+      case 'in-progress':
+        return { bg: 'bg-red-100', text: 'text-red-700', icon: <Clock className="h-3 w-3 mr-1" /> };
+      case 'resolved':
+        return { bg: 'bg-green-100', text: 'text-green-700', icon: <CheckCheck className="h-3 w-3 mr-1" /> };
+      default:
+        return { bg: 'bg-gray-100', text: 'text-gray-700', icon: <MessageSquare className="h-3 w-3 mr-1" /> };
+    }
+  };
+
+  const { bg, text, icon } = getStatusDetails();
+
+  return (
+    <motion.span
+      initial={{ scale: 0.8, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${bg} ${text}`}
+    >
+      {icon}
+      {status === 'in-progress' ? 'In Progress' : status.charAt(0).toUpperCase() + status.slice(1)}
+    </motion.span>
+  );
+};
+
+// Custom message card component
+const MessageCard = ({ message, onClick, isSelected, onReply }) => {
+  const timeAgo = formatDistanceToNow(new Date(message.createdAt), { addSuffix: true });
+  
+  return (
+    <motion.div
+      variants={listItemVariant}
+      whileHover={{ scale: 1.01, transition: { duration: 0.2 } }}
+      className={`p-4 rounded-lg mb-3 transition-all border ${isSelected ? 'border-red-300 bg-red-50' : 'border-gray-200 bg-white hover:border-red-200'}`}
+    >
+      <div className="flex justify-between items-start mb-2">
+        <div className="flex items-center">
+          <div className="bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center mr-3">
+            <User className="h-5 w-5 text-gray-500" />
+          </div>
+          <div>
+            <h3 className="font-medium text-gray-900">{message.name}</h3>
+            <p className="text-sm text-gray-500">{message.email}</p>
+          </div>
+        </div>
+        <AnimatedBadge status={message.status} />
+      </div>
+      
+      <div className="ml-13">
+        <h4 className="text-sm font-medium text-gray-800 mb-1">{message.subject || "General Inquiry"}</h4>
+        <p className="text-sm text-gray-600 line-clamp-2">{message.message}</p>
+      </div>
+      
+      <div className="flex justify-between items-center mt-3 text-xs text-gray-500">
+        <span>{timeAgo}</span>
+        <div className="flex items-center gap-2">
+          {message.preferredContact && (
+            <span className="flex items-center">
+              {message.preferredContact === 'phone' ? 
+                <PhoneCall className="h-3 w-3 mr-1" /> : 
+                <Mail className="h-3 w-3 mr-1" />}
+              {message.preferredContact}
+            </span>
+          )}
+          <div className="flex gap-2 ml-2">
+            <motion.button 
+              whileHover={{ scale: 1.05 }} 
+              whileTap={{ scale: 0.95 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onClick(message);
+              }}
+              className="p-1 rounded-full hover:bg-gray-100"
+              title="View details"
+            >
+              <Eye className="h-3.5 w-3.5 text-gray-500" />
+            </motion.button>
+            <motion.button 
+              whileHover={{ scale: 1.05 }} 
+              whileTap={{ scale: 0.95 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onReply(message);
+              }}
+              className="p-1 rounded-full hover:bg-gray-100"
+              title="Reply to message"
+            >
+              <Reply className="h-3.5 w-3.5 text-gray-500" />
+            </motion.button>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 const MessagesPage = () => {
   const navigate = useNavigate();
+  const messagesEndRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -51,6 +211,14 @@ const MessagesPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [viewMode, setViewMode] = useState("split"); // 'split', 'list', or 'detail'
+  const [isComposing, setIsComposing] = useState(false);
+  const [replyText, setReplyText] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [replyDialogOpen, setReplyDialogOpen] = useState(false);
+  const [messageToReply, setMessageToReply] = useState(null);
+  const [replySubject, setReplySubject] = useState("");
+  const [sendingReply, setSendingReply] = useState(false);
 
   const messagesPerPage = 10;
 
@@ -109,10 +277,27 @@ const MessagesPage = () => {
     fetchMessages();
   }, []);
 
-  // Open message detail dialog
+  // Open message detail view
   const handleViewMessage = (message) => {
     setSelectedMessage(message);
-    setShowMessageDialog(true);
+  };
+
+  // Open reply dialog
+  const handleOpenReply = (message) => {
+    setMessageToReply(message);
+    setReplySubject(`Re: ${message.subject || "General Inquiry"}`);
+    setReplyText(`Dear ${message.name},\n\nThank you for your message regarding "${message.subject || "your inquiry"}"...\n\nBest regards,\nThe MateLuxy Team`);
+    setReplyDialogOpen(true);
+  };
+
+  // Handle reply text change
+  const handleReplyChange = (e) => {
+    setReplyText(e.target.value);
+  };
+
+  // Handle reply subject change
+  const handleSubjectChange = (e) => {
+    setReplySubject(e.target.value);
   };
 
   // Filter messages based on search term and active tab
@@ -135,43 +320,69 @@ const MessagesPage = () => {
   // Update message status
   const updateMessageStatus = async (id, status) => {
     try {
+      // Get API URL with fallback
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
       
       const response = await fetch(`${apiUrl}/api/messages/${id}/status`, {
         method: 'PATCH',
-        credentials: 'include', // Include cookies for authentication
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ status })
       });
       
-      if (response.status === 401) {
-        toast.error("Session expired. Please log in again.");
-        setError("Authentication required. Please log in again.");
-        return;
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
       
       const data = await response.json();
       
       if (data.success) {
-        // Update local messages state
-        setMessages(prev => 
-          prev.map(msg => msg._id === id ? { ...msg, status } : msg)
-        );
+        // Update messages state with the new status
+        setMessages(messages.map(msg => 
+          msg._id === id ? { ...msg, status } : msg
+        ));
         
+        // Update selected message if it's the one being updated
         if (selectedMessage && selectedMessage._id === id) {
           setSelectedMessage({ ...selectedMessage, status });
         }
         
-        toast.success("Message status updated");
+        toast.success(`Message marked as ${status}`);
       } else {
-        throw new Error(data.message || "Failed to update status");
+        throw new Error(data.message || "Failed to update message status");
       }
     } catch (err) {
       console.error("Error updating message status:", err);
       toast.error("Failed to update message status");
     }
+  };
+
+  // Handle dialog reply submission
+  const handleDialogReply = () => {
+    if (!messageToReply || !replyText.trim()) return;
+    
+    const replyData = {
+      messageId: messageToReply._id,
+      to: messageToReply.email,
+      subject: replySubject,
+      text: replyText,
+      name: messageToReply.name
+    };
+    
+    // Use the common email sending function
+    sendEmailReply(replyData, () => {
+      // Additional callback actions specific to dialog reply
+      setReplyDialogOpen(false);
+      setReplySubject("");
+      setMessageToReply(null);
+      
+      // Update message status to in-progress if it was new
+      if (messageToReply.status === 'new') {
+        updateMessageStatus(messageToReply._id, 'in-progress');
+      }
+    });
   };
 
   // Delete message
@@ -258,255 +469,632 @@ const MessagesPage = () => {
     setSearchTerm(e.target.value);
     setCurrentPage(1); // Reset to first page on search
   };
+  
+  // Refresh messages
+  const handleRefresh = () => {
+    fetchMessages();
+    toast.success("Messages refreshed");
+  };
+  
+  // Export messages as CSV
+  const exportMessages = () => {
+    // Create CSV content
+    const headers = ["Name", "Email", "Phone", "Subject", "Message", "Preferred Contact", "Status", "Date"];
+    const csvRows = [
+      headers.join(","),
+      ...filteredMessages.map(msg => {
+        return [
+          `"${msg.name || ''}"`,
+          `"${msg.email || ''}"`,
+          `"${msg.phone || ''}"`,
+          `"${msg.subject || 'General Inquiry'}"`,
+          `"${msg.message.replace(/"/g, '""') || ''}"`,
+          `"${msg.preferredContact || 'email'}"`,
+          `"${msg.status || 'new'}"`,
+          `"${formatDate(msg.createdAt)}"`,
+        ].join(",");
+      })
+    ];
+    
+    // Create and download CSV file
+    const csvContent = csvRows.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `messages_export_${format(new Date(), "yyyy-MM-dd")}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success("Messages exported successfully");
+  };
+
+  // Scroll to bottom of messages when new ones are loaded
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Toggle view mode between split, list, and detail views
+  const toggleViewMode = (mode) => {
+    setViewMode(mode);
+  };
+
+  // Handle inline reply composition
+  const handleInlineReply = () => {
+    if (!replyText.trim()) return;
+    
+    // Use the same sendReply function but with inline context
+    const inlineReplyData = {
+      messageId: selectedMessage._id,
+      to: selectedMessage.email,
+      subject: `Re: ${selectedMessage.subject || "General Inquiry"}`,
+      text: replyText,
+      name: selectedMessage.name
+    };
+    
+    // Call the API with the inline reply data
+    sendEmailReply(inlineReplyData);
+  };
+  
+  // Helper function to send email reply via API
+  const sendEmailReply = async (replyData, callback) => {
+    try {
+      setSendingReply(true);
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      
+      const response = await fetch(`${apiUrl}/api/messages/reply`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(replyData)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        toast.success("Reply sent successfully");
+        setReplyText("");
+        
+        // If this is from the inline compose form
+        if (!callback) {
+          setIsComposing(false);
+          
+          // Update message status to in-progress if it was new
+          if (selectedMessage && selectedMessage.status === 'new') {
+            updateMessageStatus(selectedMessage._id, 'in-progress');
+          }
+        } else {
+          // Execute additional callback actions if provided
+          callback();
+        }
+      } else {
+        throw new Error(data.message || "Failed to send reply");
+      }
+    } catch (err) {
+      console.error("Error sending reply:", err);
+      toast.error("Failed to send reply: " + err.message);
+    } finally {
+      setSendingReply(false);
+    }
+  };
 
   return (
-    <div className="container mx-auto p-4 max-w-7xl">
-      {/* Improved header section with statistics */}
-      <div className="bg-white rounded-xl shadow-sm mb-6 p-6 border border-gray-100">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <motion.div 
+      initial="hidden"
+      animate="visible"
+      variants={fadeIn}
+      className="h-[calc(100vh-80px)] overflow-hidden bg-gray-50 rounded-xl shadow-sm"
+    >
+      {/* Modern header with animated stats */}
+      <div className="bg-white border-b border-gray-200 p-4">
+        <motion.div 
+          variants={slideUp}
+          className="flex flex-col md:flex-row md:items-center justify-between gap-4 max-w-7xl mx-auto"
+        >
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 mb-1">Contact Messages</h1>
+            <h1 className="text-2xl font-bold text-gray-800 mb-1 flex items-center">
+              <MessageSquare className="h-6 w-6 mr-2 text-red-500" />
+              <span>Messages</span>
+              {loading && (
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                  className="ml-3"
+                >
+                  <RefreshCw className="h-4 w-4 text-gray-400" />
+                </motion.div>
+              )}
+            </h1>
             <p className="text-gray-500 text-sm">
-              Manage all customer inquiries and communication
+              Manage customer inquiries and communication
             </p>
           </div>
           
           {!loading && !error && (
-            <div className="flex flex-wrap gap-3">
-              <div className="bg-blue-50 rounded-lg px-4 py-2 min-w-[100px]">
-                <div className="text-xs text-blue-500 font-medium mb-1">Total</div>
-                <div className="text-xl font-bold text-blue-700">{messages.length}</div>
-              </div>
-              <div className="bg-yellow-50 rounded-lg px-4 py-2 min-w-[100px]">
-                <div className="text-xs text-yellow-500 font-medium mb-1">New</div>
-                <div className="text-xl font-bold text-yellow-700">
-                  {messages.filter(m => m.status === 'new').length}
+            <motion.div 
+              variants={staggerContainer}
+              initial="hidden"
+              animate="visible"
+              className="flex gap-3"
+            >
+              <motion.div variants={listItemVariant} className="bg-white rounded-lg px-4 py-3 shadow-sm border border-gray-200 flex items-center gap-3">
+                <div className="bg-red-100 p-2 rounded-full">
+                  <Inbox className="h-5 w-5 text-red-500" />
                 </div>
-              </div>
-              <div className="bg-green-50 rounded-lg px-4 py-2 min-w-[100px]">
-                <div className="text-xs text-green-500 font-medium mb-1">Resolved</div>
-                <div className="text-xl font-bold text-green-700">
-                  {messages.filter(m => m.status === 'resolved').length}
+                <div>
+                  <div className="text-xs text-gray-500 font-medium">Total</div>
+                  <div className="text-lg font-bold text-gray-800">{messages.length}</div>
                 </div>
+              </motion.div>
+              
+              <motion.div variants={listItemVariant} className="bg-white rounded-lg px-4 py-3 shadow-sm border border-gray-200 flex items-center gap-3">
+                <div className="bg-yellow-100 p-2 rounded-full">
+                  <MailOpen className="h-5 w-5 text-yellow-500" />
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500 font-medium">New</div>
+                  <div className="text-lg font-bold text-gray-800">
+                    {messages.filter(m => m.status === 'new').length}
+                  </div>
+                </div>
+              </motion.div>
+              
+              <motion.div variants={listItemVariant} className="bg-white rounded-lg px-4 py-3 shadow-sm border border-gray-200 flex items-center gap-3">
+                <div className="bg-green-100 p-2 rounded-full">
+                  <CheckCheck className="h-5 w-5 text-green-500" />
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500 font-medium">Resolved</div>
+                  <div className="text-lg font-bold text-gray-800">
+                    {messages.filter(m => m.status === 'resolved').length}
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </motion.div>
+      </div>
+      
+      {/* Modern search and filters bar */}
+      <div className="bg-white border-b border-gray-200 p-4">
+        <motion.div 
+          variants={slideUp}
+          className="flex flex-col gap-4 max-w-7xl mx-auto"
+        >
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="relative w-full md:w-96 transition-all duration-300 ease-in-out">
+              <motion.div 
+                initial={false}
+                animate={isSearchFocused ? { width: '100%' } : { width: '100%' }}
+                transition={{ duration: 0.3 }}
+                className="relative"
+              >
+                <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 transition-colors ${isSearchFocused ? 'text-red-500' : 'text-gray-400'}`} />
+                <Input
+                  type="text"
+                  placeholder="Search by name, email or message content..."
+                  className="pl-10 py-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 w-full transition-all"
+                  value={searchTerm}
+                  onChange={handleSearch}
+                  onFocus={() => setIsSearchFocused(true)}
+                  onBlur={() => setIsSearchFocused(false)}
+                />
+              </motion.div>
+            </div>
+            
+            <div className="flex gap-2">
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleRefresh}
+                  className="border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-200 transition-colors"
+                >
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                  Refresh
+                </Button>
+              </motion.div>
+              
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={exportMessages}
+                  className="border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-200 transition-colors"
+                >
+                  <Download className="h-4 w-4 mr-1" />
+                  Export
+                </Button>
+              </motion.div>
+              
+              <div className="flex border border-gray-200 rounded-lg overflow-hidden">
+                <motion.button
+                  whileHover={{ backgroundColor: '#f9fafb' }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => toggleViewMode('list')}
+                  className={`p-2 ${viewMode === 'list' ? 'bg-red-50 text-red-600' : 'bg-white text-gray-500'}`}
+                >
+                  <Inbox className="h-4 w-4" />
+                </motion.button>
+                <motion.button
+                  whileHover={{ backgroundColor: '#f9fafb' }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => toggleViewMode('split')}
+                  className={`p-2 ${viewMode === 'split' ? 'bg-red-50 text-red-600' : 'bg-white text-gray-500'}`}
+                >
+                  <LayoutSplitIcon className="h-4 w-4" />
+                </motion.button>
               </div>
             </div>
-          )}
-        </div>
-      </div>
-      
-      {/* Search and filters - Enhanced with card style */}
-      <div className="bg-white rounded-xl shadow-sm mb-6 p-6 border border-gray-100">
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-          <div className="relative w-full md:w-96">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Search by name, email or message content..."
-              className="pl-10 py-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
-              value={searchTerm}
-              onChange={handleSearch}
-            />
           </div>
           
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
-            <TabsList className="bg-gray-100 p-1 rounded-lg">
-              <TabsTrigger value="all" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                All
-              </TabsTrigger>
-              <TabsTrigger value="new" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                New
-              </TabsTrigger>
-              <TabsTrigger value="in-progress" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                In Progress
-              </TabsTrigger>
-              <TabsTrigger value="resolved" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                Resolved
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="bg-gray-100 p-1 rounded-lg w-full flex justify-start">
+                <TabsTrigger value="all" className="rounded-md data-[state=active]:bg-red-50 data-[state=active]:text-red-600 data-[state=active]:shadow-sm">
+                  All
+                </TabsTrigger>
+                <TabsTrigger value="new" className="rounded-md data-[state=active]:bg-red-50 data-[state=active]:text-red-600 data-[state=active]:shadow-sm">
+                  New
+                </TabsTrigger>
+                <TabsTrigger value="in-progress" className="rounded-md data-[state=active]:bg-red-50 data-[state=active]:text-red-600 data-[state=active]:shadow-sm">
+                  In Progress
+                </TabsTrigger>
+                <TabsTrigger value="resolved" className="rounded-md data-[state=active]:bg-red-50 data-[state=active]:text-red-600 data-[state=active]:shadow-sm">
+                  Resolved
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </motion.div>
+        </motion.div>
       </div>
       
-      {/* Messages Table - Enhanced with better styling */}
-      {loading ? (
-        <div className="bg-white rounded-xl shadow-sm flex flex-col justify-center items-center h-64 border border-gray-100">
-          <div className="animate-spin rounded-full h-12 w-12 border-2 border-blue-500 border-t-transparent mb-4"></div>
-          <p className="text-gray-500">Loading messages...</p>
-        </div>
-      ) : error ? (
-        <div className="bg-red-50 text-red-600 p-8 rounded-xl shadow-sm text-center border border-red-100">
-          <MessageSquare className="h-12 w-12 text-red-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-red-800 mb-2">{error}</h3>
-          <p className="text-red-600 mb-4">There was a problem loading your messages.</p>
-          {(error && error.includes("Authentication")) && (
-            <button 
-              onClick={() => navigate('/admin-login')}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Go to Login
-            </button>
-          )}
-        </div>
-      ) : currentMessages.length === 0 ? (
-        <div className="bg-white p-12 rounded-xl shadow-sm text-center border border-gray-100">
-          <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-6">
-            <MessageSquare className="h-10 w-10 text-gray-400" />
+      {/* Main content area with split view */}
+      <div className="flex-1 flex overflow-hidden">
+        {loading ? (
+          <div className="flex-1 flex justify-center items-center">
+            <motion.div 
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+              className="rounded-full h-12 w-12 border-2 border-red-500 border-t-transparent"
+            />
+            <p className="ml-4 text-gray-500">Loading messages...</p>
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No messages found</h3>
-          <p className="text-gray-500 max-w-md mx-auto">
-            {searchTerm ? "Try a different search term or filter to find what you're looking for." : "No contact messages have been received yet. When customers send inquiries, they'll appear here."}
-          </p>
-        </div>
-      ) : (
-        <div className="bg-white shadow-sm rounded-xl overflow-hidden border border-gray-100">
-          <Table>
-            <TableHeader className="bg-gray-50">
-              <TableRow>
-                <TableHead className="font-semibold">From</TableHead>
-                <TableHead className="hidden md:table-cell font-semibold">Contact</TableHead>
-                <TableHead className="font-semibold">Subject</TableHead>
-                <TableHead className="hidden md:table-cell font-semibold">Date</TableHead>
-                <TableHead className="font-semibold">Status</TableHead>
-                <TableHead className="w-10"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {currentMessages.map((message) => (
-                <TableRow 
-                  key={message._id}
-                  className="cursor-pointer hover:bg-gray-50 transition-colors"
-                  onClick={() => handleViewMessage(message)}
+        ) : error ? (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex-1 flex flex-col justify-center items-center p-8"
+          >
+            <MessageSquare className="h-16 w-16 text-red-400 mb-4" />
+            <h3 className="text-lg font-medium text-red-800 mb-2">{error}</h3>
+            <p className="text-red-600 mb-4 text-center max-w-md">There was a problem loading your messages.</p>
+            {(error && error.includes("Authentication")) && (
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/admin-login')}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Go to Login
+              </motion.button>
+            )}
+          </motion.div>
+        ) : (
+          <>
+            {/* Message list panel */}
+            <motion.div 
+              initial={{ width: viewMode === 'detail' ? 0 : '100%' }}
+              animate={{ 
+                width: viewMode === 'detail' ? 0 : viewMode === 'split' ? '40%' : '100%',
+                opacity: viewMode === 'detail' ? 0 : 1
+              }}
+              transition={{ duration: 0.3 }}
+              className={`border-r border-gray-200 overflow-y-auto ${viewMode === 'detail' ? 'hidden' : 'block'}`}
+            >
+              {currentMessages.length === 0 ? (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="h-full flex flex-col justify-center items-center p-8 text-center"
                 >
-                  <TableCell className="font-medium">
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-gray-900">{message.name}</span>
-                      <span className="text-sm text-gray-500 md:hidden mt-0.5">
-                        {message.email}
-                      </span>
+                  <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                    <MessageSquare className="h-10 w-10 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No messages found</h3>
+                  <p className="text-gray-500 max-w-md mx-auto">
+                    {searchTerm ? "Try a different search term or filter to find what you're looking for." : "No contact messages have been received yet. When customers send inquiries, they'll appear here."}
+                  </p>
+                </motion.div>
+              ) : (
+                <motion.div 
+                  variants={staggerContainer}
+                  initial="hidden"
+                  animate="visible"
+                  className="p-4"
+                >
+                  {currentMessages.map((message) => (
+                    <MessageCard 
+                      key={message._id} 
+                      message={message} 
+                      onClick={handleViewMessage}
+                      onReply={handleOpenReply}
+                      isSelected={selectedMessage && selectedMessage._id === message._id}
+                    />
+                  ))}
+                  <div ref={messagesEndRef} />
+                </motion.div>
+              )}
+            </motion.div>
+
+            {/* Message detail panel */}
+            <motion.div 
+              initial={{ width: viewMode === 'list' ? 0 : '100%' }}
+              animate={{ 
+                width: viewMode === 'list' ? 0 : viewMode === 'split' ? '60%' : '100%',
+                opacity: viewMode === 'list' ? 0 : 1 
+              }}
+              transition={{ duration: 0.3 }}
+              className={`bg-white overflow-y-auto ${viewMode === 'list' ? 'hidden' : 'block'}`}
+            >
+              {selectedMessage ? (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="h-full flex flex-col"
+                >
+                  {/* Message header */}
+                  <div className="p-6 border-b border-gray-200 flex justify-between items-start sticky top-0 bg-white z-10">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h2 className="text-xl font-bold text-gray-900">{selectedMessage.subject || "General Inquiry"}</h2>
+                        <AnimatedBadge status={selectedMessage.status} />
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <span>From: {selectedMessage.name}</span>
+                        <span>•</span>
+                        <span>{formatDistanceToNow(new Date(selectedMessage.createdAt), { addSuffix: true })}</span>
+                      </div>
                     </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <div className="flex items-center">
-                      <Mail className="h-3.5 w-3.5 text-gray-400 mr-2 flex-shrink-0" />
-                      <span className="text-gray-600 truncate max-w-[200px]">
-                        {message.email}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="max-w-xs truncate text-gray-700">
-                      {message.subject || "General Inquiry"}
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-gray-500">
-                    {formatDate(message.createdAt)}
-                  </TableCell>
-                  <TableCell>
-                    {getStatusBadge(message.status)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-gray-100">
-                          <EllipsisVertical className="h-4 w-4 text-gray-600" />
-                          <span className="sr-only">Open menu</span>
+                    <div className="flex gap-2">
+                      {viewMode === 'detail' && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => toggleViewMode('split')}
+                          className="text-gray-500"
+                        >
+                          <LayoutSplitIcon className="h-4 w-4" />
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48 bg-white shadow-lg rounded-xl border border-gray-100">
-                        <DropdownMenuItem onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewMessage(message);
-                        }} className="cursor-pointer flex items-center gap-2 py-2 text-gray-700 hover:text-blue-600">
-                          <Mail className="h-4 w-4" />
-                          View details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            updateMessageStatus(message._id, 'new');
-                          }}
-                          disabled={message.status === 'new'}
-                          className="cursor-pointer flex items-center gap-2 py-2 text-gray-700 hover:text-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <Mail className="h-4 w-4" />
-                          Mark as New
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            updateMessageStatus(message._id, 'in-progress');
-                          }}
-                          disabled={message.status === 'in-progress'}
-                          className="cursor-pointer flex items-center gap-2 py-2 text-gray-700 hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <Clock className="h-4 w-4" />
-                          Mark In Progress
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            updateMessageStatus(message._id, 'resolved');
-                          }}
-                          disabled={message.status === 'resolved'}
-                          className="cursor-pointer flex items-center gap-2 py-2 text-gray-700 hover:text-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <CheckCircle className="h-4 w-4" />
-                          Mark as Resolved
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            confirmDelete(message);
-                          }}
-                          className="cursor-pointer flex items-center gap-2 py-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+                      )}
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setSelectedMessage(null)}
+                        className="text-gray-500"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Message content */}
+                  <div className="p-6 flex-1">
+                    <div className="flex items-start mb-6">
+                      <div className="bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center mr-3 flex-shrink-0">
+                        <User className="h-5 w-5 text-gray-500" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
+                          <div className="flex justify-between items-center mb-3">
+                            <div>
+                              <span className="font-medium text-gray-900">{selectedMessage.name}</span>
+                              <span className="text-sm text-gray-500 ml-2">&lt;{selectedMessage.email}&gt;</span>
+                            </div>
+                            <span className="text-xs text-gray-500">
+                              {format(new Date(selectedMessage.createdAt), "MMM d, yyyy • h:mm a")}
+                            </span>
+                          </div>
+                          <div className="whitespace-pre-wrap text-gray-700">
+                            {selectedMessage.message}
+                          </div>
+                        </div>
+                        
+                        <div className="mt-3 flex gap-2">
+                          <div className="flex items-center text-xs text-gray-500">
+                            <PhoneCall className="h-3 w-3 mr-1" />
+                            {selectedMessage.phone || "No phone provided"}
+                          </div>
+                          <div className="flex items-center text-xs text-gray-500">
+                            <MessageSquare className="h-3 w-3 mr-1" />
+                            Preferred contact: {selectedMessage.preferredContact || "Email"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Reply section */}
+                    <div className="mt-8">
+                      <AnimatePresence>
+                        {isComposing ? (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="border border-gray-200 rounded-lg overflow-hidden"
+                          >
+                            <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                              <div className="flex justify-between items-center">
+                                <h3 className="text-sm font-medium text-gray-700">Reply to {selectedMessage.name}</h3>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => setIsComposing(false)}
+                                  className="text-gray-500 h-6 w-6 p-0"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="p-4">
+                              <Textarea
+                                value={replyText}
+                                onChange={handleReplyChange}
+                                placeholder={`Hi ${selectedMessage.name},\n\nThank you for your message...`}
+                                className="min-h-[150px] border-gray-200 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                              />
+                              <div className="flex justify-end mt-4 gap-2">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => setIsComposing(false)}
+                                  className="border-gray-200"
+                                >
+                                  Cancel
+                                </Button>
+                                <Button 
+                                  variant="default" 
+                                  size="sm" 
+                                  onClick={() => handleInlineReply()}
+                                  className="bg-red-600 hover:bg-red-700 text-white"
+                                  disabled={!replyText.trim()}
+                                >
+                                  <Send className="h-4 w-4 mr-1" />
+                                  Send Reply
+                                </Button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ) : (
+                          <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="flex justify-between"
+                          >
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => setIsComposing(true)}
+                                className="border-gray-200 text-gray-700 hover:text-red-600 hover:border-red-200"
+                              >
+                                <Reply className="h-4 w-4 mr-1" />
+                                Reply
+                              </Button>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                variant={selectedMessage.status === 'new' ? "default" : "outline"}
+                                size="sm"
+                                className={selectedMessage.status === 'new' ? "bg-yellow-500 hover:bg-yellow-600 text-white" : "border-gray-200"}
+                                onClick={() => updateMessageStatus(selectedMessage._id, 'new')}
+                                disabled={selectedMessage.status === 'new'}
+                              >
+                                <MailOpen className="h-4 w-4 mr-1" />
+                                New
+                              </Button>
+                              <Button
+                                variant={selectedMessage.status === 'in-progress' ? "default" : "outline"}
+                                size="sm"
+                                className={selectedMessage.status === 'in-progress' ? "bg-red-500 hover:bg-red-600 text-white" : "border-gray-200"}
+                                onClick={() => updateMessageStatus(selectedMessage._id, 'in-progress')}
+                                disabled={selectedMessage.status === 'in-progress'}
+                              >
+                                <Clock className="h-4 w-4 mr-1" />
+                                In Progress
+                              </Button>
+                              <Button
+                                variant={selectedMessage.status === 'resolved' ? "default" : "outline"}
+                                size="sm"
+                                className={selectedMessage.status === 'resolved' ? "bg-green-500 hover:bg-green-600 text-white" : "border-gray-200"}
+                                onClick={() => updateMessageStatus(selectedMessage._id, 'resolved')}
+                                disabled={selectedMessage.status === 'resolved'}
+                              >
+                                <CheckCheck className="h-4 w-4 mr-1" />
+                                Resolved
+                              </Button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                </motion.div>
+              ) : viewMode !== 'list' && (
+                <div className="h-full flex flex-col justify-center items-center p-8 text-center">
+                  <div className="w-20 h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                    <Mail className="h-10 w-10 text-gray-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No message selected</h3>
+                  <p className="text-gray-500 max-w-md mx-auto">
+                    Select a message from the list to view its details
+                  </p>
+                </div>
+              )}
+            </motion.div>
+          </>
+        )}
+      </div>
       
-      {/* Pagination - Enhanced with better styling */}
+      {/* Modern pagination */}
       {!loading && !error && filteredMessages.length > 0 && (
-        <div className="flex justify-center mt-6">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  className={currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"}
-                />
-              </PaginationItem>
-              
-              {[...Array(totalPages)].map((_, i) => (
-                <PaginationItem key={i} className={currentPage === i + 1 ? "hidden sm:block" : totalPages > 5 && (i < currentPage - 2 || i > currentPage + 0) ? "hidden sm:block" : ""}>
-                  <PaginationLink
-                    onClick={() => setCurrentPage(i + 1)}
-                    isActive={currentPage === i + 1}
-                    className={currentPage === i + 1 ? "bg-blue-50 text-blue-600 hover:bg-blue-100 border-blue-200" : "hover:bg-gray-100"}
-                  >
-                    {i + 1}
-                  </PaginationLink>
+        <div className="bg-white border-t border-gray-200 p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="flex justify-center"
+          >
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <PaginationPrevious 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className={currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-red-50 transition-colors"}
+                    />
+                  </motion.div>
                 </PaginationItem>
-              ))}
-              
-              <PaginationItem>
-                <PaginationNext 
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                  className={currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100"}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
+                
+                {[...Array(totalPages)].map((_, i) => (
+                  <PaginationItem key={i} className={currentPage === i + 1 ? "hidden sm:block" : totalPages > 5 && (i < currentPage - 2 || i > currentPage + 0) ? "hidden sm:block" : ""}>
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <PaginationLink
+                        onClick={() => setCurrentPage(i + 1)}
+                        isActive={currentPage === i + 1}
+                        className={currentPage === i + 1 ? "bg-red-50 text-red-600 hover:bg-red-100 border-red-200 font-medium transition-colors" : "hover:bg-red-50 transition-colors"}
+                      >
+                        {i + 1}
+                      </PaginationLink>
+                    </motion.div>
+                  </PaginationItem>
+                ))}
+                
+                <PaginationItem>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <PaginationNext 
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className={currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-red-50 transition-colors"}
+                    />
+                  </motion.div>
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </motion.div>
         </div>
       )}
       
@@ -514,9 +1102,9 @@ const MessagesPage = () => {
       {selectedMessage && (
         <Dialog open={showMessageDialog} onOpenChange={setShowMessageDialog}>
           <DialogContent className="sm:max-w-lg bg-white p-0 rounded-xl overflow-hidden">
-            <DialogHeader className="px-6 py-4 border-b border-gray-100 bg-gray-50">
+            <DialogHeader className="px-6 py-4 border-b border-gray-100 bg-red-50">
               <DialogTitle className="flex items-center gap-2 text-gray-900">
-                <Mail className="h-5 w-5 text-blue-500" />
+                <Mail className="h-5 w-5 text-red-500" />
                 Contact Message
               </DialogTitle>
               <DialogDescription className="text-gray-500">
@@ -546,10 +1134,10 @@ const MessagesPage = () => {
                     <div className="bg-gray-50 rounded-lg p-4">
                       <h3 className="text-sm font-medium text-gray-500 mb-1">Email</h3>
                       <div className="flex items-center gap-2">
-                        <p className="text-blue-600 font-medium">{selectedMessage.email}</p>
+                        <p className="text-red-600 font-medium">{selectedMessage.email}</p>
                         <a 
                           href={`mailto:${selectedMessage.email}?subject=RE: ${selectedMessage.subject || 'Your inquiry'}`}
-                          className="text-gray-400 hover:text-blue-600 transition-colors"
+                          className="text-gray-400 hover:text-red-600 transition-colors"
                           onClick={(e) => e.stopPropagation()}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -566,7 +1154,7 @@ const MessagesPage = () => {
                           <p className="font-medium">{selectedMessage.phone}</p>
                           <a 
                             href={`tel:${selectedMessage.phone}`}
-                            className="text-gray-400 hover:text-blue-600 transition-colors"
+                            className="text-gray-400 hover:text-red-600 transition-colors"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <PhoneCall className="h-3.5 w-3.5" />
@@ -609,7 +1197,7 @@ const MessagesPage = () => {
                 </Button>
                 <Button
                   variant={selectedMessage.status === 'in-progress' ? "default" : "outline"}
-                  className={selectedMessage.status === 'in-progress' ? "bg-blue-500 hover:bg-blue-600 border-blue-500" : "border-gray-200"}
+                  className={selectedMessage.status === 'in-progress' ? "bg-red-500 hover:bg-red-600 border-red-500" : "border-gray-200"}
                   onClick={() => updateMessageStatus(selectedMessage._id, 'in-progress')}
                   disabled={selectedMessage.status === 'in-progress'}
                 >
@@ -618,7 +1206,7 @@ const MessagesPage = () => {
                 </Button>
                 <Button
                   variant={selectedMessage.status === 'resolved' ? "default" : "outline"}
-                  className={selectedMessage.status === 'resolved' ? "bg-green-500 hover:bg-green-600 border-green-500" : "border-gray-200"}
+                  className={selectedMessage.status === 'resolved' ? "bg-red-500 hover:bg-red-600 border-red-500" : "border-gray-200"}
                   onClick={() => updateMessageStatus(selectedMessage._id, 'resolved')}
                   disabled={selectedMessage.status === 'resolved'}
                 >
@@ -652,10 +1240,88 @@ const MessagesPage = () => {
         </Dialog>
       )}
       
+      {/* Reply Dialog */}
+      <Dialog open={replyDialogOpen} onOpenChange={setReplyDialogOpen}>
+        <DialogContent className="sm:max-w-md bg-white p-0 rounded-xl overflow-hidden">
+          <DialogHeader className="px-6 py-4 border-b border-gray-100 bg-red-50">
+            <DialogTitle className="text-gray-900 flex items-center gap-2">
+              <Reply className="h-5 w-5 text-red-500" />
+              Reply to Message
+            </DialogTitle>
+            <DialogDescription className="text-gray-500">
+              Send an email reply to {messageToReply?.name} at {messageToReply?.email}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="px-6 py-4">
+            {messageToReply && (
+              <motion.div 
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-4"
+              >
+                <div className="mb-4">
+                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                  <Input
+                    id="subject"
+                    value={replySubject}
+                    onChange={handleSubjectChange}
+                    className="w-full border-gray-200 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="reply" className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                  <Textarea
+                    id="reply"
+                    value={replyText}
+                    onChange={handleReplyChange}
+                    className="min-h-[200px] w-full border-gray-200 rounded-md focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  />
+                </div>
+              </motion.div>
+            )}
+            
+            <div className="flex justify-end gap-3 mt-6">
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="outline"
+                  onClick={() => setReplyDialogOpen(false)}
+                  className="border-gray-200 text-gray-700 hover:bg-gray-50"
+                  disabled={sendingReply}
+                >
+                  Cancel
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="default"
+                  onClick={handleDialogReply}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                  disabled={!replyText.trim() || sendingReply}
+                >
+                  {sendingReply ? (
+                    <>
+                      <span className="animate-spin mr-2">⏳</span>
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4 mr-2" />
+                      Send Reply
+                    </>
+                  )}
+                </Button>
+              </motion.div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Confirmation Dialog - Enhanced with better styling */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md bg-white p-0 rounded-xl overflow-hidden">
-          <DialogHeader className="px-6 py-4 border-b border-gray-100 bg-gray-50">
+          <DialogHeader className="px-6 py-4 border-b border-gray-100 bg-red-50">
             <DialogTitle className="text-gray-900 flex items-center gap-2">
               <Trash2 className="h-5 w-5 text-red-500" />
               Confirm Deletion
@@ -667,33 +1333,41 @@ const MessagesPage = () => {
           
           <div className="px-6 py-4">
             {messageToDelete && (
-              <div className="bg-red-50 p-4 rounded-lg mb-4 border border-red-100">
+              <motion.div 
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-red-50 p-4 rounded-lg mb-4 border border-red-100"
+              >
                 <p className="font-medium text-red-700 mb-1">Message from: {messageToDelete.name}</p>
                 <p className="text-sm text-red-600 truncate">{messageToDelete.subject || "General Inquiry"}</p>
-              </div>
+              </motion.div>
             )}
             
             <div className="flex justify-end gap-3 mt-6">
-              <Button
-                variant="outline"
-                onClick={() => setDeleteDialogOpen(false)}
-                className="border-gray-200 text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={deleteMessage}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Message
-              </Button>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteDialogOpen(false)}
+                  className="border-gray-200 text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="destructive"
+                  onClick={deleteMessage}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Message
+                </Button>
+              </motion.div>
             </div>
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </motion.div>
   );
 };
 
