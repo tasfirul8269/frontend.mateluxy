@@ -84,7 +84,7 @@ const SimpleContactForm = () => {
   };
   
   return (
-    <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6" id="contact-form">
+    <div className="w-full max-w-xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6" id="contact-form">
       {formSuccess ? (
         <div className="text-center p-6">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">

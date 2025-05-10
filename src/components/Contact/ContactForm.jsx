@@ -101,15 +101,10 @@ const ContactForm = () => {
   );
 
   return (
-    <div className="w-full max-w-xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
+    <div className="w-full  mx-auto bg-white rounded-2xl overflow-hidden">
       <div className="px-8 pt-8 pb-0">
         {/* Header */}
-        <div className="flex items-center mb-8">
-          <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mr-4">
-            <Mail className="h-7 w-7 text-[#FF2626]" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900">Send a Message</h2>
-        </div>
+      
         {/* Stepper */}
         <Stepper />
         <AnimatePresence mode="wait">
