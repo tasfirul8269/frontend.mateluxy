@@ -32,6 +32,8 @@ const OffPlanSinglePage = () => {
             image: initialPropertyData.propertyFeaturedImage,
             title: initialPropertyData.propertyTitle,
             location: initialPropertyData.propertyAddress,
+            duringConstructionPercentage: initialPropertyData.duringConstructionPercentage || 50,
+            onCompletionPercentage: initialPropertyData.onCompletionPercentage || 50,
           };
           setProperty(transformedProperty);
           
@@ -64,6 +66,8 @@ const OffPlanSinglePage = () => {
           image: propertyData.propertyFeaturedImage,
           title: propertyData.propertyTitle,
           location: propertyData.propertyAddress,
+          duringConstructionPercentage: propertyData.duringConstructionPercentage || 50,
+          onCompletionPercentage: propertyData.onCompletionPercentage || 50,
         };
         setProperty(transformedProperty);
         
@@ -90,6 +94,8 @@ const OffPlanSinglePage = () => {
             image: initialPropertyData.propertyFeaturedImage,
             title: initialPropertyData.propertyTitle,
             location: initialPropertyData.propertyAddress,
+            duringConstructionPercentage: initialPropertyData.duringConstructionPercentage || 50,
+            onCompletionPercentage: initialPropertyData.onCompletionPercentage || 50,
           };
           setProperty(transformedProperty);
           setIsLoading(false);

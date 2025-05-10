@@ -179,13 +179,28 @@ export const OffPlanPropertyForm = ({ agentData, onSubmit, onCancel }) => {
         throw new Error('Payment plan is required');
       }
       
-      // Set featured image from the first exterior gallery image
-      const propertyData = {
-        ...formData,
-        propertyFeaturedImage: formData.exteriorsGallery[0],
-        media: [...formData.exteriorsGallery, ...formData.interiorsGallery],
-        agent: agentData._id
-      };
+      // Create a new object for the property data to ensure all fields are included
+      const propertyData = {};
+      
+      // Copy all form data fields
+      Object.keys(formData).forEach(key => {
+        propertyData[key] = formData[key];
+      });
+      
+      // Ensure payment percentage fields are explicitly set as numbers
+      propertyData.duringConstructionPercentage = parseInt(formData.duringConstructionPercentage, 10);
+      propertyData.onCompletionPercentage = parseInt(formData.onCompletionPercentage, 10);
+      
+      // Set featured image and media
+      propertyData.propertyFeaturedImage = formData.exteriorsGallery[0];
+      propertyData.media = [...formData.exteriorsGallery, ...formData.interiorsGallery];
+      propertyData.agent = agentData._id;
+      
+      // Log payment percentages for debugging
+      console.log('Payment percentages being submitted:', { 
+        duringConstructionPercentage: propertyData.duringConstructionPercentage, 
+        onCompletionPercentage: propertyData.onCompletionPercentage 
+      });
       
       // Log the size of the request for debugging
       const jsonSize = JSON.stringify(propertyData).length / (1024 * 1024);
@@ -195,6 +210,7 @@ export const OffPlanPropertyForm = ({ agentData, onSubmit, onCancel }) => {
         throw new Error('Request size too large. Please use smaller images or fewer images.');
       }
 
+      // Submit the property data
       onSubmit(propertyData);
     } catch (error) {
       console.error('Error preparing property data:', error);
