@@ -5,6 +5,7 @@ import Services from "../../components/Services/Services";
 import TopProperties from "../../components/TopProperties/TopProperties";
 import FindConsultant from "../../components/FindConsultant/FindConsultant";
 import LocationCategory from "../../LocationBasedProperty/locationCategory";
+import FeaturesAmenities from "../../components/FeaturesAmenities/FeaturesAmenities";
 import NewsAndInsights from "../../components/NewsAndInsights/NewsAndInsights";
 
 const Home = () => {
@@ -39,6 +40,11 @@ const Home = () => {
           {/* Location Category Section */}
           <div className="mb-8 sm:mb-10 md:mb-12">
             <LocationCategory></LocationCategory>
+          </div>
+          
+          {/* Features and Amenities Section */}
+          <div className="mb-8 sm:mb-10 md:mb-12">
+            <FeaturesAmenities></FeaturesAmenities>
           </div>
           
           {/* News and Insights Section */}

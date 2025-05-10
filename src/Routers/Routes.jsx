@@ -3,6 +3,7 @@ import Layout from "../Layout/Layout";
 import Home from "../pages/Home/Home";
 import Buy from "../pages/Buy/Buy";
 import Rent from "../pages/Rent/Rent";
+import Properties from "../pages/Properties/Properties";
 import MapView from "../pages/MapView/MapView";
 import PropertyDetails from "../pages/PropertyDetails/PropertyDetails";
 import AgentProfileCard from "../components/AgentProfileCard/AgentProfileCard";
@@ -42,6 +43,10 @@ const router = createBrowserRouter([
             {
                 path: "/rent",
                 element: <Rent></Rent>
+            },
+            {
+                path: "/properties",
+                element: <Properties></Properties>
             },
             {
                 path: "/property-details/:id",

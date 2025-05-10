@@ -187,8 +187,8 @@ function LocationCategory() {
   }, []);
 
   const handleLocationClick = (locationName) => {
-    // Navigate to rent page with location filter
-    navigate(`/rent?location=${encodeURIComponent(locationName)}`);
+    // Navigate to properties page with location filter
+    navigate(`/properties?location=${encodeURIComponent(locationName)}`);
   };
 
   if (loading) {
@@ -323,7 +323,7 @@ function LocationCategory() {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => navigate('/rent')}
+          onClick={() => navigate('/properties')}
           className="px-8 py-4 bg-transparent text-red-600 rounded-[20px] font-medium hover:bg-red-600 hover:text-white hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-3 mx-auto "
         >
           <div className="bg-red-500 p-2 rounded-[20px]">
