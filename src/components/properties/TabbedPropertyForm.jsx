@@ -232,6 +232,8 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         tags: initialData.tags || [],
         completionDate: initialData.completionDate || "",
         paymentPlan: initialData.paymentPlan || "",
+        duringConstructionPercentage: initialData.duringConstructionPercentage || 50,
+        onCompletionPercentage: initialData.onCompletionPercentage || 50,
         exteriorGallery: initialData.media ? initialData.media.slice(0, 5) : [],
         interiorGallery: initialData.media ? initialData.media.slice(5, 10) : [],
 
@@ -286,6 +288,8 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         tags: [],
         completionDate: "",
         paymentPlan: "",
+        duringConstructionPercentage: 50,
+        onCompletionPercentage: 50,
       };
     }
 
@@ -760,6 +764,9 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         propertyBedrooms: formData.propertyBedrooms || 0,
         propertyBathrooms: formData.propertyBathrooms || 0,
         propertyKitchen: formData.propertyKitchen || 0,
+        // Ensure payment percentages are included as numbers
+        duringConstructionPercentage: parseInt(formData.duringConstructionPercentage || 50, 10),
+        onCompletionPercentage: parseInt(formData.onCompletionPercentage || 50, 10),
       };
     }
 
@@ -1601,8 +1608,8 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                   <div>
                     <label className="block text-base font-medium mb-2">During construction (%)</label>
                     <input
-                      name="duringConstruction"
-                      value={form.duringConstruction || ''}
+                      name="duringConstructionPercentage"
+                      value={form.duringConstructionPercentage || ''}
                       onChange={handleInput}
                       placeholder="During construction (%)"
                       type="number"
@@ -1612,8 +1619,8 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                   <div>
                     <label className="block text-base font-medium mb-2">On completion (%)</label>
                     <input
-                      name="onCompletion"
-                      value={form.onCompletion || ''}
+                      name="onCompletionPercentage"
+                      value={form.onCompletionPercentage || ''}
                       onChange={handleInput}
                       placeholder="On completion (%)"
                       type="number"
