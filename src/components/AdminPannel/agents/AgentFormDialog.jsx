@@ -713,7 +713,6 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
       name="languages"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Languages</FormLabel>
           <FormControl>
             <div className="space-y-2">
               <div className="flex gap-2">
@@ -929,7 +928,7 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
                               <SelectTrigger className="bg-gray-50 border-0">
                                 <SelectValue placeholder="Select your department" />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent className="bg-white">
                                 <SelectItem value="sales">Sales</SelectItem>
                                 <SelectItem value="marketing">Marketing</SelectItem>
                                 <SelectItem value="operations">Operations</SelectItem>

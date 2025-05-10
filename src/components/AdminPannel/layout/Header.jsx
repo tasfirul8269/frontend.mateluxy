@@ -54,7 +54,7 @@ export function Header({ searchPlaceholder, onSearch }) {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Determine page title based on the current route
+  // Determine page title and search placeholder based on the current route
   const getPageTitle = () => {
     const path = location.pathname;
     
@@ -63,9 +63,29 @@ export function Header({ searchPlaceholder, onSearch }) {
     if (path.includes('/admins')) return 'Admins';
     if (path.includes('/dashboard')) return 'Dashboard';
     if (path.includes('/settings')) return 'Settings';
+    if (path.includes('/messages')) return 'Messages';
     
     // Default title or extract from the path
     return 'Admin Panel';
+  };
+  
+  // Get dynamic search placeholder based on current page
+  const getDynamicPlaceholder = () => {
+    const path = location.pathname;
+    
+    if (path.includes('admin-pannel/properties')) return 'Search for properties...';
+    if (path.includes('admin-pannel/agents')) return 'Search for agents...';
+    if (path.includes('admin-pannel/admins')) return 'Search for admins...';
+    if (path.includes('admin-pannel/dashboard')) return 'Search dashboard...';
+    
+    // Default placeholder
+    return 'Search...';
+  };
+  
+  // Check if search should be hidden on current page
+  const shouldHideSearch = () => {
+    const path = location.pathname;
+    return path.includes('/messages');
   };
   
   // Get the current page title
@@ -648,75 +668,77 @@ export function Header({ searchPlaceholder, onSearch }) {
       <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">{pageTitle}</h1>
 
       <div className="flex items-center space-x-3 sm:space-x-6">
-        <div className="relative">
-          <form 
-            onSubmit={handleSearchSubmit}
-            className={cn(
-              "relative flex items-center transition-all duration-300 bg-gray-100 rounded-full overflow-hidden",
-              isSearchFocused 
-                ? 'w-40 sm:w-64 md:w-80 ring-2 ring-red-500' 
-                : 'w-40 sm:w-48 hover:bg-gray-200'
-            )}
-          >
-            <Search 
-              size={18} 
-              className="absolute left-3 text-gray-500" 
-            />
-            <input
-              ref={searchInputRef}
-              type="text"
-              placeholder={searchPlaceholder}
-              value={searchValue}
-              onChange={handleSearchChange}
-              className="w-full py-2 pl-10 pr-4 bg-transparent text-sm outline-none text-gray-700"
-              onFocus={() => {
-                setIsSearchFocused(true);
-                if (searchValue) setShowSuggestions(true);
-              }}
-              onBlur={() => setIsSearchFocused(false)}
-            />
-            {searchValue && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchValue('');
-                  setShowSuggestions(false);
-                }}
-                className="absolute right-3 text-gray-400 hover:text-gray-600"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </form>
-
-          {showSuggestions && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg border border-gray-200 overflow-hidden z-50 animate-fade-in">
-              {isLoadingSuggestions ? (
-                <div className="p-4 text-center text-gray-500">
-                  <div className="inline-block h-4 w-4 border-2 border-current border-r-transparent rounded-full animate-spin mr-2"></div>
-                  Loading suggestions...
-                </div>
-              ) : suggestions.length > 0 ? (
-                <ul className="max-h-64 overflow-auto">
-                  {suggestions.map(suggestion => (
-                    <li 
-                      key={suggestion.id}
-                      onClick={() => handleSelectSuggestion(suggestion.value)}
-                      className="px-4 py-2 hover:bg-red-50 cursor-pointer flex items-center justify-between"
-                    >
-                      <span>{suggestion.value}</span>
-                      <span className="text-xs text-gray-500 capitalize">{suggestion.type}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="p-4 text-center text-gray-500">
-                  {searchValue.length < 2 ? "Type at least 2 characters" : "No suggestions found"}
-                </div>
+        {!shouldHideSearch() ? (
+          <div className="relative">
+            <form 
+              onSubmit={handleSearchSubmit}
+              className={cn(
+                "relative flex items-center transition-all duration-300 bg-gray-100 rounded-full overflow-hidden",
+                isSearchFocused 
+                  ? 'w-40 sm:w-64 md:w-80 ring-2 ring-red-500' 
+                  : 'w-40 sm:w-48 hover:bg-gray-200'
               )}
-            </div>
-          )}
-        </div>
+            >
+              <Search 
+                size={18} 
+                className="absolute left-3 text-gray-500" 
+              />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder={getDynamicPlaceholder()}
+                value={searchValue}
+                onChange={handleSearchChange}
+                className="w-full py-2 pl-10 pr-4 bg-transparent text-sm outline-none text-gray-700"
+                onFocus={() => {
+                  setIsSearchFocused(true);
+                  if (searchValue) setShowSuggestions(true);
+                }}
+                onBlur={() => setIsSearchFocused(false)}
+              />
+              {searchValue && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchValue('');
+                    setShowSuggestions(false);
+                  }}
+                  className="absolute right-3 text-gray-400 hover:text-gray-600"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </form>
+
+            {showSuggestions && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-md shadow-lg border border-gray-200 overflow-hidden z-50 animate-fade-in">
+                {isLoadingSuggestions ? (
+                  <div className="p-4 text-center text-gray-500">
+                    <div className="inline-block h-4 w-4 border-2 border-current border-r-transparent rounded-full animate-spin mr-2"></div>
+                    Loading suggestions...
+                  </div>
+                ) : suggestions.length > 0 ? (
+                  <ul className="max-h-64 overflow-auto">
+                    {suggestions.map(suggestion => (
+                      <li 
+                        key={suggestion.id}
+                        onClick={() => handleSelectSuggestion(suggestion.value)}
+                        className="px-4 py-2 hover:bg-red-50 cursor-pointer flex items-center justify-between"
+                      >
+                        <span>{suggestion.value}</span>
+                        <span className="text-xs text-gray-500 capitalize">{suggestion.type}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="p-4 text-center text-gray-500">
+                    {searchValue.length < 2 ? "Type at least 2 characters" : "No suggestions found"}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ) : null}
 
         <Popover open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
           <PopoverTrigger asChild>

@@ -9,7 +9,7 @@ export function AgentCard({ agent, onAgentUpdated, onAgentDeleted }) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  
+
   const defaultImage = `https://ui-avatars.com/api/?name=${encodeURIComponent(agent.fullName)}&background=random`;
 
   const handleEdit = () => {
@@ -53,7 +53,7 @@ export function AgentCard({ agent, onAgentUpdated, onAgentDeleted }) {
       <div className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden relative">
         {/* Edit and Delete buttons */}
         <div className="absolute top-2 right-2 flex space-x-1 z-10">
-          <button 
+          <button
             className="p-1.5 bg-white text-blue-600 rounded-full hover:bg-blue-50 transition-colors shadow-sm"
             onClick={handleEdit}
             disabled={isDeleting}
@@ -61,7 +61,7 @@ export function AgentCard({ agent, onAgentUpdated, onAgentDeleted }) {
           >
             <Edit size={16} />
           </button>
-          <button 
+          <button
             className="p-1.5 bg-white text-red-600 rounded-full hover:bg-red-50 transition-colors shadow-sm"
             onClick={handleDelete}
             disabled={isDeleting}
@@ -76,28 +76,30 @@ export function AgentCard({ agent, onAgentUpdated, onAgentDeleted }) {
           {/* Profile Image */}
           <div className="mb-4">
             <div className="w-24 h-24 relative rounded-full overflow-hidden border-4 border-white shadow-sm">
-              <img 
+              <img
                 src={imgError ? defaultImage : (agent.profileImage || defaultImage)}
-                alt={agent.fullName} 
+                alt={agent.fullName}
                 className="w-full h-full object-cover"
                 onError={() => setImgError(true)}
               />
             </div>
           </div>
-          
+
           {/* Agent Name and Title */}
-          <div className="text-center mb-2">
-            <h3 className="text-xl font-bold text-gray-800">{agent.fullName}</h3>
+          <div className="text-center  mb-2">
+            <h3 className="text-xl font-bold text-gray-800 overflow-hidden text-ellipsis whitespace-nowrap inline-block max-w-[200px] align-middle">
+              {agent.fullName}
+            </h3>
             <p className="text-gray-600">{agent.position || "Real Estate Agent"}</p>
           </div>
-          
+
           {/* Property Count */}
           <div className="mb-6">
             <span className="bg-blue-100 text-blue-700 px-4 py-1 rounded-full text-sm font-medium">
               {agent.listings || 0} Properties
             </span>
           </div>
-          
+
           {/* Contact Information */}
           <div className="w-full space-y-3 mb-5">
             <div className="flex items-center justify-center text-gray-600 w-full px-4">
@@ -109,9 +111,9 @@ export function AgentCard({ agent, onAgentUpdated, onAgentDeleted }) {
               <span className="text-sm truncate">{agent.contactNumber || "+1 (555) 123-4567"}</span>
             </div>
           </div>
-          
+
           {/* View Profile Button */}
-          <button 
+          <button
             onClick={handleViewProfile}
             className="w-full text-center text-purple-600 hover:text-purple-800 font-medium py-2 transition-colors"
           >
@@ -120,7 +122,7 @@ export function AgentCard({ agent, onAgentUpdated, onAgentDeleted }) {
         </div>
       </div>
 
-      <AgentFormDialog 
+      <AgentFormDialog
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         agent={agent}

@@ -135,7 +135,7 @@ export function AgentProfileDialog({ open, onOpenChange, agentId }) {
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto bg-white">
+        <DialogContent className="sm:max-w-3xl max-h-[90vh] pt-[50px] overflow-y-auto bg-white">
           <DialogHeader className="relative">
             <div className="absolute right-0 top-0 flex space-x-2">
               <button 
