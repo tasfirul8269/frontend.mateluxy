@@ -31,6 +31,8 @@ export const OffPlanPropertyForm = ({ agentData, onSubmit, onCancel }) => {
     longitude: 55.2708,
     completionDate: '',
     paymentPlan: '',
+    duringConstructionPercentage: 50,
+    onCompletionPercentage: 50,
     tags: [],
     
     // Required fields from the property model but not shown on form
@@ -475,10 +477,44 @@ export const OffPlanPropertyForm = ({ agentData, onSubmit, onCancel }) => {
                 value={formData.paymentPlan}
                 onChange={handleChange}
                 required
-                placeholder="40/60"
+                placeholder="Detailed payment plan description"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <p className="text-xs text-gray-500 mt-1">Payment plan details (e.g. 40/60, 30/70)</p>
+              <p className="text-xs text-gray-500 mt-1">Detailed payment plan description</p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                During Construction (%)*
+              </label>
+              <input
+                type="number"
+                name="duringConstructionPercentage"
+                value={formData.duringConstructionPercentage}
+                onChange={handleChange}
+                required
+                min="0"
+                max="100"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Percentage to be paid during construction</p>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                On Completion (%)*
+              </label>
+              <input
+                type="number"
+                name="onCompletionPercentage"
+                value={formData.onCompletionPercentage}
+                onChange={handleChange}
+                required
+                min="0"
+                max="100"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Percentage to be paid on completion</p>
             </div>
             
             <div className="md:col-span-3">

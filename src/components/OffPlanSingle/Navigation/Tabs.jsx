@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 const tabs = [
   { label: 'About', href: '#about' },
   { label: 'Gallery', href: '#gallery' },
-
-  { label: 'Location', href: '#location' }
+  { label: 'Location', href: '#location' },
+  { label: 'Payment Plan', href: '#payment-plan' }
 ];
 
 const Tabs = () => {

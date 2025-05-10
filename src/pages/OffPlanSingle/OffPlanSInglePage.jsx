@@ -10,6 +10,7 @@ import HeroBanner from '../../components/OffPlanSingle/Hero/HeroBanner';
 import AboutSection from '../../components/OffPlanSingle/Sections/AboutSection';
 import GallerySection from '../../components/OffPlanSingle/Sections/GallerySection';
 import LocationSection from '../../components/OffPlanSingle/Sections/LocationSection';
+import PaymentPlanSection from '../../components/OffPlanSingle/Sections/PaymentPlanSection';
 
 const OffPlanSinglePage = () => {
   const initialPropertyData = useLoaderData();
@@ -159,6 +160,10 @@ const OffPlanSinglePage = () => {
               
               <div id="location">
                 <LocationSection property={property} />
+              </div>
+              
+              <div id="payment-plan">
+                <PaymentPlanSection property={property} />
               </div>
               
               {/* Related Properties Section - Only show if there are off-plan properties */}
