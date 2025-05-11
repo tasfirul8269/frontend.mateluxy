@@ -846,7 +846,7 @@ const MessagesPage = () => {
                 opacity: viewMode === 'list' ? 0 : 1 
               }}
               transition={{ duration: 0.3 }}
-              className={`bg-white overflow-y-auto ${viewMode === 'list' ? 'hidden' : 'block'}`}
+              className={`bg-white ${viewMode === 'list' ? 'hidden' : 'block'} h-full flex flex-col overflow-hidden`}
             >
               {selectedMessage ? (
                 <motion.div 
@@ -856,7 +856,7 @@ const MessagesPage = () => {
                   className="h-full flex flex-col"
                 >
                   {/* Message header */}
-                  <div className="p-6 border-b border-gray-200 flex justify-between items-start sticky top-0 bg-white z-10">
+                  <div className="p-6 border-b border-gray-200 flex justify-between items-start bg-white z-10">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h2 className="text-xl font-bold text-gray-900">{selectedMessage.subject || "General Inquiry"}</h2>
@@ -890,8 +890,8 @@ const MessagesPage = () => {
                     </div>
                   </div>
 
-                  {/* Message content */}
-                  <div className="p-6 flex-1">
+                  {/* Message content - Make this scrollable */}
+                  <div className="p-6 flex-1 overflow-y-auto">
                     <div className="flex items-start mb-6">
                       <div className="bg-gray-100 rounded-full w-10 h-10 flex items-center justify-center mr-3 flex-shrink-0">
                         <User className="h-5 w-5 text-gray-500" />
