@@ -14,6 +14,7 @@ const PropertyListing = ({ offPlanProjects }) => {
   const [filteredProjects, setFilteredProjects] = useState([]);
   const [displayedProjects, setDisplayedProjects] = useState([]);
   const [hasMore, setHasMore] = useState(false);
+  const [searchFilters, setSearchFilters] = useState({});
   const projectsPerPage = 6;
 
   // Filter off-plan projects (category === "Off Plan")
@@ -35,10 +36,11 @@ const PropertyListing = ({ offPlanProjects }) => {
     return () => clearTimeout(timer);
   }, [offPlanProjects]);
   
-  // Apply category filtering
+  // Apply category filtering and search filters
   useEffect(() => {
     let result = [...allOffPlanProjects];
     
+    // Apply category filter
     if (selectedCategory !== 'All') {
       result = result.filter(property => {
         // Exact match with the propertyType field from the database
@@ -46,10 +48,80 @@ const PropertyListing = ({ offPlanProjects }) => {
       });
     }
     
+    // Apply search filters
+    if (searchFilters.searchTerm) {
+      const searchTerm = searchFilters.searchTerm.toLowerCase();
+      result = result.filter(property => {
+        return (
+          (property.propertyTitle && property.propertyTitle.toLowerCase().includes(searchTerm)) ||
+          (property.propertyAddress && property.propertyAddress.toLowerCase().includes(searchTerm)) ||
+          (property.propertyState && property.propertyState.toLowerCase().includes(searchTerm)) ||
+          (property.propertyCountry && property.propertyCountry.toLowerCase().includes(searchTerm)) ||
+          (property.developer && property.developer.toLowerCase().includes(searchTerm)) ||
+          (property.project && property.project.toLowerCase().includes(searchTerm))
+        );
+      });
+    }
+    
+    // Apply price range filter
+    if (searchFilters.minPrice !== null && searchFilters.minPrice !== undefined) {
+      result = result.filter(property => {
+        return property.propertyPrice >= searchFilters.minPrice;
+      });
+    }
+    
+    if (searchFilters.maxPrice !== null && searchFilters.maxPrice !== undefined) {
+      result = result.filter(property => {
+        return property.propertyPrice <= searchFilters.maxPrice;
+      });
+    }
+    
+    // Apply bedroom filter
+    if (searchFilters.beds !== null && searchFilters.beds !== undefined) {
+      result = result.filter(property => {
+        if (searchFilters.beds === 0) {
+          // For studio (0 bedrooms)
+          return property.propertyBedrooms === 0;
+        } else if (searchFilters.beds === '4+') {
+          // For 4+ bedrooms
+          return property.propertyBedrooms >= 4;
+        } else {
+          // For specific number of bedrooms
+          return property.propertyBedrooms === parseInt(searchFilters.beds);
+        }
+      });
+    }
+    
+    // Apply completion date filter
+    if (searchFilters.completion !== null && searchFilters.completion !== undefined) {
+      const currentYear = new Date().getFullYear();
+      
+      result = result.filter(property => {
+        // If property doesn't have a completion date, skip it for most filters
+        if (!property.completionDate && searchFilters.completion !== 'future') {
+          return false;
+        }
+        
+        // Handle special completion values
+        if (searchFilters.completion === 'ready') {
+          // For "Ready Now" - check if completion date is in the past or current year
+          return property.completionStatus === 'Completed' || 
+                 (property.completionDate && parseInt(property.completionDate) <= currentYear);
+        } else if (searchFilters.completion === 'future') {
+          // For "Future Projects" - check if completion date is beyond current year + 3
+          return !property.completionDate || 
+                 (property.completionDate && parseInt(property.completionDate) > currentYear + 3);
+        } else {
+          // For specific years (currentYear, currentYear+1, etc.)
+          return property.completionDate && property.completionDate.includes(searchFilters.completion);
+        }
+      });
+    }
+    
     setFilteredProjects(result);
     setDisplayedProjects(result.slice(0, projectsPerPage));
     setHasMore(result.length > projectsPerPage);
-  }, [selectedCategory, allOffPlanProjects]);
+  }, [selectedCategory, searchFilters, allOffPlanProjects]);
   
   // Handle category change
   const handleCategoryChange = (category) => {
@@ -58,8 +130,8 @@ const PropertyListing = ({ offPlanProjects }) => {
   
   // Handle search
   const handleSearch = (params) => {
-    // Implement search functionality if needed
     console.log('Search params:', params);
+    setSearchFilters(params);
   };
   
   // Load more properties
@@ -110,8 +182,8 @@ const PropertyListing = ({ offPlanProjects }) => {
             <p className="text-gray-500 text-lg">No off-plan properties found matching your criteria.</p>
             <button 
               onClick={() => {
-                handleCategoryChange('All');
-                handleSearch({});
+                setSelectedCategory('All');
+                setSearchFilters({});
               }}
               className="mt-4 text-[#FF2626] hover:text-[#FF4040] underline"
             >

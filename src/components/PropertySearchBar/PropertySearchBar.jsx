@@ -187,9 +187,8 @@ const PropertySearchBar = () => {
     "Land",
   ];
   
-  // Determine which property types to use based on whether we're on a commercial page
-  const isCommercialPage = location.pathname.includes('/commercial');
-  const propertyTypes = isCommercialPage ? commercialPropertyTypes : residentialPropertyTypes;
+  // Always use the residential property types for all pages
+  const propertyTypes = residentialPropertyTypes;
 
   // Bed and bath options
   const bedOptions = ["Any", "Studio", "1", "2", "3", "4", "5", "6+"];

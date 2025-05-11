@@ -21,11 +21,26 @@ const MapView = () => {
   // Default center is Dubai
   const defaultCenter = [25.2048, 55.2708];
   
-  // Get category from URL (buy or rent)
+  // Get category from URL (buy, rent, commercial-buy, commercial-rent)
   const pathSegments = location.pathname.split('/');
-  const category = pathSegments[1] === 'map-view' && pathSegments[2] 
-    ? pathSegments[2].charAt(0).toUpperCase() + pathSegments[2].slice(1) 
-    : 'Buy';
+  const urlCategory = pathSegments[2] || 'buy';
+
+  // Convert URL category to actual property category
+  let category;
+  switch(urlCategory) {
+    case 'commercial-buy':
+      category = 'Commercial for Buy';
+      break;
+    case 'commercial-rent':
+      category = 'Commercial for Rent';
+      break;
+    case 'rent':
+      category = 'Rent';
+      break;
+    case 'buy':
+    default:
+      category = 'Buy';
+  }
 
   // This is now moved inside the useEffect to avoid dependency issues
 
@@ -194,7 +209,20 @@ const MapView = () => {
 
   // Handle back button click
   const handleBack = () => {
-    navigate(`/${category.toLowerCase()}`);
+    switch(urlCategory) {
+      case 'commercial-buy':
+        navigate('/commercial/buy');
+        break;
+      case 'commercial-rent':
+        navigate('/commercial/rent');
+        break;
+      case 'rent':
+        navigate('/rent');
+        break;
+      case 'buy':
+      default:
+        navigate('/buy');
+    }
   };
   
   // Handle location selection for quick navigation
@@ -386,7 +414,7 @@ const MapView = () => {
               <FaArrowLeft className="text-gray-700" />
             </button>
             <h1 className="text-xl font-bold text-gray-800">
-              {category} Properties on Map
+              {urlCategory.includes('commercial') ? 'Commercial' : ''} Properties {category.includes('Buy') ? 'for sale' : 'for rent'} on Map
             </h1>
           </div>
           <div className="text-sm bg-red-50 text-red-600 px-3 py-1 rounded-md">
