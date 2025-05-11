@@ -65,6 +65,78 @@ const Banner = () => {
     setCurrentSlide(index);
   };
 
+  // Shimmer loading animation component
+  const ShimmerLoading = () => (
+    <div className="mx-auto w-full overflow-hidden relative rounded-[30px] shadow-2xl">
+      <div className="relative min-h-[650px] md:min-h-[650px] bg-gray-200 overflow-hidden">
+        {/* Shimmer effect */}
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-gray-200 via-white to-gray-200"></div>
+        
+        {/* Content placeholders */}
+        <div className="relative z-10 flex flex-col justify-center h-full px-8 md:px-16 py-12">
+          <div className="max-w-xl">
+            {/* Subtitle placeholder */}
+            <div className="h-4 w-40 bg-gray-300 rounded-md mb-4"></div>
+            
+            {/* Title placeholders */}
+            <div className="h-12 w-72 bg-gray-300 rounded-md mb-3"></div>
+            <div className="h-12 w-48 bg-gray-300 rounded-md mb-6"></div>
+            
+            {/* Description placeholder */}
+            <div className="h-24 w-full max-w-md bg-gray-300 rounded-md mb-8"></div>
+            
+            {/* Button placeholders */}
+            <div className="flex flex-wrap gap-4">
+              <div className="h-12 w-32 bg-gray-300 rounded-full"></div>
+              <div className="h-12 w-40 bg-gray-300 rounded-full"></div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Slide indicators placeholders */}
+        <div className="absolute bottom-8 right-8 flex space-x-2 z-20">
+          <div className="w-8 h-3 rounded-full bg-gray-300"></div>
+          <div className="w-3 h-3 rounded-full bg-gray-300"></div>
+          <div className="w-3 h-3 rounded-full bg-gray-300"></div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Add keyframes for shimmer animation to the document
+  useEffect(() => {
+    const styleSheet = document.createElement("style");
+    styleSheet.textContent = `
+      @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fadeInUp {
+        animation: fadeInUp 0.8s ease-out forwards;
+      }
+    `;
+    document.head.appendChild(styleSheet);
+    return () => document.head.removeChild(styleSheet);
+  }, []);
+
+  if (loading) {
+    return <ShimmerLoading />;
+  }
+
+  if (error) {
+    return (
+      <div className="mx-auto mb-11 w-full overflow-hidden relative rounded-[30px] shadow-2xl">
+        <div className="relative min-h-[650px] md:min-h-[650px] flex items-center justify-center">
+          <p className="text-red-500 text-xl">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto mb-11 w-full overflow-hidden relative rounded-[30px] shadow-2xl">
       {/* Main banner container */}
@@ -103,25 +175,25 @@ const Banner = () => {
             {/* Animated title with dynamic content */}
             <div className="overflow-hidden mb-4">
               <h1 className="text-4xl md:text-6xl font-bold text-white animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
-                {slides.length > 0 && slides[currentSlide]?.title} <br />
-                <span className="text-[#FF2626]">{slides.length > 0 && slides[currentSlide]?.subtitle}</span>
+                {slides[currentSlide]?.title} <br />
+                <span className="text-[#FF2626]">{slides[currentSlide]?.subtitle}</span>
               </h1>
             </div>
 
             {/* Animated description */}
             <div className="overflow-hidden mb-8">
               <p className="text-white/70 text-base md:text-lg max-w-md animate-fadeInUp" style={{ animationDelay: '0.4s' }}>
-                {slides.length > 0 && slides[currentSlide]?.description}
+                {slides[currentSlide]?.description}
               </p>
             </div>
 
             {/* Animated buttons */}
             <div className="flex flex-wrap gap-4 animate-fadeInUp" style={{ animationDelay: '0.6s' }}>
-              <Link to={slides.length > 0 ? slides[currentSlide]?.buttonLink1 || '#' : '#'} className="px-6 py-3 text-sm md:text-base font-medium rounded-full border-2 border-white text-white hover:bg-white hover:text-[#FF2626] transition-all duration-300 backdrop-blur-sm">
-                {slides.length > 0 && slides[currentSlide]?.buttonText1}
+              <Link to={slides[currentSlide]?.buttonLink1 || '#'} className="px-6 py-3 text-sm md:text-base font-medium rounded-full border-2 border-white text-white hover:bg-white hover:text-[#FF2626] transition-all duration-300 backdrop-blur-sm">
+                {slides[currentSlide]?.buttonText1}
               </Link>
-              <Link to={slides.length > 0 ? slides[currentSlide]?.buttonLink2 || '/properties' : '/properties'} className="px-6 py-3 text-sm md:text-base font-medium rounded-full bg-[#FF2626] text-white hover:bg-[#FF4040] transition-all duration-300">
-                {slides.length > 0 && slides[currentSlide]?.buttonText2}
+              <Link to={slides[currentSlide]?.buttonLink2 || '/properties'} className="px-6 py-3 text-sm md:text-base font-medium rounded-full bg-[#FF2626] text-white hover:bg-[#FF4040] transition-all duration-300">
+                {slides[currentSlide]?.buttonText2}
               </Link>
             </div>
           </div>
@@ -141,23 +213,6 @@ const Banner = () => {
           ))}
         </div>
       </div>
-      
-      {/* Add custom CSS for animations */}
-      <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fadeInUp {
-          animation: fadeInUp 0.8s ease-out forwards;
-        }
-      `}} />
     </div>
   );
 };
