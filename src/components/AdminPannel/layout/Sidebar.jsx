@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Users, Settings, ChevronLeft, ChevronRight, MenuIcon, MessageSquare } from "lucide-react";
+import { Home, Users, Settings, ChevronLeft, ChevronRight, MenuIcon, MessageSquare, Image } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/AdminPannel/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,6 +26,11 @@ const navItems = [
     icon: MessageSquare,
     label: "Messages",
     href: "/admin-pannel/messages",
+  },
+  {
+    icon: Image,
+    label: "Banners",
+    href: "/admin-pannel/banners",
   },
 ];
 

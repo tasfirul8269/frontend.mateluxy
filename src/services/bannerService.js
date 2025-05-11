@@ -1,12 +1,21 @@
-import axios from 'axios';
-
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
 // Get all banners
 export const getAllBanners = async () => {
   try {
-    const response = await axios.get(`${API_URL}/banners`, { withCredentials: true });
-    return response.data;
+    const response = await fetch(`${API_URL}/banners`, { 
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+    
+    return await response.json();
   } catch (error) {
     console.error('Error fetching banners:', error);
     throw error;
@@ -16,8 +25,18 @@ export const getAllBanners = async () => {
 // Get banners by type (home or offplan)
 export const getBannersByType = async (type) => {
   try {
-    const response = await axios.get(`${API_URL}/banners?type=${type}`);
-    return response.data;
+    const response = await fetch(`${API_URL}/banners?type=${type}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+    
+    return await response.json();
   } catch (error) {
     console.error(`Error fetching ${type} banners:`, error);
     throw error;
@@ -27,8 +46,19 @@ export const getBannersByType = async (type) => {
 // Get a single banner
 export const getBanner = async (id) => {
   try {
-    const response = await axios.get(`${API_URL}/banners/${id}`, { withCredentials: true });
-    return response.data;
+    const response = await fetch(`${API_URL}/banners/${id}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+    
+    return await response.json();
   } catch (error) {
     console.error('Error fetching banner:', error);
     throw error;
@@ -38,8 +68,20 @@ export const getBanner = async (id) => {
 // Create a new banner
 export const createBanner = async (bannerData) => {
   try {
-    const response = await axios.post(`${API_URL}/banners`, bannerData, { withCredentials: true });
-    return response.data;
+    const response = await fetch(`${API_URL}/banners`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(bannerData)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+    
+    return await response.json();
   } catch (error) {
     console.error('Error creating banner:', error);
     throw error;
@@ -49,8 +91,20 @@ export const createBanner = async (bannerData) => {
 // Update a banner
 export const updateBanner = async (id, bannerData) => {
   try {
-    const response = await axios.put(`${API_URL}/banners/${id}`, bannerData, { withCredentials: true });
-    return response.data;
+    const response = await fetch(`${API_URL}/banners/${id}`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(bannerData)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+    
+    return await response.json();
   } catch (error) {
     console.error('Error updating banner:', error);
     throw error;
@@ -60,8 +114,19 @@ export const updateBanner = async (id, bannerData) => {
 // Delete a banner
 export const deleteBanner = async (id) => {
   try {
-    const response = await axios.delete(`${API_URL}/banners/${id}`, { withCredentials: true });
-    return response.data;
+    const response = await fetch(`${API_URL}/banners/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+    
+    return await response.json();
   } catch (error) {
     console.error('Error deleting banner:', error);
     throw error;
