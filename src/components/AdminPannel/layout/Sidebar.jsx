@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Users, Settings, ChevronLeft, ChevronRight, MenuIcon, MessageSquare, Image } from "lucide-react";
+import { Home, Users, Settings,Building, Shield,MessageCircle , ChevronLeft, ChevronRight, MenuIcon, MessageSquare, Image } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/AdminPannel/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,13 +17,9 @@ const navItems = [
     label: "Agents",
     href: "/admin-pannel/agents",
   },
+ 
   {
-    icon: Settings,
-    label: "Admins",
-    href: "/admin-pannel/admins",
-  },
-  {
-    icon: MessageSquare,
+    icon: MessageCircle,
     label: "Messages",
     href: "/admin-pannel/messages",
   },
@@ -31,6 +27,11 @@ const navItems = [
     icon: Image,
     label: "Banners",
     href: "/admin-pannel/banners",
+  },
+  {
+    icon: Shield,
+    label: "Admins",
+    href: "/admin-pannel/admins",
   },
 ];
 
@@ -91,7 +92,7 @@ export function Sidebar() {
             transition={{ duration: 0.3 }}
             className="flex justify-center items-center"
           >
-            <img className="w-10" src={logo} alt="LOGO" />
+            <img className="w-15" src={logo} alt="LOGO" />
           
           </motion.div>
           )}
@@ -143,7 +144,7 @@ export function Sidebar() {
           onClick={toggleSidebar}
           variant="ghost"
           className={cn(
-            "w-full flex items-center justify-center py-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors",
+            "w-full flex items-center justify-center py-2 hover:text-white text-gray-600 hover:bg-red-500 rounded-md transition-colors ",
             expanded && "justify-between"
           )}
         >
