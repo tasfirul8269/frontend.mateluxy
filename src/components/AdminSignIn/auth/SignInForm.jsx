@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, Lock, ArrowLeft, AlertCircle } from 'lucide-react';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
@@ -24,6 +24,17 @@ const SignInForm = () => {
   const [resetEmail, setResetEmail] = useState('');
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [resetEmailError, setResetEmailError] = useState(null);
+  
+  // Load saved rememberMe preference from localStorage when component mounts
+  useEffect(() => {
+    const savedRememberMe = localStorage.getItem('adminRememberMe') === 'true';
+    if (savedRememberMe) {
+      setFormData(prev => ({
+        ...prev,
+        rememberMe: true
+      }));
+    }
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
@@ -68,10 +79,12 @@ const SignInForm = () => {
     e.preventDefault();
 
     if (validateForm()) {
-      // Simulate API call
       try {
         setLoading(true);
         setIsSubmitting(true);
+
+        // Log the rememberMe value for debugging
+        console.log('Remember Me:', formData.rememberMe);
 
         const res = await fetch(`${import.meta.env.VITE_API_URL}/api/admin-login`, {
           method: 'POST',
@@ -83,21 +96,33 @@ const SignInForm = () => {
         });
 
         const data = await res.json();
-        if (data.success == false) {
+        if (!res.ok || data.success === false) {
           setLoading(false);
           setIsSubmitting(false);
-          setError("An error occurred while adding the agent. Please try again.");
+          setError(data.message || "Invalid credentials. Please try again.");
           return;
         }
+
+        // Success - store rememberMe preference in localStorage for future reference
+        if (formData.rememberMe) {
+          localStorage.setItem('adminRememberMe', 'true');
+        } else {
+          localStorage.removeItem('adminRememberMe');
+        }
+
         setLoading(false);
         setIsSubmitting(false);
         setError(null);
+        
+        // Show success message
+        toast.success('Signed in successfully!');
+        
+        // Navigate to admin panel
         navigate('/admin-pannel');
-        setFormData(initialFormData);
       } catch (error) {
         setLoading(false);
         setIsSubmitting(false);
-        setError('An error occurred while adding the agent. Please try again.');
+        setError('An error occurred. Please try again.');
       }
     }
   };
