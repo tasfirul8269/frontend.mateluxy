@@ -38,8 +38,8 @@ const Input = ({
       <div className={`relative transition-all duration-300 ${isFocused ? 'scale-[1.01]' : 'scale-100'}`}>
         <div
           className={`relative rounded-lg overflow-hidden shadow-sm transition-shadow duration-300 ${
-            isFocused ? 'shadow-md ring-2 ring-blue-200' : 'ring-1 ring-gray-200'
-          } ${error ? 'ring-red-300' : ''}`}
+            isFocused ? 'shadow-md ring-3 ring-red-300' : 'ring-1 ring-gray-200'
+          } ${error ? 'ring-red-400' : ''}`}
         >
           <div className="flex items-center">
             {icon && <div className="pl-3 text-gray-500">{icon}</div>}

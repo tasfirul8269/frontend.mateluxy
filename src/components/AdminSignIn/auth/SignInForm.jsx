@@ -300,7 +300,7 @@ const SignInForm = () => {
             fullWidth 
             size="lg" 
             isLoading={isSubmitting} 
-            className="mt-6 bg-red-600 hover:bg-red-700"
+            className="mt-6 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 shadow-md shadow-red-100 hover:shadow-red-200 transform transition-all duration-300 hover:-translate-y-1"
           >
             Sign in
           </Button>
