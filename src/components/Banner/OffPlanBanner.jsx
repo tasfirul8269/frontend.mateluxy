@@ -9,39 +9,17 @@ const Banner = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Default slides in case API fails
-  const defaultSlides = [
-    {
-      image: "https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg",
-      title: "Off-Plan",
-      subtitle: "Investments",
-      description: "Secure your future with premium off-plan properties offering exceptional investment opportunities and modern living spaces.",
-      buttonText1: "Learn More",
-      buttonLink1: "#",
-      buttonText2: "View Off-Plan Properties",
-      buttonLink2: "/off-plan-properties"
-    },
-    {
-      image: "https://images.pexels.com/photos/1732414/pexels-photo-1732414.jpeg",
-      title: "Future",
-      subtitle: "Homes",
-      description: "Secure your future with premium off-plan properties offering exceptional investment opportunities and modern living spaces.",
-      buttonText1: "Learn More",
-      buttonLink1: "#",
-      buttonText2: "View Off-Plan Properties",
-      buttonLink2: "/off-plan-properties"
-    },
-    {
-      image: "https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg",
-      title: "Investment",
-      subtitle: "Opportunities",
-      description: "Secure your future with premium off-plan properties offering exceptional investment opportunities and modern living spaces.",
-      buttonText1: "Learn More",
-      buttonLink1: "#",
-      buttonText2: "View Off-Plan Properties",
-      buttonLink2: "/off-plan-properties"
-    }
-  ];
+  // Single placeholder slide when no data is available
+  const placeholderSlide = {
+    image: "https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg",
+    title: "Off-Plan",
+    subtitle: "Properties",
+    description: "Secure your future with premium off-plan properties offering exceptional investment opportunities and modern living spaces.",
+    buttonText1: "Learn More",
+    buttonLink1: "#",
+    buttonText2: "View Off-Plan Properties",
+    buttonLink2: "/off-plan-properties"
+  };
 
   // Fetch banners from API
   useEffect(() => {
@@ -52,13 +30,14 @@ const Banner = () => {
         if (data && data.length > 0) {
           setSlides(data);
         } else {
-          setSlides(defaultSlides);
+          // Use a single placeholder slide instead of multiple dummy slides
+          setSlides([placeholderSlide]);
         }
         setLoading(false);
       } catch (err) {
         console.error('Error fetching offplan banners:', err);
         setError('Failed to load banners');
-        setSlides(defaultSlides);
+        setSlides([placeholderSlide]);
         setLoading(false);
       }
     };
@@ -66,10 +45,10 @@ const Banner = () => {
     fetchBanners();
   }, []);
   
-  // Initialize with default slides immediately to prevent rendering errors
+  // Initialize with placeholder slide immediately to prevent rendering errors
   useEffect(() => {
     if (slides.length === 0) {
-      setSlides(defaultSlides);
+      setSlides([placeholderSlide]);
     }
   }, []);
 

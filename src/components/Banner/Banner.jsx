@@ -9,39 +9,17 @@ const Banner = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Default slides in case API fails
-  const defaultSlides = [
-    {
-      image: "https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg",
-      title: "Luxury Living",
-      subtitle: "Redefined",
-      description: "We provide a complete service for the sale, purchase or rental of real estate with a modern approach and personalized experience.",
-      buttonText1: "Learn More",
-      buttonLink1: "#",
-      buttonText2: "Explore Properties",
-      buttonLink2: "/properties"
-    },
-    {
-      image: "https://images.pexels.com/photos/1732414/pexels-photo-1732414.jpeg",
-      title: "Premium",
-      subtitle: "Properties",
-      description: "We provide a complete service for the sale, purchase or rental of real estate with a modern approach and personalized experience.",
-      buttonText1: "Learn More",
-      buttonLink1: "#",
-      buttonText2: "Explore Properties",
-      buttonLink2: "/properties"
-    },
-    {
-      image: "https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg",
-      title: "Exclusive",
-      subtitle: "Listings",
-      description: "We provide a complete service for the sale, purchase or rental of real estate with a modern approach and personalized experience.",
-      buttonText1: "Learn More",
-      buttonLink1: "#",
-      buttonText2: "Explore Properties",
-      buttonLink2: "/properties"
-    }
-  ];
+  // Single placeholder slide when no data is available
+  const placeholderSlide = {
+    image: "https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg",
+    title: "MateLuxy",
+    subtitle: "Real Estate",
+    description: "Discover your dream property with MateLuxy. We offer a complete service for buying, selling, and renting properties with a modern approach.",
+    buttonText1: "Learn More",
+    buttonLink1: "#",
+    buttonText2: "Explore Properties",
+    buttonLink2: "/properties"
+  };
 
   // Fetch banners from API
   useEffect(() => {
@@ -52,13 +30,14 @@ const Banner = () => {
         if (data && data.length > 0) {
           setSlides(data);
         } else {
-          setSlides(defaultSlides);
+          // Use a single placeholder slide instead of multiple dummy slides
+          setSlides([placeholderSlide]);
         }
         setLoading(false);
       } catch (err) {
         console.error('Error fetching home banners:', err);
         setError('Failed to load banners');
-        setSlides(defaultSlides);
+        setSlides([placeholderSlide]);
         setLoading(false);
       }
     };
@@ -66,10 +45,10 @@ const Banner = () => {
     fetchBanners();
   }, []);
 
-  // Initialize with default slides immediately to prevent rendering errors
+  // Initialize with placeholder slide immediately to prevent rendering errors
   useEffect(() => {
     if (slides.length === 0) {
-      setSlides(defaultSlides);
+      setSlides([placeholderSlide]);
     }
   }, []);
 
