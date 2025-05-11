@@ -20,51 +20,89 @@ const AgentsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [properties, setProperties] = useState([]);
   const itemsPerPage = 4;
 
-  // Fetch agents from API
+  // Fetch properties and agents from API
   useEffect(() => {
-    const fetchAgents = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/agents`);
         
-        if (!response.ok) {
+        // Fetch agents
+        const agentsResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/agents`);
+        if (!agentsResponse.ok) {
           throw new Error('Failed to fetch agents');
         }
+        const agentsData = await agentsResponse.json();
+        console.log("Agents data:", agentsData);
         
-        const data = await response.json();
+        // Fetch properties to count agent assignments
+        const propertiesResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/properties`);
+        if (!propertiesResponse.ok) {
+          throw new Error('Failed to fetch properties');
+        }
+        const propertiesData = await propertiesResponse.json();
+        console.log("Properties data:", propertiesData);
+        setProperties(propertiesData);
         
-        // Transform data to match our frontend structure
-        const transformedAgents = data.map(agent => ({
-          id: agent._id,
-          username: agent.username,
-          fullName: agent.fullName,
-          profileImage: agent.profileImage,
-          position: agent.position,
-          email: agent.email,
-          contactNumber: agent.contactNumber,
-          whatsapp: agent.whatsapp || "",
-          department: agent.department || "",
-          vcard: agent.vcard || "",
-          languages: agent.languages || [],
-          aboutMe: agent.aboutMe || "",
-          address: agent.address || "",
-          socialLinks: agent.socialLinks || [],
-          listings: 0, // You might want to add this field to your backend model
-        }));
+        // Count how many properties each agent has
+        const agentPropertyCounts = {};
+        
+        // Debug log for agent IDs
+        const agentIds = agentsData.map(agent => agent._id);
+        console.log("Agent IDs for reference:", agentIds);
+        
+        propertiesData.forEach(property => {
+          // Log each property's agent value to debug
+          console.log(`Property ${property._id} has agent:`, property.agent);
+          
+          if (property.agent) {
+            // Increment the count for this agent
+            // Make sure to compare with string IDs if needed
+            const agentId = typeof property.agent === 'object' ? property.agent._id : property.agent;
+            agentPropertyCounts[agentId] = (agentPropertyCounts[agentId] || 0) + 1;
+          }
+        });
+        
+        console.log("Agent property counts:", agentPropertyCounts);
+        
+        // Transform agent data and include property counts
+        const transformedAgents = agentsData.map(agent => {
+          const agentId = agent._id;
+          const propertyCount = agentPropertyCounts[agentId] || 0;
+          console.log(`Agent ${agentId} (${agent.fullName}) has ${propertyCount} properties`);
+          
+          return {
+            id: agentId,
+            username: agent.username,
+            fullName: agent.fullName,
+            profileImage: agent.profileImage,
+            position: agent.position,
+            email: agent.email,
+            contactNumber: agent.contactNumber,
+            whatsapp: agent.whatsapp || "",
+            department: agent.department || "",
+            vcard: agent.vcard || "",
+            languages: agent.languages || [],
+            aboutMe: agent.aboutMe || "",
+            address: agent.address || "",
+            socialLinks: agent.socialLinks || [],
+            listings: propertyCount,
+          };
+        });
         
         setAgents(transformedAgents);
         setFilteredAgents(transformedAgents);
       } catch (error) {
-        console.error('Error fetching agents:', error);
-        toast.error('Failed to load agents. Please try again later.');
+        console.error('Error fetching data:', error);
+        toast.error('Failed to load data. Please try again later.');
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchAgents();
+    fetchData();
   }, []);
 
   // Listen for search event from Header
@@ -107,14 +145,23 @@ const AgentsPage = () => {
   };
 
   const handleAgentAdded = (newAgent) => {
-    setAgents(prevAgents => [newAgent, ...prevAgents]);
+    // Add the new agent with 0 listings initially
+    const agentWithListings = {
+      ...newAgent,
+      listings: 0
+    };
+    setAgents(prevAgents => [agentWithListings, ...prevAgents]);
   };
 
   const handleAgentUpdated = (updatedAgent) => {
     setAgents(prevAgents => 
-      prevAgents.map(agent => 
-        agent.id === updatedAgent.id ? updatedAgent : agent
-      )
+      prevAgents.map(agent => {
+        if (agent.id === updatedAgent.id) {
+          // Preserve the listings count when updating an agent
+          return { ...updatedAgent, listings: agent.listings };
+        }
+        return agent;
+      })
     );
   };
 

@@ -183,6 +183,9 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
   const getInitialFormState = () => {
     // If we have initialData for editing, use that
     if (initialData) {
+      // Log the agent field for debugging
+      console.log("Initial data agent field:", initialData.agent);
+      
       // Transform backend data model to form model
       return {
         // General
@@ -211,7 +214,8 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         // Legal
         dldPermitNumber: initialData.dldPermitNumber || "",
         dldQrCode: initialData.dldQrCode || "",
-        agent: initialData.agent || "",
+        // Handle agent field carefully - could be an object with _id or a string ID
+        agent: initialData.agent ? (typeof initialData.agent === 'object' ? initialData.agent._id : initialData.agent) : "",
 
         // Location
         latitude: initialData.latitude || DEFAULT_COORDINATES.latitude,
@@ -364,9 +368,15 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
         const data = await agentApi.getAgents();
         if (data && Array.isArray(data)) {
           setAgents(data);
-          // Set the first agent as default if agents exist
-          if (data.length > 0) {
-            setForm(prev => ({ ...prev, agent: data[0]._id })); // Use _id instead of agentName
+          console.log("Available agents:", data);
+          
+          // When editing, make sure we keep the existing agent selection
+          if (isEditing && initialData && initialData.agent) {
+            console.log("Property has agent:", initialData.agent);
+            // Don't override agent if already set in initial data
+          } else if (data.length > 0) {
+            // Only set default agent if not in edit mode
+            setForm(prev => ({ ...prev, agent: data[0]._id }));
           }
         } else {
           console.error("Invalid agents data received:", data);
@@ -379,7 +389,7 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
     };
 
     fetchAgents();
-  }, []);
+  }, [isEditing, initialData]);
 
   // Cloudinary config from env
   const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`;

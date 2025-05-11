@@ -209,8 +209,6 @@ const MessagesPage = () => {
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [viewMode, setViewMode] = useState("split"); // 'split', 'list', or 'detail'
@@ -221,8 +219,76 @@ const MessagesPage = () => {
   const [messageToReply, setMessageToReply] = useState(null);
   const [replySubject, setReplySubject] = useState("");
   const [sendingReply, setSendingReply] = useState(false);
+  const [lastScrollTop, setLastScrollTop] = useState(0);
+  const [showTopbar, setShowTopbar] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [totalPages, setTotalPages] = useState(1);
 
   const messagesPerPage = 10;
+  const mainContentRef = useRef(null);
+  const messageListRef = useRef(null);
+
+  // Handle scroll to hide/show topbar and load more messages
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!mainContentRef.current) return;
+      
+      const scrollTop = mainContentRef.current.scrollTop;
+      
+      // Determine scroll direction for showing/hiding the topbar
+      if (scrollTop > lastScrollTop && scrollTop > 100) {
+        // Scrolling down & past threshold
+        setShowTopbar(false);
+      } else if (scrollTop < lastScrollTop || scrollTop < 50) {
+        // Scrolling up or near top
+        setShowTopbar(true);
+      }
+      
+      setLastScrollTop(scrollTop);
+
+      // Infinite scroll logic for message list
+      if (messageListRef.current && !loadingMore && hasMore) {
+        const { scrollTop, scrollHeight, clientHeight } = messageListRef.current;
+        if (scrollTop + clientHeight >= scrollHeight - 100) {
+          // User has scrolled to within 100px of the bottom, load more messages
+          loadMoreMessages();
+        }
+      }
+    };
+
+    const currentRef = mainContentRef.current;
+    if (currentRef) {
+      currentRef.addEventListener('scroll', handleScroll);
+    }
+    
+    return () => {
+      if (currentRef) {
+        currentRef.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [lastScrollTop, loadingMore, hasMore]);
+
+  // Load more messages when scrolling down
+  const loadMoreMessages = () => {
+    if (!hasMore || loadingMore) return;
+    
+    setLoadingMore(true);
+    
+    // Simulate loading delay (in a real app, you'd fetch from API here)
+    setTimeout(() => {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      
+      // If we've loaded all messages, set hasMore to false
+      if (nextPage * messagesPerPage >= filteredMessages.length) {
+        setHasMore(false);
+      }
+      
+      setLoadingMore(false);
+    }, 800);
+  };
 
   // Fetch messages from API
   const fetchMessages = async () => {
@@ -313,11 +379,8 @@ const MessagesPage = () => {
     return matchesSearch && message.status === activeTab;
   });
 
-  // Slice messages for current page
-  const currentMessages = filteredMessages.slice(
-    (currentPage - 1) * messagesPerPage,
-    currentPage * messagesPerPage
-  );
+  // Slice messages for current view based on the current page
+  const displayedMessages = filteredMessages.slice(0, page * messagesPerPage);
 
   // Update message status
   const updateMessageStatus = async (id, status) => {
@@ -469,7 +532,7 @@ const MessagesPage = () => {
   // Handle search input change
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
-    setCurrentPage(1); // Reset to first page on search
+    setPage(1); // Reset to first page on search
   };
   
   // Refresh messages
@@ -590,10 +653,15 @@ const MessagesPage = () => {
       initial="hidden"
       animate="visible"
       variants={fadeIn}
-      className="h-[calc(100vh-80px)] overflow-hidden bg-gray-50 rounded-xl shadow-sm"
+      className="h-[calc(100vh-80px)] overflow-hidden flex flex-col bg-gray-50 rounded-xl shadow-sm"
     >
-      {/* Modern header with animated stats */}
-      <div className="bg-white border-b border-gray-200 p-4">
+      {/* Modern header with animated stats - now with transition for hiding */}
+      <motion.div 
+        initial={{ y: 0, opacity: 1 }} 
+        animate={{ y: showTopbar ? 0 : '-100%', opacity: showTopbar ? 1 : 0 }}
+        transition={{ duration: 0.3 }}
+        className="bg-white border-b border-gray-200 p-4 z-20 sticky top-0"
+      >
         <motion.div 
           variants={slideUp}
           className="flex flex-col md:flex-row md:items-center justify-between gap-4 max-w-7xl mx-auto"
@@ -622,7 +690,7 @@ const MessagesPage = () => {
               variants={staggerContainer}
               initial="hidden"
               animate="visible"
-              className="flex gap-3"
+              className="flex flex-wrap md:flex-nowrap gap-3"
             >
               <motion.div variants={listItemVariant} className="bg-white rounded-lg px-4 py-3 shadow-sm border border-gray-200 flex items-center gap-3">
                 <div className="bg-red-100 p-2 rounded-full">
@@ -660,10 +728,15 @@ const MessagesPage = () => {
             </motion.div>
           )}
         </motion.div>
-      </div>
+      </motion.div>
       
-      {/* Modern search and filters bar */}
-      <div className="bg-white border-b border-gray-200 p-4">
+      {/* Modern search and filters bar - also with transition for hiding */}
+      <motion.div 
+        initial={{ y: 0, opacity: 1 }} 
+        animate={{ y: showTopbar ? 0 : '-100%', opacity: showTopbar ? 1 : 0 }}
+        transition={{ duration: 0.3, delay: 0.05 }}
+        className="bg-white border-b border-gray-200 p-4 z-10 sticky top-0"
+      >
         <motion.div 
           variants={slideUp}
           className="flex flex-col gap-4 max-w-7xl mx-auto"
@@ -741,7 +814,7 @@ const MessagesPage = () => {
             transition={{ delay: 0.1 }}
           >
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="bg-gray-100 p-1 rounded-lg w-full flex justify-start">
+              <TabsList className="bg-gray-100 p-1 rounded-lg w-full flex justify-start overflow-x-auto">
                 <TabsTrigger value="all" className="rounded-md data-[state=active]:bg-red-50 data-[state=active]:text-red-600 data-[state=active]:shadow-sm">
                   All
                 </TabsTrigger>
@@ -758,10 +831,13 @@ const MessagesPage = () => {
             </Tabs>
           </motion.div>
         </motion.div>
-      </div>
+      </motion.div>
       
-      {/* Main content area with split view */}
-      <div className="flex-1 flex overflow-hidden">
+      {/* Main content area with scroll capability */}
+      <div 
+        ref={mainContentRef}
+        className="flex-1 flex overflow-auto h-full"
+      >
         {loading ? (
           <div className="flex-1 flex justify-center items-center">
             <motion.div 
@@ -802,8 +878,9 @@ const MessagesPage = () => {
               }}
               transition={{ duration: 0.3 }}
               className={`border-r border-gray-200 overflow-y-auto h-full ${viewMode === 'detail' ? 'hidden' : 'block'}`}
+              ref={messageListRef}
             >
-              {currentMessages.length === 0 ? (
+              {filteredMessages.length === 0 ? (
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -822,9 +899,9 @@ const MessagesPage = () => {
                   variants={staggerContainer}
                   initial="hidden"
                   animate="visible"
-                  className="p-4 h-full overflow-y-auto max-h-[calc(100vh-220px)]"
+                  className="p-4 h-full overflow-y-auto"
                 >
-                  {currentMessages.map((message) => (
+                  {displayedMessages.map((message) => (
                     <MessageCard 
                       key={message._id} 
                       message={message} 
@@ -833,6 +910,26 @@ const MessagesPage = () => {
                       isSelected={selectedMessage && selectedMessage._id === message._id}
                     />
                   ))}
+                  
+                  {/* Loading indicator for infinite scroll */}
+                  {loadingMore && (
+                    <div className="flex justify-center items-center py-4">
+                      <motion.div 
+                        animate={{ rotate: 360 }}
+                        transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                        className="w-6 h-6 border-2 border-red-500 border-t-transparent rounded-full"
+                      />
+                      <span className="ml-2 text-sm text-gray-500">Loading more...</span>
+                    </div>
+                  )}
+                  
+                  {/* End of results indicator */}
+                  {!hasMore && filteredMessages.length > 0 && (
+                    <div className="text-center py-4 text-sm text-gray-500">
+                      End of messages
+                    </div>
+                  )}
+                  
                   <div ref={messagesEndRef} />
                 </motion.div>
               )}
@@ -912,7 +1009,7 @@ const MessagesPage = () => {
                           </div>
                         </div>
                         
-                        <div className="mt-3 flex gap-2">
+                        <div className="mt-3 flex flex-wrap gap-2">
                           <div className="flex items-center text-xs text-gray-500">
                             <PhoneCall className="h-3 w-3 mr-1" />
                             {selectedMessage.phone || "No phone provided"}
@@ -1059,9 +1156,9 @@ const MessagesPage = () => {
         )}
       </div>
       
-      {/* Modern pagination */}
+      {/* Modern pagination - now sticky at the bottom */}
       {!loading && !error && filteredMessages.length > 0 && (
-        <div className="bg-white border-t border-gray-200 p-4">
+        <div className="bg-white border-t border-gray-200 p-4 sticky bottom-0 z-10">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -1069,24 +1166,24 @@ const MessagesPage = () => {
             className="flex justify-center"
           >
             <Pagination>
-              <PaginationContent>
+              <PaginationContent className="flex flex-wrap justify-center">
                 <PaginationItem>
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <PaginationPrevious 
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                      className={currentPage === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-red-50 transition-colors"}
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className={page === 1 ? "opacity-50 cursor-not-allowed" : "hover:bg-red-50 transition-colors"}
                     />
                   </motion.div>
                 </PaginationItem>
                 
                 {[...Array(totalPages)].map((_, i) => (
-                  <PaginationItem key={i} className={currentPage === i + 1 ? "hidden sm:block" : totalPages > 5 && (i < currentPage - 2 || i > currentPage + 0) ? "hidden sm:block" : ""}>
+                  <PaginationItem key={i} className={page === i + 1 ? "hidden sm:block" : totalPages > 5 && (i < page - 2 || i > page + 0) ? "hidden sm:block" : ""}>
                     <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                       <PaginationLink
-                        onClick={() => setCurrentPage(i + 1)}
-                        isActive={currentPage === i + 1}
-                        className={currentPage === i + 1 ? "bg-red-50 text-red-600 hover:bg-red-100 border-red-200 font-medium transition-colors" : "hover:bg-red-50 transition-colors"}
+                        onClick={() => setPage(i + 1)}
+                        isActive={page === i + 1}
+                        className={page === i + 1 ? "bg-red-50 text-red-600 hover:bg-red-100 border-red-200 font-medium transition-colors" : "hover:bg-red-50 transition-colors"}
                       >
                         {i + 1}
                       </PaginationLink>
@@ -1097,9 +1194,9 @@ const MessagesPage = () => {
                 <PaginationItem>
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <PaginationNext 
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                      disabled={currentPage === totalPages}
-                      className={currentPage === totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-red-50 transition-colors"}
+                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                      className={page === totalPages ? "opacity-50 cursor-not-allowed" : "hover:bg-red-50 transition-colors"}
                     />
                   </motion.div>
                 </PaginationItem>

@@ -219,6 +219,7 @@ export function Header({ searchPlaceholder, onSearch }) {
             id: data.admin._id,
             fullName: data.admin.fullName,
             firstName: firstName,
+            
             email: data.admin.email,
             username: data.admin.username,
             role: data.admin.role || 'Administrator',
@@ -411,6 +412,19 @@ export function Header({ searchPlaceholder, onSearch }) {
       console.error("Error marking all notifications as read:", error);
     }
   };
+
+  // Reset body styles when settings dialog closes to prevent UI lockup
+  useEffect(() => {
+    if (!isSettingsOpen) {
+      // Short timeout to ensure the dialog has fully closed
+      const timer = setTimeout(() => {
+        document.body.style.pointerEvents = '';
+        document.body.style.overflow = '';
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isSettingsOpen]);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -956,9 +970,9 @@ export function Header({ searchPlaceholder, onSearch }) {
           <DropdownMenuContent align="end" className="mr-4 w-72 p-0 overflow-hidden shadow-xl border border-gray-100 rounded-xl bg-white">
             <div className="px-6 py-5 border-b border-gray-100">
               <div className="flex items-center">
-                <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center mr-4 border-2 border-white shadow text-white">
+                <div className="h-14 w-14 rounded-xl overflow-hidden bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center mr-4 border-2 border-white shadow text-white">
                   {adminData?.firstName ? (
-                    <span className="text-xl font-bold">{adminData.firstName.charAt(0)}</span>
+                    <img src={adminData.profileImage} alt={adminData.fullName} className="h-full w-full object-cover" />
                   ) : (
                     <User size={24} />
                   )}

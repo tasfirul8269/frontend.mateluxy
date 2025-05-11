@@ -116,6 +116,7 @@ export const PropertyFormDialog = ({
       };
       
       console.log(`${isEditing ? "Updating" : "Creating"} property:`, propertyData);
+      console.log("Agent field:", propertyData.agent); // Debug log for agent field
       
       if (isEditing && property) {
         // Update existing property
