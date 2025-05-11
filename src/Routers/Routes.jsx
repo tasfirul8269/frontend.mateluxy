@@ -16,6 +16,7 @@ import OffPlanSinglePage from "../pages/OffPlanSingle/OffPlanSInglePage";
 import OffPlanListingPage from "../pages/OffPlanProperties/OffPlanPropertyListingPage";
 import AdminSIgnInPage from "../pages/AdminSIgnInPage/AdminSignInPage";
 import AgentSignInPage from "../pages/AgentSignInPage/AgentSignInPage";
+import ResetPasswordPage from "../pages/ResetPasswordPage/ResetPasswordPage";
 import { ProtectedAdminRoute, PublicRoute } from "../pages/AdminPannel/ProtectedAdminRoute";
 import { ProtectedAgentRoute, PublicAgentRoute } from "../pages/AgentPannel/ProtectedAgentRoute";
 import AdminPannelPage from "@/pages/AdminPannelPages/AdminPannel";
@@ -173,6 +174,10 @@ const router = createBrowserRouter([
             {
                 path: "/admin-login",
                 element: <AdminSIgnInPage></AdminSIgnInPage>
+            },
+            {
+                path: "/reset-password/:token",
+                element: <ResetPasswordPage />
             }
         ]
     },

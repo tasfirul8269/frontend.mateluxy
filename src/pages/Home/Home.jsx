@@ -21,29 +21,29 @@ const Home = () => {
         </div>
         
         {/* Main Content */}
-        <div className="mt-12 sm:mt-14 md:mt-16 sm:px-3 md:px-4 lg:px-5 mx-auto">
+        <div className="mt-8 sm:mt-10 md:mt-12 sm:px-3 md:px-4 lg:px-5 mx-auto">
           {/* Services Section */}
-          <div className="mb-8 sm:mb-10 md:mb-12">
+          <div className="mb-6 sm:mb-7 md:mb-8">
             <Services></Services>
           </div>
           
           {/* Find Consultant Section */}
-          <div className="mb-8 sm:mb-10 md:mb-12">
+          <div className="mb-6 sm:mb-7 md:mb-8">
             <FindConsultant></FindConsultant>
           </div>
           
           {/* Top Properties Section */}
-          <div className="mb-8 sm:mb-10 md:mb-12">
+          <div className="mb-6 sm:mb-7 md:mb-8">
             <TopProperties></TopProperties>
           </div>
           
           {/* Location Category Section */}
-          <div className="mb-8 sm:mb-10 md:mb-12">
+          <div className="mb-6 sm:mb-7 md:mb-8">
             <LocationCategory></LocationCategory>
           </div>
           
           {/* Features and Amenities Section */}
-          <div className="mb-8 sm:mb-10 md:mb-12">
+          <div className="mb-6 sm:mb-7 md:mb-8">
             <FeaturesAmenities></FeaturesAmenities>
           </div>
           
