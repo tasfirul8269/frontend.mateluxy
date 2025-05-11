@@ -1,27 +1,77 @@
 import React, { useState, useEffect } from "react";
 import "../../components/Navbar/colors.css";
+import { getBannersByType } from "../../services/bannerService";
+import { Link } from "react-router-dom";
 
 const Banner = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  
-  // High-quality luxury property images from Pexels
-  const slides = [
+  const [slides, setSlides] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Default slides in case API fails
+  const defaultSlides = [
     {
       image: "https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg",
-      title: "Luxury Living",
-      subtitle: "Redefined"
+      title: "Off-Plan",
+      subtitle: "Investments",
+      description: "Secure your future with premium off-plan properties offering exceptional investment opportunities and modern living spaces.",
+      buttonText1: "Learn More",
+      buttonLink1: "#",
+      buttonText2: "View Off-Plan Properties",
+      buttonLink2: "/off-plan-properties"
     },
     {
       image: "https://images.pexels.com/photos/1732414/pexels-photo-1732414.jpeg",
-      title: "Premium",
-      subtitle: "Properties"
+      title: "Future",
+      subtitle: "Homes",
+      description: "Secure your future with premium off-plan properties offering exceptional investment opportunities and modern living spaces.",
+      buttonText1: "Learn More",
+      buttonLink1: "#",
+      buttonText2: "View Off-Plan Properties",
+      buttonLink2: "/off-plan-properties"
     },
     {
       image: "https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg",
-      title: "Exclusive",
-      subtitle: "Listings"
+      title: "Investment",
+      subtitle: "Opportunities",
+      description: "Secure your future with premium off-plan properties offering exceptional investment opportunities and modern living spaces.",
+      buttonText1: "Learn More",
+      buttonLink1: "#",
+      buttonText2: "View Off-Plan Properties",
+      buttonLink2: "/off-plan-properties"
     }
   ];
+
+  // Fetch banners from API
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        setLoading(true);
+        const data = await getBannersByType('offplan');
+        if (data && data.length > 0) {
+          setSlides(data);
+        } else {
+          setSlides(defaultSlides);
+        }
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching offplan banners:', err);
+        setError('Failed to load banners');
+        setSlides(defaultSlides);
+        setLoading(false);
+      }
+    };
+
+    fetchBanners();
+  }, []);
+  
+  // Initialize with default slides immediately to prevent rendering errors
+  useEffect(() => {
+    if (slides.length === 0) {
+      setSlides(defaultSlides);
+    }
+  }, []);
 
   // Auto-rotate slides
   useEffect(() => {
@@ -74,26 +124,26 @@ const Banner = () => {
             {/* Animated title with dynamic content */}
             <div className="overflow-hidden mb-4">
               <h1 className="text-4xl md:text-6xl font-bold text-white animate-fadeInUp" style={{animationDelay: '0.2s'}}>
-                {slides[currentSlide].title} <br />
-                <span className="text-[#FF2626]">{slides[currentSlide].subtitle}</span>
+                {slides.length > 0 && slides[currentSlide]?.title} <br />
+                <span className="text-[#FF2626]">{slides.length > 0 && slides[currentSlide]?.subtitle}</span>
               </h1>
             </div>
             
             {/* Animated description */}
             <div className="overflow-hidden mb-8">
               <p className="text-white/70 text-base md:text-lg max-w-md animate-fadeInUp" style={{animationDelay: '0.4s'}}>
-                We provide a complete service for the sale, purchase or rental of real estate with a modern approach and personalized experience.
+                {slides.length > 0 && slides[currentSlide]?.description}
               </p>
             </div>
             
             {/* Animated buttons */}
             <div className="flex flex-wrap gap-4 animate-fadeInUp" style={{animationDelay: '0.6s'}}>
-              <button className="px-6 py-3 text-sm md:text-base font-medium rounded-full border-2 border-white text-white hover:bg-white hover:text-[#FF2626] transition-all duration-300 backdrop-blur-sm">
-                Learn More
-              </button>
-              <button className="px-6 py-3 text-sm md:text-base font-medium rounded-full bg-[#FF2626] text-white hover:bg-[#FF4040] transition-all duration-300">
-                Explore Properties
-              </button>
+              <Link to={slides.length > 0 ? slides[currentSlide]?.buttonLink1 || '#' : '#'} className="px-6 py-3 text-sm md:text-base font-medium rounded-full border-2 border-white text-white hover:bg-white hover:text-[#FF2626] transition-all duration-300 backdrop-blur-sm">
+                {slides.length > 0 && slides[currentSlide]?.buttonText1}
+              </Link>
+              <Link to={slides.length > 0 ? slides[currentSlide]?.buttonLink2 || '/off-plan-properties' : '/off-plan-properties'} className="px-6 py-3 text-sm md:text-base font-medium rounded-full bg-[#FF2626] text-white hover:bg-[#FF4040] transition-all duration-300">
+                {slides.length > 0 && slides[currentSlide]?.buttonText2}
+              </Link>
             </div>
           </div>
         </div>
