@@ -120,10 +120,10 @@ const FeaturesAmenities = () => {
               {/* Card content */}
               <div className="p-6 flex flex-col items-center">
                 <motion.div 
-                  className="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center mb-4 shadow-md shadow-red-200 group-hover:shadow-red-300"
+                  className="w-16 h-16 rounded-full bg-white border border-gray-100 flex items-center justify-center mb-4 shadow-md group-hover:shadow-gray-200"
                   whileHover={{ scale: 1.1, rotate: 5 }}
                 >
-                  <div className="text-white">{item.icon}</div>
+                  <div className="text-red-600">{item.icon}</div>
                 </motion.div>
                 
                 <h3 className="font-semibold text-gray-800 text-center text-lg mb-2 group-hover:text-red-600 transition-colors">
