@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import SearchBar from './SearchBar';
 import CategoryFilter from './CategoryFilter';
 import PropertyCardSkeleton from './PropertyCardSkeleton';
@@ -21,6 +21,33 @@ const PropertyListing = ({ offPlanProjects }) => {
   const allOffPlanProjects = offPlanProjects.filter(
     project => project.category === "Off Plan"
   );
+  
+  // Calculate min and max prices from real property data
+  const priceRange = useMemo(() => {
+    let minPrice = Number.MAX_SAFE_INTEGER;
+    let maxPrice = 0;
+    
+    allOffPlanProjects.forEach(property => {
+      if (property.propertyPrice && !isNaN(property.propertyPrice)) {
+        const price = Number(property.propertyPrice);
+        if (price > 0) {
+          minPrice = Math.min(minPrice, price);
+          maxPrice = Math.max(maxPrice, price);
+        }
+      }
+    });
+    
+    // If no valid prices found, use default range
+    if (minPrice === Number.MAX_SAFE_INTEGER || maxPrice === 0) {
+      return { minPrice: 500000, maxPrice: 50000000 };
+    }
+    
+    // Round to nicer values
+    minPrice = Math.floor(minPrice / 100000) * 100000; // Round down to nearest 100K
+    maxPrice = Math.ceil(maxPrice / 1000000) * 1000000; // Round up to nearest million
+    
+    return { minPrice, maxPrice };
+  }, [allOffPlanProjects]);
   
   // Initialize data
   useEffect(() => {
@@ -147,7 +174,7 @@ const PropertyListing = ({ offPlanProjects }) => {
       <div className="relative">
           <Banner></Banner>
           <div className="sm:absolute sm:-bottom-16 sm:left-1/2 sm:transform sm:-translate-x-1/2 w-full max-w-4xl z-40 ">
-          <SearchBar onSearch={handleSearch} />
+          <SearchBar onSearch={handleSearch} priceRange={priceRange} />
           </div>
         </div>
       <div className="mt-16 mb-8">

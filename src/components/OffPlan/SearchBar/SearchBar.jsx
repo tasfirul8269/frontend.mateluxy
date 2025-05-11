@@ -5,7 +5,7 @@ import { BedsSelector } from './BedsSelector';
 import { CompletionSelector } from './CompletionSelector';
 import './SearchBar.css';
 
-const SearchBar = ({ onSearch }) => {
+const SearchBar = ({ onSearch, priceRange = { minPrice: 500000, maxPrice: 50000000 } }) => {
   const [searchParams, setSearchParams] = useState({
     searchTerm: '',
     minPrice: null,
@@ -73,6 +73,7 @@ const SearchBar = ({ onSearch }) => {
               minPrice={searchParams.minPrice}
               maxPrice={searchParams.maxPrice}
               onChange={handlePriceChange}
+              realPriceRange={priceRange}
             />
             <BedsSelector
               value={searchParams.beds}
@@ -100,6 +101,7 @@ const SearchBar = ({ onSearch }) => {
               minPrice={searchParams.minPrice}
               maxPrice={searchParams.maxPrice}
               onChange={handlePriceChange}
+              realPriceRange={priceRange}
             />
             <BedsSelector
               value={searchParams.beds}

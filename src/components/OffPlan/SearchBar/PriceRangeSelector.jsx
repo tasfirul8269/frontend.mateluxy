@@ -1,27 +1,74 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
-export const PriceRangeSelector = ({ minPrice, maxPrice, onChange }) => {
-  const priceOptions = [
-    { value: null, label: 'Min Price' },
-    { value: 500000, label: 'AED 500K' },
-    { value: 1000000, label: 'AED 1M' },
-    { value: 2000000, label: 'AED 2M' },
-    { value: 3000000, label: 'AED 3M' },
-    { value: 5000000, label: 'AED 5M' },
-    { value: 10000000, label: 'AED 10M' },
-    { value: 20000000, label: 'AED 20M' },
-  ];
+export const PriceRangeSelector = ({ 
+  minPrice, 
+  maxPrice, 
+  onChange, 
+  realPriceRange = { minPrice: 500000, maxPrice: 50000000 } 
+}) => {
+  // Generate price options based on real min and max prices
+  const priceOptions = useMemo(() => {
+    const options = [{ value: null, label: 'Min Price' }];
+    
+    // Add dynamically generated price options based on the real price range
+    const minPriceValue = realPriceRange.minPrice;
+    const maxPriceValue = realPriceRange.maxPrice;
+    
+    // Calculate appropriate increments based on the price range
+    let increment;
+    if (maxPriceValue <= 5000000) {
+      increment = 500000; // 500K increments for lower ranges
+    } else if (maxPriceValue <= 10000000) {
+      increment = 1000000; // 1M increments for mid ranges
+    } else {
+      increment = 2000000; // 2M increments for higher ranges
+    }
+    
+    // Generate price options
+    let currentPrice = minPriceValue;
+    while (currentPrice < maxPriceValue) {
+      const formattedLabel = currentPrice >= 1000000 
+        ? `AED ${(currentPrice / 1000000).toFixed(1)}M`.replace('.0M', 'M') 
+        : `AED ${(currentPrice / 1000).toFixed(0)}K`;
+      
+      options.push({ value: currentPrice, label: formattedLabel });
+      currentPrice += increment;
+    }
+    
+    return options;
+  }, [realPriceRange]);
   
-  const maxPriceOptions = [
-    { value: null, label: 'Max Price' },
-    { value: 1000000, label: 'AED 1M' },
-    { value: 2000000, label: 'AED 2M' },
-    { value: 3000000, label: 'AED 3M' },
-    { value: 5000000, label: 'AED 5M' },
-    { value: 10000000, label: 'AED 10M' },
-    { value: 20000000, label: 'AED 20M' },
-    { value: 50000000, label: 'AED 50M' },
-  ].filter(option => option.value === null || option.value > (minPrice || 0));
+  // Generate max price options based on the selected min price
+  const maxPriceOptions = useMemo(() => {
+    const options = [{ value: null, label: 'Max Price' }];
+    
+    // Add dynamically generated price options based on the real price range
+    const minPriceValue = minPrice || realPriceRange.minPrice;
+    const maxPriceValue = realPriceRange.maxPrice;
+    
+    // Calculate appropriate increments based on the price range
+    let increment;
+    if (maxPriceValue <= 5000000) {
+      increment = 500000; // 500K increments for lower ranges
+    } else if (maxPriceValue <= 10000000) {
+      increment = 1000000; // 1M increments for mid ranges
+    } else {
+      increment = 2000000; // 2M increments for higher ranges
+    }
+    
+    // Generate price options starting from the selected min price
+    let currentPrice = Math.max(minPriceValue + increment, realPriceRange.minPrice + increment);
+    while (currentPrice <= maxPriceValue) {
+      const formattedLabel = currentPrice >= 1000000 
+        ? `AED ${(currentPrice / 1000000).toFixed(1)}M`.replace('.0M', 'M') 
+        : `AED ${(currentPrice / 1000).toFixed(0)}K`;
+      
+      options.push({ value: currentPrice, label: formattedLabel });
+      currentPrice += increment;
+    }
+    
+    return options;
+  }, [minPrice, realPriceRange]);
   
   return (
     <div className="price-selector grid grid-cols-2 gap-2 ">
