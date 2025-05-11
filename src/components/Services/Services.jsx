@@ -10,7 +10,7 @@ const servicesData = [
     icon: <FaHome className="text-4xl text-red-600" />,
     backgroundImage: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80",
     buttonText: "Explore Properties",
-    link: "/properties?category=residential",
+    link: "/properties",
     hasSearch: false,
     stats: [
       { value: "500+", label: "Properties" },
@@ -24,7 +24,7 @@ const servicesData = [
     icon: <FaBuilding className="text-4xl text-red-600" />,
     backgroundImage: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1169&q=80",
     buttonText: "View Commercial",
-    link: "/properties?category=commercial",
+    link: "/properties",
     hasSearch: false,
     stats: [
       { value: "200+", label: "Office Spaces" },
@@ -38,7 +38,7 @@ const servicesData = [
     icon: <FaClipboardCheck className="text-4xl text-red-600" />,
     backgroundImage: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1073&q=80",
     buttonText: "Our Services",
-    link: "/services/property-management",
+    link: "/our-team",
     hasSearch: false,
     stats: [
       { value: "300+", label: "Properties Managed" },
