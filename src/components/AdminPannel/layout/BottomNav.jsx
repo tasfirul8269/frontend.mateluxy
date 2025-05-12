@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Users, Settings, MessageSquare } from "lucide-react";
+import { Home, Users, Settings, MessageSquare, Calendar, Image } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function BottomNav() {
@@ -18,14 +18,19 @@ export function BottomNav() {
       href: "/admin-pannel/agents",
     },
     {
-      icon: Settings,
-      label: "Admins",
-      href: "/admin-pannel/admins",
+      icon: Calendar,
+      label: "Requests",
+      href: "/admin-pannel/property-requests",
     },
     {
       icon: MessageSquare,
       label: "Messages",
       href: "/admin-pannel/messages",
+    },
+    {
+      icon: Settings,
+      label: "More",
+      href: "/admin-pannel/admins",
     },
   ];
 

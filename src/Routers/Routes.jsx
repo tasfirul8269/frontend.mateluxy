@@ -28,6 +28,7 @@ import AgentsPage from "@/pages/AdminPannelPages/AgentsPage";
 import AdminsPage from "@/pages/AdminPannelPages/AdminsPage";
 import MessagesPage from "../pages/AdminPannelPages/MessagesPage";
 import BannerPage from "../pages/AdminPannelPages/BannerPage";
+import PropertyRequestsPage from "../pages/AdminPannelPages/PropertyRequestsPage";
 import { AgentProvider } from '@/components/AdminPannelAgents/context/AgentContext';
 
 // For debugging
@@ -145,6 +146,10 @@ const router = createBrowserRouter([
                     {
                         path: "banners",
                         element: <BannerPage />
+                    },
+                    {
+                        path: "property-requests",
+                        element: <PropertyRequestsPage />
                     }
                 ]
             },
