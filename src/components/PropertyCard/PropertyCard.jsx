@@ -245,7 +245,7 @@ const PropertyCard = ({ property, loading, error }) => {
         {/* Action Buttons */}
         <div className="flex w-full items-center justify-between md:justify-start gap-3 border-t border-gray-200 mt-4 pt-4">
           <button 
-            onClick={() => window.location.href = "tel:+1234567890"}
+            onClick={() => window.location.href = `tel:${agentData?.contactNumber || '+1234567890'}`}
             className="cursor-pointer flex justify-center items-center gap-2 text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 px-4 py-2.5 rounded-lg transition-colors duration-200 flex-1"
           >
             <FaPhone className="text-sm text-gray-500" />
@@ -253,7 +253,7 @@ const PropertyCard = ({ property, loading, error }) => {
           </button>
 
           <button
-            onClick={() => window.location.href = "https://wa.me/1234567890"}
+            onClick={() => window.location.href = `https://wa.me/${(agentData?.whatsapp || agentData?.contactNumber || '+1234567890').replace(/[^0-9]/g, '')}`}
             className="flex cursor-pointer justify-center items-center gap-2 text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 px-4 py-2.5 rounded-lg transition-colors duration-200 flex-1"
           >
             <FaWhatsapp className="text-green-500" />
