@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { FiSearch, FiSliders, FiMapPin, FiHome, FiDollarSign } from "react-icons/fi";
 import * as DropdownMenu from "../AdminPannel/ui/dropdown-menu";
 import { Slider } from "../AdminPannel/ui/slider";
+import DIRHAM from "@/assets/uae-dirham.png"; // Assuming you have a dirham icon
 
 const PropertySearchBar = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -396,7 +397,7 @@ const PropertySearchBar = () => {
               <DropdownMenu.DropdownMenuTrigger asChild>
                 <button className="w-full flex items-center justify-between pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all">
                   <div className="flex items-center">
-                    <FiDollarSign className="absolute left-3 text-red-500" />
+                    <img src={DIRHAM} className="w-5 absolute left-3 text-red-500" />
                     <span className="text-gray-700">
                       {(searchParams.priceRange[0] > minMaxPrices.min || searchParams.priceRange[1] < minMaxPrices.max) 
                         ? `${formatPrice(searchParams.priceRange[0])} - ${formatPrice(searchParams.priceRange[1])}` 

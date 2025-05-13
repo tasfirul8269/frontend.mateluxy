@@ -5,10 +5,10 @@ import { MapPin, Phone, Mail, ExternalLink, Building, Calendar, Clock, Instagram
 const OfficeInfo = () => {
   // Social media links
   const socialLinks = [
-    { icon: Instagram, href: "https://instagram.com/mateluxy", color: "#E1306C", name: "Instagram" },
-    { icon: Facebook, href: "https://facebook.com/mateluxy", color: "#1877F2", name: "Facebook" },
-    { icon: Linkedin, href: "https://linkedin.com/company/mateluxy", color: "#0A66C2", name: "LinkedIn" },
-    { icon: Twitter, href: "https://twitter.com/mateluxy", color: "#1DA1F2", name: "Twitter" }
+    { icon: Instagram, href: "https://www.instagram.com/mateluxyrealestate", color: "#E1306C", name: "Instagram" },
+    { icon: Facebook, href: "https://www.facebook.com/MateLuxy", color: "#1877F2", name: "Facebook" },
+    { icon: Linkedin, href: "https://ae.linkedin.com/company/mateluxy-real-estate", color: "#0A66C2", name: "LinkedIn" },
+    { icon: Twitter, href: "https://x.com/mateluxy", color: "#1DA1F2", name: "Twitter" }
   ];
 
   // Contact information
@@ -29,7 +29,7 @@ const OfficeInfo = () => {
     contact: {
       title: "Get in Touch Directly",
       icon: Phone,
-      phone: "+971 58 559 0085",
+      phone: "04 572 5420",
       email: "info@mateluxy.com",
       responseTime: "We typically respond within in only 30 minutes"
     }

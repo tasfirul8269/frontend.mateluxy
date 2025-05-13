@@ -31,10 +31,10 @@ const Contact = () => {
 
   // Social media links
   const socialLinks = [
-    { icon: Instagram, href: "https://instagram.com/mateluxy", color: "#E1306C", name: "Instagram" },
-    { icon: Facebook, href: "https://facebook.com/mateluxy", color: "#1877F2", name: "Facebook" },
-    { icon: Linkedin, href: "https://linkedin.com/company/mateluxy", color: "#0A66C2", name: "LinkedIn" },
-    { icon: Twitter, href: "https://twitter.com/mateluxy", color: "#1DA1F2", name: "Twitter" }
+    { icon: Instagram, href: "https://www.instagram.com/mateluxyrealestate", color: "#E1306C", name: "Instagram" },
+    { icon: Facebook, href: "https://www.facebook.com/MateLuxy", color: "#1877F2", name: "Facebook" },
+    { icon: Linkedin, href: "https://ae.linkedin.com/company/mateluxy-real-estate", color: "#0A66C2", name: "LinkedIn" },
+    { icon: Twitter, href: "https://x.com/mateluxy", color: "#1DA1F2", name: "Twitter" }
   ];
 
   // Contact methods
@@ -42,8 +42,8 @@ const Contact = () => {
     {
       icon: Phone,
       title: "Call Us",
-      content: "+971 58 559 0085",
-      action: "tel:+971585590085",
+      content: "04 572 5420",
+      action: "tel:045725420",
       color: "#4CAF50"
     },
     {
@@ -57,7 +57,7 @@ const Contact = () => {
       icon: Clock,
       title: "Working Hours",
       content: "Mon-Fri: 9AM-6PM",
-      subContent: "Sat: 10AM-4PM | Sun: Closed",
+      subContent: "Sat: 9AM-2PM | Sun: Closed",
       color: "#FF9800"
     }
   ];
@@ -254,7 +254,7 @@ const Contact = () => {
                   </div>
                   <div className="text-right">
                     <p className="font-medium">9:00 AM — 6:00 PM</p>
-                    <p className="font-medium">10:00 AM — 4:00 PM</p>
+                    <p className="font-medium">9:00 AM — 2:00 PM</p>
                     <p className="font-medium">Closed</p>
                   </div>
                 </div>
@@ -319,7 +319,7 @@ const Contact = () => {
                   <span>Call</span>
                 </motion.a>
                 <motion.a 
-                  href="https://wa.me/971585590085"
+                  href="https://wa.me/+971585590085"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] py-3 rounded-xl text-white hover:shadow-lg transition-all duration-300 font-medium"
@@ -374,7 +374,7 @@ const Contact = () => {
               </div>
               
               <motion.a 
-                href="https://instagram.com/mateluxy"
+                href="https://www.instagram.com/mateluxyrealestate"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-purple-500 py-3 rounded-xl text-white hover:shadow-lg transition-all duration-300 w-full font-medium mt-auto"
