@@ -25,6 +25,8 @@ const navigation = [
   },
   { label: 'Contact', path: '/contact' },
   { label: 'Team', path: '/our-team' },
+  { label: 'News', path: '/news' },
+
 ];
 
 const HeaderNav = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {

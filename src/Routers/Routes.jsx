@@ -32,6 +32,7 @@ import PropertyRequestsPage from "../pages/AdminPannelPages/PropertyRequestsPage
 import { AgentProvider } from '@/components/AdminPannelAgents/context/AgentContext';
 import NewsPage from "../pages/News/NewsPage";
 import NewsDetailPage from "../pages/News/NewsDetailPage";
+import NewsManagementPage from "../pages/AdminPannelPages/NewsManagementPage";
 
 // For debugging
 const DebugMessagesPage = () => {
@@ -121,8 +122,7 @@ const router = createBrowserRouter([
             {
                 path: "/map-view/:category",
                 element: <MapView />
-            },
-
+            }
         ]
     },
     {
@@ -159,6 +159,10 @@ const router = createBrowserRouter([
                     {
                         path: "property-requests",
                         element: <PropertyRequestsPage />
+                    },
+                    {
+                        path: "news",
+                        element: <NewsManagementPage />
                     }
                 ]
             },
