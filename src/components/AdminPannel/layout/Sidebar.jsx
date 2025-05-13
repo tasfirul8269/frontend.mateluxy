@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Users, Settings,Building, Shield,MessageCircle , ChevronLeft, ChevronRight, MenuIcon, MessageSquare, Image, Calendar } from "lucide-react";
+import { Home, Users, Settings, Building, Shield, MessageCircle, ChevronLeft, ChevronRight, MenuIcon, MessageSquare, Image, Calendar, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/AdminPannel/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import logo  from "@/assets/logo.png"; // Adjust the path to your logo
+import logo from "@/assets/logo.png"; // Adjust the path to your logo
 
 const navItems = [
   {
@@ -32,6 +32,11 @@ const navItems = [
     icon: Image,
     label: "Banners",
     href: "/admin-pannel/banners",
+  },
+  {
+    icon: FileText,
+    label: "News",
+    href: "/admin-pannel/news",
   },
   {
     icon: Shield,

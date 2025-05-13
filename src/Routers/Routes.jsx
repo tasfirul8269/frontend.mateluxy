@@ -30,6 +30,8 @@ import MessagesPage from "../pages/AdminPannelPages/MessagesPage";
 import BannerPage from "../pages/AdminPannelPages/BannerPage";
 import PropertyRequestsPage from "../pages/AdminPannelPages/PropertyRequestsPage";
 import { AgentProvider } from '@/components/AdminPannelAgents/context/AgentContext';
+import NewsPage from "../pages/News/NewsPage";
+import NewsDetailPage from "../pages/News/NewsDetailPage";
 
 // For debugging
 const DebugMessagesPage = () => {
@@ -78,7 +80,14 @@ const router = createBrowserRouter([
                 loader:  () => fetch(`${import.meta.env.VITE_API_URL}/api/properties`),
                 element: <OffPlanListingPage></OffPlanListingPage>
             },
-
+            {
+                path: "/news",
+                element: <NewsPage></NewsPage>
+            },
+            {
+                path: "/news/:slug",
+                element: <NewsDetailPage></NewsDetailPage>
+            },
             {
                 path: "/contact",
                 element: <Contact></Contact>

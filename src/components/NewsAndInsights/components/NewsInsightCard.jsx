@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { FiCalendar, FiTag, FiArrowRight } from 'react-icons/fi';
 
 const NewsInsightCard = ({newsInsight}) => {
@@ -36,9 +37,12 @@ const NewsInsightCard = ({newsInsight}) => {
                 {newsInsight.description}
             </p>
             
-            <button className="flex items-center text-[#FF2626] font-medium mt-auto group-hover:underline">
+            <Link 
+                to={`/news/${newsInsight.slug || newsInsight._id || newsInsight.id}`} 
+                className="flex items-center text-[#FF2626] font-medium mt-auto group-hover:underline"
+            >
                 Read More <FiArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
-            </button>
+            </Link>
         </div>
     );
 };
