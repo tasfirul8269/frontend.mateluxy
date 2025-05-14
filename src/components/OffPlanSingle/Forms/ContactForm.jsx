@@ -78,7 +78,7 @@ const ContactForm = ({ property }) => {
           <h3 className="text-xl font-bold text-gray-800 mb-2 text-center">Request Submitted!</h3>
           <p className="text-gray-600 text-center mb-6">
             Thank you for your interest in {property?.propertyTitle || 'this property'}. 
-            One of our property experts will contact you shortly.
+            Your inquiry has been sent to the agent managing this property, and they will contact you shortly.
           </p>
           <button 
             onClick={() => setFormSubmitted(false)}

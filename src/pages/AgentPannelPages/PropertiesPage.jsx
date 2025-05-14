@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Filter } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { PropertyCard } from "@/components/AgentPannel/PropertyCard";
 import { toast } from "sonner";
+import { PropertyFormDialog } from '@/components/AgentPannel/PropertyFormDialog';
 
 const PropertiesPage = () => {
+  const location = useLocation(); // Get location to detect URL changes
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -12,10 +14,13 @@ const PropertiesPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('All');
   const [isLoading, setIsLoading] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [propertyToEdit, setPropertyToEdit] = useState(null);
 
   useEffect(() => {
     fetchProperties();
-  }, []);
+    // Re-fetch when the URL query parameters change (refresh param)
+  }, [location.search]);
   
   // Function to fetch properties
   const fetchProperties = async () => {
@@ -45,10 +50,10 @@ const PropertiesPage = () => {
       
       const propertiesData = await propertiesRes.json();
       
-      // Filter to only include properties where agent field matches agentData._id
-      const agentProperties = propertiesData.filter(property => property.agent === agentData._id);
-      
-      setProperties(agentProperties);
+      // Don't filter again - just use the properties returned by the API
+      // This avoids issues where property.agent might be an object instead of just the ID
+      setProperties(propertiesData);
+      console.log("Fetched properties:", propertiesData.length);
     } catch (err) {
       console.error('Error fetching data:', err);
       setError('Failed to load properties. Please try again later.');
@@ -68,6 +73,23 @@ const PropertiesPage = () => {
 
   // Properties count
   const propertyCount = properties.length;
+
+  // Handle edit property
+  const handleEditProperty = (propertyId) => {
+    const property = properties.find(p => p._id === propertyId);
+    if (property) {
+      setPropertyToEdit(property);
+      setIsEditDialogOpen(true);
+    } else {
+      toast.error("Property not found");
+    }
+  };
+
+  // Handle property update
+  const handlePropertyUpdated = (updatedProperty) => {
+    fetchProperties(); // Refresh the properties list
+    toast.success("Property updated successfully");
+  };
 
   // Handle property deletion
   const handleDeleteProperty = async (propertyId) => {
@@ -181,11 +203,27 @@ const PropertiesPage = () => {
                 key={property._id} 
                 property={property} 
                 onDelete={handleDeleteProperty}
+                onEdit={() => handleEditProperty(property._id)}
               />
             ))}
           </div>
         )}
       </div>
+
+      {/* Edit Property Dialog */}
+      {propertyToEdit && (
+        <PropertyFormDialog 
+          isOpen={isEditDialogOpen} 
+          onClose={() => {
+            setIsEditDialogOpen(false);
+            setPropertyToEdit(null);
+          }}
+          property={propertyToEdit}
+          isEditing={true}
+          agentData={agentData}
+          onPropertyUpdated={handlePropertyUpdated}
+        />
+      )}
     </div>
   );
 };

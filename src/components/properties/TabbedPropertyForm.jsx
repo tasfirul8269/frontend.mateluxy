@@ -133,7 +133,7 @@ const MapPreview = React.memo(({ latitude, longitude, zoomLevel, onMapClick }) =
   );
 });
 
-export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategory, initialData = null, isEditing = false, onFormChange = null }) {
+export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategory, initialData = null, isEditing = false, onFormChange = null, isAgentPanel = false, agentId = null }) {
   const [activeTab, setActiveTab] = useState(0);
   const [agents, setAgents] = useState([]);
 
@@ -274,6 +274,7 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
       zoomLevel: DEFAULT_COORDINATES.zoom.toString(),
       features: [], // Initialize as empty array
       amenities: [], // Initialize as empty array
+      completionDate: "", // Added completion date for all property types
       category: selectedCategory,
     };
 
@@ -1151,19 +1152,28 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                 </div>
                 <div className="mb-6">
                   <label className="block text-base font-medium mb-2">Agent</label>
-                  <select
-                    name="agent"
-                    value={form.agent}
-                    onChange={handleInput}
-                    className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition appearance-none"
-                  >
-                    <option value="">Select an agent</option>
-                    {agents.map(agent => (
-                      <option key={agent._id} value={agent._id}>
-                        {agent.fullName}
-                      </option>
-                    ))}
-                  </select>
+                  {isAgentPanel ? (
+                    // When in agent panel, show a disabled field with the agent name
+                    <div className="w-full rounded-lg border border-[#e5e7eb] bg-[#f3f4f6] px-4 py-3 text-gray-700">
+                      {agents.find(a => a._id === agentId)?.fullName || "Your Account"}
+                      <input type="hidden" name="agent" value={form.agent} />
+                    </div>
+                  ) : (
+                    // In admin panel, show the normal dropdown
+                    <select
+                      name="agent"
+                      value={form.agent}
+                      onChange={handleInput}
+                      className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition appearance-none"
+                    >
+                      <option value="">Select an agent</option>
+                      {agents.map(agent => (
+                        <option key={agent._id} value={agent._id}>
+                          {agent.fullName}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
               </div>
@@ -1181,6 +1191,7 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                   className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
                 />
               </div>
+           
               <div className="bg-white rounded-2xl p-6 shadow border border-[#f3f3f3] flex flex-col items-center justify-center h-auto">
 
                 <div className="text-lg font-semibold mb-3">DLD QR Code</div>
@@ -1637,6 +1648,16 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
                       className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
                     />
                   </div>
+                </div>
+                <div className="mt-6">
+                  <label className="block text-base font-medium mb-2">Completion Date</label>
+                  <input
+                    name="completionDate"
+                    value={form.completionDate}
+                    onChange={handleInput}
+                    type="date"
+                    className="w-full rounded-lg border border-[#e5e7eb] bg-[#fafafa] px-4 py-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#ff4d4f]/30 focus:border-[#ff4d4f] transition"
+                  />
                 </div>
               </div>
             )}

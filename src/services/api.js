@@ -94,6 +94,7 @@ export const propertyApi = {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
+        credentials: 'include', // Include credentials for authentication
         body: JSON.stringify(completeData),
         mode: 'cors', // Explicitly set CORS mode
       });
@@ -133,6 +134,7 @@ export const propertyApi = {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
+        credentials: 'include', // Include credentials for authentication
         body: JSON.stringify(completeData),
         mode: 'cors',
       });

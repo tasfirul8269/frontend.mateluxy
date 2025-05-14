@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import ProCard from "../ProCard/ProCard";
 import { FaChevronLeft, FaChevronRight, FaSpinner } from 'react-icons/fa';
@@ -172,10 +171,9 @@ const TopProperties = () => {
     
     try {
       const date = new Date(dateString);
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return `${months[date.getMonth()]}. ${date.getFullYear()}`;
-    } catch (error) {
-      return dateString;
+      return date.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    } catch (e) {
+      return dateString; // If parsing fails, return the original string
     }
   };
 

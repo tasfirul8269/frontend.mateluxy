@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
-import { PropertyCategorySelector } from '@/components/AgentPannel/PropertyCategorySelector';
-import { RegularPropertyForm } from '@/components/AgentPannel/RegularPropertyForm';
-import { OffPlanPropertyForm } from '@/components/AgentPannel/OffPlanPropertyForm';
+import { ArrowLeft, Plus } from 'lucide-react';
+import { PropertyFormDialog } from '@/components/AgentPannel/PropertyFormDialog';
+import { FloatingActionButton } from "@/components/AdminPannel/ui/UIComponents";
 
 const AddPropertyPage = () => {
   const navigate = useNavigate();
   const [agentData, setAgentData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [isFormDialogOpen, setIsFormDialogOpen] = useState(true);
 
   useEffect(() => {
     const fetchAgentData = async () => {
@@ -34,73 +33,21 @@ const AddPropertyPage = () => {
     fetchAgentData();
   }, [navigate]);
 
-  const handleSelectCategory = (category) => {
-    setSelectedCategory(category);
+  const handleAddProperty = () => {
+    setIsFormDialogOpen(true);
   };
 
-  const handleCancelForm = () => {
-    // Go back to category selection
-    setSelectedCategory(null);
+  const handleCloseDialog = () => {
+    setIsFormDialogOpen(false);
+    navigate('/agent-pannel/properties');
   };
 
-  const handleSubmitProperty = async (propertyData) => {
-    setLoading(true);
-    setError(null);
+  const handlePropertySubmitted = (property) => {
+    console.log("Property added:", property);
     
-    try {
-      console.log("Submitting property data:", propertyData);
-      
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/properties`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(propertyData),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Server error: ${response.status} ${response.statusText}`);
-      }
-      
-      const savedProperty = await response.json();
-      console.log("Property added successfully:", savedProperty);
-      
-      navigate('/agent-pannel/properties');
-    } catch (error) {
-      console.error('Error adding property:', error);
-      setError(error.message || 'An error occurred while adding the property');
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Render the appropriate form based on the selected category
-  const renderForm = () => {
-    if (!selectedCategory) {
-      return <PropertyCategorySelector onSelectCategory={handleSelectCategory} />;
-    }
-    
-    if (selectedCategory === 'Off Plan') {
-      return (
-        <OffPlanPropertyForm
-          agentData={agentData}
-          onSubmit={handleSubmitProperty}
-          onCancel={handleCancelForm}
-        />
-      );
-    }
-    
-    return (
-      <RegularPropertyForm
-        category={selectedCategory}
-        agentData={agentData}
-        onSubmit={handleSubmitProperty}
-        onCancel={handleCancelForm}
-      />
-    );
+    // Force a refresh of the properties page by adding a timestamp to the URL
+    // This will ensure the PropertiesPage component fetches the latest data
+    navigate('/agent-pannel/properties?refresh=' + Date.now());
   };
 
   return (
@@ -114,10 +61,7 @@ const AddPropertyPage = () => {
             <ArrowLeft size={20} />
           </button>
           <h1 className="text-2xl font-bold text-gray-800">
-            {selectedCategory 
-              ? `Add New ${selectedCategory} Property` 
-              : 'Add New Property'
-            }
+            Properties
           </h1>
         </div>
       </div>
@@ -128,7 +72,25 @@ const AddPropertyPage = () => {
         </div>
       )}
       
-      {renderForm()}
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="text-center p-8">
+          <h2 className="text-2xl font-semibold text-gray-700">Add a New Property</h2>
+          <p className="text-gray-500 mt-2">Click the button below to add a new property listing</p>
+          <button
+            onClick={handleAddProperty}
+            className="mt-6 py-3 px-6 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center mx-auto"
+          >
+            <Plus size={20} className="mr-2" /> Add Property
+          </button>
+        </div>
+      </div>
+
+      <PropertyFormDialog 
+        isOpen={isFormDialogOpen} 
+        onClose={handleCloseDialog} 
+        agentData={agentData}
+        onPropertyAdded={handlePropertySubmitted}
+      />
     </div>
   );
 };

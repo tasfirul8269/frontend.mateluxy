@@ -83,7 +83,11 @@ const ProCard = ({ property }) => {
             {property?.category}
           </span>
           <span className="ml-5 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-medium">
-            {property?.deliveryDate}
+            {property?.deliveryDate ? new Date(property.deliveryDate).toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            }) : 'TBA'}
           </span>
           </div>
           

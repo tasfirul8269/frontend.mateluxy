@@ -34,6 +34,7 @@ const OffPlanSinglePage = () => {
             location: initialPropertyData.propertyAddress,
             duringConstructionPercentage: initialPropertyData.duringConstructionPercentage || 50,
             onCompletionPercentage: initialPropertyData.onCompletionPercentage || 50,
+            completionDate: initialPropertyData.completionDate || null,
           };
           setProperty(transformedProperty);
           
@@ -68,6 +69,7 @@ const OffPlanSinglePage = () => {
           location: propertyData.propertyAddress,
           duringConstructionPercentage: propertyData.duringConstructionPercentage || 50,
           onCompletionPercentage: propertyData.onCompletionPercentage || 50,
+          completionDate: propertyData.completionDate || null,
         };
         setProperty(transformedProperty);
         
@@ -96,6 +98,7 @@ const OffPlanSinglePage = () => {
             location: initialPropertyData.propertyAddress,
             duringConstructionPercentage: initialPropertyData.duringConstructionPercentage || 50,
             onCompletionPercentage: initialPropertyData.onCompletionPercentage || 50,
+            completionDate: initialPropertyData.completionDate || null,
           };
           setProperty(transformedProperty);
           setIsLoading(false);

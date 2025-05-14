@@ -130,7 +130,7 @@ const Properties = () => {
     
     try {
       const date = new Date(dateString);
-      return date.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+      return date.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
     } catch (e) {
       return dateString; // If parsing fails, return the original string
     }

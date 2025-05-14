@@ -5,7 +5,7 @@ import { DollarSign, Ruler, Bed, MapPin, Calendar } from 'lucide-react';
 const ProjectDetailsCard = ({ property }) => {
   // Format completion date if available
   const formattedCompletionDate = property?.completionDate 
-    ? new Date(property.completionDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+    ? new Date(property.completionDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     : 'Not specified';
     
   // Dynamic details derived from property data with icons

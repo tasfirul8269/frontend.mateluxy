@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, LogOut, PlusCircle } from 'lucide-react';
+import { Home, LogOut, PlusCircle, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function Sidebar({ isOpen }) {
@@ -11,6 +11,7 @@ export function Sidebar({ isOpen }) {
   // Function to fetch agent properties and update count
   const fetchAgentProperties = async (agentId) => {
     try {
+      console.log("Fetching properties for agent ID:", agentId);
       const propertiesRes = await fetch(`${import.meta.env.VITE_API_URL}/api/properties?agent=${agentId}`, {
         credentials: 'include',
       });
@@ -18,12 +19,10 @@ export function Sidebar({ isOpen }) {
       if (propertiesRes.ok) {
         const propertiesData = await propertiesRes.json();
         
-        // Filter properties to include only those added by this agent
-        const agentProperties = propertiesData.filter(property => property.agent === agentId);
-        
-        // Set the count of properties added by this agent
-        setPropertyCount(agentProperties.length);
-        console.log("Agent properties count:", agentProperties.length);
+        // Simply use the length of returned properties as the count
+        // The API should already filter by agent ID
+        setPropertyCount(propertiesData.length);
+        console.log("Updated agent properties count:", propertiesData.length);
       }
     } catch (error) {
       console.error('Error fetching agent properties:', error);
@@ -44,7 +43,9 @@ export function Sidebar({ isOpen }) {
           setAgentData(data);
           
           // Fetch properties for this agent
-          await fetchAgentProperties(data._id);
+          if (data && data._id) {
+            await fetchAgentProperties(data._id);
+          }
         }
       } catch (error) {
         console.error('Error fetching agent data:', error);
@@ -52,6 +53,16 @@ export function Sidebar({ isOpen }) {
     };
     
     fetchAgentData();
+    
+    // Set up an interval to refresh property count every 30 seconds
+    const intervalId = setInterval(() => {
+      if (agentData?._id) {
+        fetchAgentProperties(agentData._id);
+      }
+    }, 30000);
+    
+    // Clear interval on unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   // Update property count when location changes (e.g., after adding a property)
@@ -139,6 +150,20 @@ export function Sidebar({ isOpen }) {
               >
                 <PlusCircle size={20} />
                 {isOpen && <span className="ml-3">Add Property</span>}
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="/agent-pannel/property-requests"
+                className={cn(
+                  'flex items-center px-3 py-2 rounded-md transition-colors',
+                  location.pathname.includes('/agent-pannel/property-requests')
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-gray-700 hover:bg-gray-100'
+                )}
+              >
+                <MessageCircle size={20} />
+                {isOpen && <span className="ml-3">Property Requests</span>}
               </Link>
             </li>
           </ul>

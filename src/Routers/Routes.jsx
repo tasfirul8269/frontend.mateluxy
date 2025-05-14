@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
+import React from "react";
 import Layout from "../Layout/Layout";
 import Home from "../pages/Home/Home";
 import Buy from "../pages/Buy/Buy";
@@ -186,6 +187,10 @@ const router = createBrowserRouter([
                     {
                         path: "add-property",
                         element: <AddPropertyPage />
+                    },
+                    {
+                        path: "property-requests",
+                        element: <PropertyRequestsPage />
                     }
                 ]
             },
