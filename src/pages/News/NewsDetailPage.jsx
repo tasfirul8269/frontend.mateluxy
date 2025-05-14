@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getNewsById, getNewsBySlug, getAllNews } from '../../services/newsService';
 import { FiCalendar, FiTag, FiArrowLeft, FiShare2, FiClock, FiFacebook, FiTwitter, FiLinkedin } from 'react-icons/fi';
-// import { Helmet } from 'react-helmet';
+import { Helmet } from 'react-helmet-async';
 
 const NewsDetailPage = () => {
   const { slug } = useParams();
@@ -109,11 +109,17 @@ const NewsDetailPage = () => {
   
   return (
     <>
-      {/* SEO Metadata - Using document.title instead of Helmet temporarily */}
+      {/* SEO Metadata using Helmet */}
       {newsArticle && (
-        <div style={{ display: 'none' }}>
-          {document.title = `${newsArticle.title} | MateLuxy Real Estate News`}
-        </div>
+        <Helmet>
+          <title>{newsArticle.title} | MateLuxy Real Estate News</title>
+          <meta name="description" content={newsArticle.description} />
+          <meta property="og:title" content={newsArticle.title} />
+          <meta property="og:description" content={newsArticle.description} />
+          <meta property="og:image" content={newsArticle.image} />
+          <meta property="og:url" content={window.location.href} />
+          <meta property="og:type" content="article" />
+        </Helmet>
       )}
     
       <div className="max-w-[1440px] mx-auto px-4 py-8 md:py-12">
