@@ -80,7 +80,7 @@ const propertyTypes = [
   "Apartment", "Villa", "Townhouse", "Penthouse", "Duplex", 
   "Studio", "Office", "Retail", "Warehouse", "Land"
 ];
-
+  
 // Commercial types
 const commercialTypes = [
   "Office", "Retail", "Warehouse", "Industrial", 
@@ -133,7 +133,7 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
       propertyState: "Dubai",
       propertyZip: "",
       propertyFeaturedImage: "",
-      media: [],
+    media: [],
       propertyType: "Apartment",
       propertyPrice: 0,
       brokerFee: 0,
@@ -145,10 +145,10 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
       dldPermitNumber: "",
       agent: agentData?._id || "",
       dldQrCode: "",
-      latitude: 25.2048,
-      longitude: 55.2708,
-      features: [],
-      amenities: [],
+    latitude: 25.2048,
+    longitude: 55.2708,
+    features: [],
+    amenities: [],
       ...(category === "Rent" ? { roiPercentage: 0 } : {}),
       ...(category === "Buy" || category === "Rent" || category.includes("Commercial") ? { numberOfCheques: 1 } : {}),
       ...(category.includes("Commercial") ? { commercialType: "Office" } : {}),
@@ -274,22 +274,22 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
       setLoading(false);
     }
   };
-
+  
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmitForm)} className="bg-white space-y-6">
-        {error && (
+      {error && (
           <div className="bg-red-50 border border-red-200 p-4 rounded-md text-red-600">
             {error}
-          </div>
-        )}
-        
+        </div>
+      )}
+      
         <div className="space-y-4">
           <h3 className="text-lg font-medium">General Details</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="propertyTitle"
+                name="propertyTitle"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Property Title</FormLabel>
@@ -323,9 +323,9 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
                   <FormMessage />
                 </FormItem>
               )}
-            />
-          </div>
-
+              />
+            </div>
+            
           <FormField
             control={form.control}
             name="propertyDescription"
@@ -347,7 +347,7 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="propertyAddress"
+                name="propertyAddress"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Address</FormLabel>
@@ -361,7 +361,7 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
             
             <FormField
               control={form.control}
-              name="propertyCountry"
+                name="propertyCountry"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Country</FormLabel>
@@ -409,7 +409,7 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
             <div>
               <FormLabel>Featured Image</FormLabel>
               <div className="mt-1 border border-gray-300 rounded-md p-2">
-                <input
+              <input
                   type="file"
                   accept="image/*"
                   onChange={handleFeaturedImageUpload}
@@ -427,7 +427,7 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
                     src={featuredImagePreview} 
                     alt="Featured" 
                     className="h-32 object-cover rounded-md" 
-                  />
+              />
                 </div>
               )}
             </div>
@@ -435,7 +435,7 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
             <div>
               <FormLabel>Additional Images</FormLabel>
               <div className="mt-1 border border-gray-300 rounded-md p-2">
-                <input
+              <input
                   type="file"
                   accept="image/*"
                   multiple
@@ -446,8 +446,8 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
                     file:text-sm file:font-semibold
                     file:bg-blue-50 file:text-blue-700
                     hover:file:bg-blue-100"
-                />
-              </div>
+              />
+            </div>
               {mediaPreview.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-2">
                   {mediaPreview.map((img, i) => (
@@ -456,7 +456,7 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
                       src={img} 
                       alt={`Media ${i}`} 
                       className="h-16 w-16 object-cover rounded-md" 
-                    />
+              />
                   ))}
                 </div>
               )}
@@ -498,7 +498,7 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
             {(isBuy || isRent) && (
               <FormField
                 control={form.control}
-                name="numberOfCheques"
+                  name="numberOfCheques"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Number of Cheques</FormLabel>
@@ -514,7 +514,7 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
             {isRent && (
               <FormField
                 control={form.control}
-                name="roiPercentage"
+                  name="roiPercentage"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>ROI Percentage</FormLabel>
@@ -548,7 +548,7 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
             
             <FormField
               control={form.control}
-              name="propertyRooms"
+                name="propertyRooms"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Rooms</FormLabel>
@@ -562,7 +562,7 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
             
             <FormField
               control={form.control}
-              name="propertyBedrooms"
+                name="propertyBedrooms"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Bedrooms</FormLabel>
@@ -576,7 +576,7 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
             
             <FormField
               control={form.control}
-              name="propertyBathrooms"
+                name="propertyBathrooms"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Bathrooms</FormLabel>
@@ -590,7 +590,7 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
             
             <FormField
               control={form.control}
-              name="propertyKitchen"
+                name="propertyKitchen"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Kitchens</FormLabel>
@@ -600,10 +600,10 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
                   <FormMessage />
                 </FormItem>
               )}
-            />
+              />
+            </div>
           </div>
-        </div>
-        
+          
         <div className="space-y-4">
           <h3 className="text-lg font-medium">Location</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -634,7 +634,7 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
                 </FormItem>
               )}
             />
-          </div>
+                  </div>
           
           <div className="h-64 border rounded-md overflow-hidden">
             <SimpleMap 
@@ -698,7 +698,7 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
                         }}
                       />
                     ))}
-                  </div>
+            </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -751,7 +751,7 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
                         }}
                       />
                     ))}
-                  </div>
+            </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -791,7 +791,7 @@ export const RegularPropertyForm = ({ category, agentData, onSubmit, onCancel })
             />
           </div>
         </div>
-
+        
         <div className="flex justify-between pt-5">
           <Button
             type="button"

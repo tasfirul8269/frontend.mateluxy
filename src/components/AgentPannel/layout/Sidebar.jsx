@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, LogOut, PlusCircle, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, LogOut, PlusCircle, MessageCircle, ChevronLeft, ChevronRight, User, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function Sidebar({ isOpen, toggleSidebar }) {
@@ -84,21 +84,20 @@ export function Sidebar({ isOpen, toggleSidebar }) {
   return (
     <aside
       className={cn(
-        'bg-white border-r border-gray-200 h-full transition-all duration-300 ease-in-out fixed lg:static z-10',
-        isOpen ? 'w-64' : 'w-0 lg:w-20',
-        isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        'bg-white border-r border-gray-200 h-full transition-all duration-300 ease-in-out',
+        isOpen ? 'w-64' : 'w-20'
       )}
     >
       <div className="flex flex-col h-full relative">
         <div className={cn(
           "flex items-center justify-center h-16 border-b border-gray-200",
-          !isOpen && "lg:justify-center"
+          !isOpen && "justify-center"
         )}>
-          <span className={cn('text-xl font-semibold text-gray-800', !isOpen && 'lg:hidden')}>
+          <span className={cn('text-xl font-semibold text-gray-800', !isOpen && 'hidden')}>
             Agent Panel
           </span>
           {!isOpen && (
-            <span className="hidden lg:block text-xl font-semibold text-gray-800">AP</span>
+            <span className="block text-xl font-semibold text-gray-800">AP</span>
           )}
         </div>
 
@@ -166,6 +165,38 @@ export function Sidebar({ isOpen, toggleSidebar }) {
               >
                 <MessageCircle size={20} className={cn(!isOpen && "mx-auto")} />
                 {isOpen && <span className="ml-3">Property Requests</span>}
+              </Link>
+            </li>
+
+            <li className="flex justify-center">
+              <Link
+                to="/agent-pannel/profile"
+                className={cn(
+                  'flex items-center transition-colors',
+                  isOpen ? 'px-3 py-2 rounded-md w-full' : 'w-12 h-12 rounded-lg justify-center',
+                  location.pathname.includes('/agent-pannel/profile')
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-gray-700 hover:bg-gray-100'
+                )}
+              >
+                <User size={20} className={cn(!isOpen && "mx-auto")} />
+                {isOpen && <span className="ml-3">My Profile</span>}
+              </Link>
+            </li>
+
+            <li className="flex justify-center">
+              <Link
+                to="/agent-pannel/settings"
+                className={cn(
+                  'flex items-center transition-colors',
+                  isOpen ? 'px-3 py-2 rounded-md w-full' : 'w-12 h-12 rounded-lg justify-center',
+                  location.pathname.includes('/agent-pannel/settings')
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-gray-700 hover:bg-gray-100'
+                )}
+              >
+                <Settings size={20} className={cn(!isOpen && "mx-auto")} />
+                {isOpen && <span className="ml-3">Settings</span>}
               </Link>
             </li>
           </ul>

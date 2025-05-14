@@ -34,6 +34,8 @@ import { AgentProvider } from '@/components/AdminPannelAgents/context/AgentConte
 import NewsPage from "../pages/News/NewsPage";
 import NewsDetailPage from "../pages/News/NewsDetailPage";
 import NewsManagementPage from "../pages/AdminPannelPages/NewsManagementPage";
+import ProfilePage from "../pages/AgentPannelPages/ProfilePage";
+import SettingsPage from "../pages/AgentPannelPages/SettingsPage";
 
 // For debugging
 const DebugMessagesPage = () => {
@@ -191,6 +193,14 @@ const router = createBrowserRouter([
                     {
                         path: "property-requests",
                         element: <PropertyRequestsPage />
+                    },
+                    {
+                        path: "profile",
+                        element: <ProfilePage />
+                    },
+                    {
+                        path: "settings",
+                        element: <SettingsPage />
                     }
                 ]
             },

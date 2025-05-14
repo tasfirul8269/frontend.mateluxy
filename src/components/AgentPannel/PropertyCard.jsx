@@ -29,38 +29,38 @@ export function PropertyCard({ property, onDelete, onEdit }) {
         className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
         onClick={handleCardClick}
       >
-        <div className="relative">
-          {/* Tags on top */}
-          <div className="absolute top-3 left-3 z-10 flex gap-2">
-            {property.category && (
-              <span className={`
-                px-4 py-1.5 bg-white rounded-full text-xs font-semibold
-                ${property.category === 'Rent' ? 'text-green-600' : 
-                 property.category === 'Buy' ? 'text-blue-600' :
-                 property.category === 'Off Plan' ? 'text-purple-600' :
-                 property.category === 'Commercial for Rent' ? 'text-amber-600' :
-                 property.category === 'Commercial for Buy' ? 'text-orange-600' :
-                 'text-gray-600'}
-              `}>
-                {property.category}
-              </span>
-            )}
-            {/* Display tags for Off Plan properties */}
-            {property.category === 'Off Plan' && property.tags && property.tags.map((tag, index) => (
-              <span key={index} className="px-4 py-1.5 bg-white rounded-full text-xs font-medium">
-                {tag}
-              </span>
-            ))}
-          </div>
-          
-          {/* Property Image */}
-          <div className="h-52 overflow-hidden">
-            <img 
-              src={property.propertyFeaturedImage} 
-              alt={property.propertyTitle}
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
-            />
-          </div>
+      <div className="relative">
+        {/* Tags on top */}
+        <div className="absolute top-3 left-3 z-10 flex gap-2">
+          {property.category && (
+            <span className={`
+              px-4 py-1.5 bg-white rounded-full text-xs font-semibold
+              ${property.category === 'Rent' ? 'text-green-600' : 
+               property.category === 'Buy' ? 'text-blue-600' :
+               property.category === 'Off Plan' ? 'text-purple-600' :
+               property.category === 'Commercial for Rent' ? 'text-amber-600' :
+               property.category === 'Commercial for Buy' ? 'text-orange-600' :
+               'text-gray-600'}
+            `}>
+              {property.category}
+            </span>
+          )}
+          {/* Display tags for Off Plan properties */}
+          {property.category === 'Off Plan' && property.tags && property.tags.map((tag, index) => (
+            <span key={index} className="px-4 py-1.5 bg-white rounded-full text-xs font-medium">
+              {tag}
+            </span>
+          ))}
+        </div>
+        
+        {/* Property Image */}
+        <div className="h-52 overflow-hidden">
+          <img 
+            src={property.propertyFeaturedImage} 
+            alt={property.propertyTitle}
+            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+          />
+        </div>
           
           {/* Location on image bottom left */}
           <div className="absolute bottom-3 left-3 z-10">
@@ -69,12 +69,12 @@ export function PropertyCard({ property, onDelete, onEdit }) {
               {property.propertyState || property.propertyAddress?.split(',').pop()?.trim() || 'Dubai'}
             </span>
           </div>
-        </div>
-        
-        <div className="p-5">
+      </div>
+      
+      <div className="p-5">
           {/* Title only - removed price */}
           <div className="mb-3">
-            <h3 className="text-lg font-bold text-gray-800 line-clamp-1">{property.propertyTitle}</h3>
+          <h3 className="text-lg font-bold text-gray-800 line-clamp-1">{property.propertyTitle}</h3>
           </div>
           
           {/* Address */}
@@ -83,8 +83,8 @@ export function PropertyCard({ property, onDelete, onEdit }) {
               <span className="flex items-top text-ellipsis whitespace-wrap w-full overflow-hidden justify-start">
                 <MapPin size={16} className="mr-1.5 flex-shrink-0" />
                 {property.propertyAddress}
-              </span>
-            </div>
+          </span>
+        </div>
           )}
           
           {/* Off Plan Completion Date */}
@@ -98,20 +98,20 @@ export function PropertyCard({ property, onDelete, onEdit }) {
                   day: 'numeric' 
                 })}
               </span>
-            </div>
+        </div>
           )}
-          
-          {/* Developer for Off Plan */}
-          {property.category === 'Off Plan' && property.developer && (
-            <div className="flex items-center text-sm text-gray-500 mb-3">
-              <Building size={16} className="mr-1.5 text-gray-400 flex-shrink-0" />
-              <span>Developer: {property.developer}</span>
-            </div>
-          )}
-          
-          {/* Horizontal line */}
-          <div className="border-t border-gray-100 my-3"></div>
-          
+        
+        {/* Developer for Off Plan */}
+        {property.category === 'Off Plan' && property.developer && (
+          <div className="flex items-center text-sm text-gray-500 mb-3">
+            <Building size={16} className="mr-1.5 text-gray-400 flex-shrink-0" />
+            <span>Developer: {property.developer}</span>
+          </div>
+        )}
+        
+        {/* Horizontal line */}
+        <div className="border-t border-gray-100 my-3"></div>
+        
           {/* Price display - Left aligned */}
           <div className="flex justify-start mb-4">
             <div className="text-left">
@@ -119,16 +119,16 @@ export function PropertyCard({ property, onDelete, onEdit }) {
               {property.category === 'Rent' && <p className="text-xs text-gray-500">Per Year</p>}
             </div>
           </div>
-          
-          {/* Buttons */}
-          <div className="flex justify-between items-center">
-            <a 
-              href={`/property-details/${property._id}`}
+        
+        {/* Buttons */}
+        <div className="flex justify-between items-center">
+          <a
+            href={`/property-details/${property._id}`}
               className="px-5 py-2 bg-blue-50 text-blue-500 rounded-full text-sm font-medium"
-            >
-              View Details
-            </a>
-            
+          >
+            View Details
+          </a>
+          
             <div className="flex items-center space-x-2">
               <button 
                 onClick={(e) => {
@@ -139,7 +139,7 @@ export function PropertyCard({ property, onDelete, onEdit }) {
               >
                 <Edit size={16} />
               </button>
-              <button 
+          <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onDelete && onDelete(property._id);
@@ -147,8 +147,8 @@ export function PropertyCard({ property, onDelete, onEdit }) {
                 className="p-1.5 text-gray-500 hover:text-red-600 rounded-full hover:bg-red-50 transition-colors"
               >
                 <Trash2 size={16} />
-              </button>
-            </div>
+          </button>
+        </div>
           </div>
         </div>
       </div>
@@ -285,10 +285,10 @@ export function PropertyCard({ property, onDelete, onEdit }) {
                 <div className="flex justify-between items-center border-b pb-2">
                   <span className="text-gray-600">Last Updated:</span>
                   <span className="font-medium">{new Date(property.updatedAt).toLocaleDateString()}</span>
-                </div>
-              )}
-            </div>
           </div>
+        )}
+      </div>
+    </div>
 
           {/* Property Description */}
           {property.propertyDescription && (
