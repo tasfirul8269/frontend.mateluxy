@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, LogOut, PlusCircle, MessageCircle } from 'lucide-react';
+import { Home, LogOut, PlusCircle, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export function Sidebar({ isOpen }) {
+export function Sidebar({ isOpen, toggleSidebar }) {
   const location = useLocation();
   const [agentData, setAgentData] = useState(null);
   const [propertyCount, setPropertyCount] = useState(0);
@@ -84,12 +84,16 @@ export function Sidebar({ isOpen }) {
   return (
     <aside
       className={cn(
-        'bg-white border-r border-gray-200 w-64 h-full transition-all duration-300 ease-in-out fixed lg:static z-10',
-        isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0 lg:w-20'
+        'bg-white border-r border-gray-200 h-full transition-all duration-300 ease-in-out fixed lg:static z-10',
+        isOpen ? 'w-64' : 'w-0 lg:w-20',
+        isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       )}
     >
-      <div className="flex flex-col h-full">
-        <div className="flex items-center justify-center h-16 border-b border-gray-200">
+      <div className="flex flex-col h-full relative">
+        <div className={cn(
+          "flex items-center justify-center h-16 border-b border-gray-200",
+          !isOpen && "lg:justify-center"
+        )}>
           <span className={cn('text-xl font-semibold text-gray-800', !isOpen && 'lg:hidden')}>
             Agent Panel
           </span>
@@ -99,8 +103,14 @@ export function Sidebar({ isOpen }) {
         </div>
 
         {agentData && (
-          <div className="flex flex-col items-center py-4 border-b border-gray-200">
-            <div className="w-16 h-16 rounded-full bg-gray-300 overflow-hidden mb-2">
+          <div className={cn(
+            "flex flex-col items-center py-4 border-b border-gray-200",
+            !isOpen && "lg:py-3"
+          )}>
+            <div className={cn(
+              "rounded-full bg-gray-300 overflow-hidden mb-2",
+              isOpen ? "w-16 h-16" : "lg:w-10 lg:h-10"
+            )}>
               {agentData.profileImage ? (
                 <img 
                   src={agentData.profileImage} 
@@ -123,46 +133,38 @@ export function Sidebar({ isOpen }) {
         )}
 
         <nav className="flex-1 overflow-y-auto py-4">
-          <ul className="space-y-1 px-3">
-            <li>
+          <ul className={cn(
+            "space-y-3",
+            isOpen ? "px-3" : "px-0"
+          )}>
+            <li className="flex justify-center">
               <Link
                 to="/agent-pannel/properties"
                 className={cn(
-                  'flex items-center px-3 py-2 rounded-md transition-colors',
+                  'flex items-center transition-colors',
+                  isOpen ? 'px-3 py-2 rounded-md w-full' : 'w-12 h-12 rounded-lg justify-center',
                   location.pathname.includes('/agent-pannel/properties')
                     ? 'bg-blue-50 text-blue-600'
                     : 'text-gray-700 hover:bg-gray-100'
                 )}
               >
-                <Home size={20} />
+                <Home size={20} className={cn(!isOpen && "mx-auto")} />
                 {isOpen && <span className="ml-3">Properties</span>}
               </Link>
             </li>
-            <li>
-              <Link
-                to="/agent-pannel/add-property"
-                className={cn(
-                  'flex items-center px-3 py-2 rounded-md transition-colors',
-                  location.pathname.includes('/agent-pannel/add-property')
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-700 hover:bg-gray-100'
-                )}
-              >
-                <PlusCircle size={20} />
-                {isOpen && <span className="ml-3">Add Property</span>}
-              </Link>
-            </li>
-            <li>
+           
+            <li className="flex justify-center">
               <Link
                 to="/agent-pannel/property-requests"
                 className={cn(
-                  'flex items-center px-3 py-2 rounded-md transition-colors',
+                  'flex items-center transition-colors',
+                  isOpen ? 'px-3 py-2 rounded-md w-full' : 'w-12 h-12 rounded-lg justify-center',
                   location.pathname.includes('/agent-pannel/property-requests')
                     ? 'bg-blue-50 text-blue-600'
                     : 'text-gray-700 hover:bg-gray-100'
                 )}
               >
-                <MessageCircle size={20} />
+                <MessageCircle size={20} className={cn(!isOpen && "mx-auto")} />
                 {isOpen && <span className="ml-3">Property Requests</span>}
               </Link>
             </li>
@@ -180,15 +182,29 @@ export function Sidebar({ isOpen }) {
           </div>
         )}
 
-        <div className="p-4 border-t border-gray-200">
+        <div className={cn(
+          "border-t border-gray-200",
+          isOpen ? "p-4" : "p-2 flex justify-center"
+        )}>
           <button
             onClick={handleLogout}
-            className="flex items-center w-full px-3 py-2 text-sm text-red-600 rounded-md hover:bg-red-50 transition-colors"
+            className={cn(
+              'flex items-center text-red-600 transition-colors',
+              isOpen ? 'w-full px-3 py-2 text-sm rounded-md hover:bg-red-50' : 'w-12 h-12 rounded-lg justify-center hover:bg-red-50'
+            )}
           >
-            <LogOut size={20} />
+            <LogOut size={20} className={cn(!isOpen && "mx-auto")} />
             {isOpen && <span className="ml-3">Logout</span>}
           </button>
         </div>
+        
+        {/* Collapse/Expand Button - Only visible on tablet and desktop */}
+        <button
+          onClick={toggleSidebar}
+          className="hidden md:flex absolute -right-3 top-1/2 transform -translate-y-1/2 items-center justify-center w-6 h-6 bg-white text-gray-500 border border-gray-200 rounded-full shadow-sm cursor-pointer hover:text-blue-600 transition-all"
+        >
+          {isOpen ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
+        </button>
       </div>
     </aside>
   );

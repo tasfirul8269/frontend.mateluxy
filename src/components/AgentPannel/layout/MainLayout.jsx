@@ -11,10 +11,10 @@ export function MainLayout({ children }) {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar isOpen={isSidebarOpen} />
+      <Sidebar isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <TopNav onMenuClick={toggleSidebar} />
+        <TopNav className="lg:hidden md:hidden" onMenuClick={toggleSidebar} />
         
         <main className="flex-1 overflow-y-auto bg-gray-50 p-4">
           <div className="container mx-auto">
