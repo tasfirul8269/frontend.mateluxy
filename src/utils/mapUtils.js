@@ -18,7 +18,7 @@ const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyB
 export const getGoogleMapsEmbedUrl = ({ latitude, longitude, address, zoom = 15 }) => {
   // If we have coordinates, use them for precise location
   if (latitude && longitude) {
-    return `https://www.google.com/maps/embed/v1/view?key=${GOOGLE_MAPS_API_KEY}&center=${latitude},${longitude}&zoom=${zoom}&maptype=roadmap`;
+    return `https://www.google.com/maps/embed/v1/place?key=${GOOGLE_MAPS_API_KEY}&q=${latitude},${longitude}&center=${latitude},${longitude}&zoom=${zoom}&maptype=roadmap`;
   }
   
   // Otherwise use the address for geocoding
