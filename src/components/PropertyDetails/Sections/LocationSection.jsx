@@ -80,12 +80,7 @@ const LocationSection = ({ property }) => {
               title="Property Location"
               className="absolute inset-0"
             />
-            <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm py-2 px-3 rounded-lg shadow-md z-10">
-              <div className="flex items-center gap-2">
-                <MapPin className="text-red-500" size={16} />
-                <span className="text-sm font-medium text-gray-800">Property Location</span>
-              </div>
-            </div>
+           
             <div className="absolute bottom-4 right-4 flex gap-2">
               <a 
                 href={googleMapsUrl} 
