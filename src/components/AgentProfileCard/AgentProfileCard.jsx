@@ -3,6 +3,8 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { MapPin, Mail, Phone, Download, MessageCircle, Globe, Briefcase, Building, Home, ArrowRight, Star, ChevronRight, Calendar, Users, ChevronDown } from "lucide-react";
+import { convertS3UrlToProxyUrl } from "../../utils/s3UrlConverter";
+import { toast } from "sonner";
 
 const AgentProfileCard = () => {
   const [agentData, setAgentData] = useState({});
@@ -36,7 +38,32 @@ const AgentProfileCard = () => {
   }, [id])
   
 
-  const handleDownloadVCard = () => {
+  const handleDownloadVCard = async () => {
+    // First check if the agent has a stored vCard
+    if (agentData?.vcard) {
+      try {
+        // Use the vCard-specific proxy route
+        const vcardUrl = convertS3UrlToProxyUrl(agentData.vcard, { isVCard: true });
+        
+        // Create a link and trigger download
+        const link = document.createElement("a");
+        link.href = vcardUrl;
+        link.setAttribute("download", `${agentData.fullName.replace(/[^\w\s]/gi, "_")}.vcf`);
+        link.setAttribute("target", "_blank");
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        return;
+      } catch (error) {
+        console.error("Error downloading stored vCard:", error);
+        toast.error("Could not download vCard file. Generating a basic version instead.");
+        // Fall through to generate a basic vCard
+      }
+    }
+    
+    // Fallback: Generate basic vCard if no stored one exists
     // Validate required fields
     if (!agentData?.fullName) {
       console.error("Full name is required to generate a vCard.");

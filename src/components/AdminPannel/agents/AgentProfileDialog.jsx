@@ -5,10 +5,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter
 } from "@/components/AdminPannel/ui/dialog";
-import { Mail, Phone, MapPin, Languages, Facebook, Twitter, Instagram, Linkedin, Globe, MessageSquare, Edit, Trash2 } from "lucide-react";
+import { Mail, Phone, MapPin, Languages, Facebook, Twitter, Instagram, Linkedin, Globe, MessageSquare, Edit, Trash2, ExternalLink, Download } from "lucide-react";
 import { toast } from "sonner";
 import { AgentFormDialog } from "./AgentFormDialog";
+import { convertS3UrlToProxyUrl } from "../../../utils/s3UrlConverter";
 
 export function AgentProfileDialog({ open, onOpenChange, agentId }) {
   const [agent, setAgent] = useState(null);
@@ -38,23 +40,20 @@ export function AgentProfileDialog({ open, onOpenChange, agentId }) {
       
       const data = await response.json();
       
-      setAgent({
-        id: data._id,
-        username: data.username,
-        fullName: data.fullName,
-        profileImage: data.profileImage,
-        position: data.position || "",
-        email: data.email,
-        contactNumber: data.contactNumber || "",
-        whatsapp: data.whatsapp || "",
-        department: data.department || "",
-        vcard: data.vcard || "",
-        languages: data.languages || [],
-        aboutMe: data.aboutMe || "",
-        address: data.address || "",
-        socialLinks: data.socialLinks || [],
-        listings: 0 // This should come from your backend if available
-      });
+      // Process the agent data to ensure image URLs are properly proxied
+      if (data) {
+        // Process profile image to use proxy
+        if (data.profileImage) {
+          data.profileImage = convertS3UrlToProxyUrl(data.profileImage);
+        }
+        
+        // Process vcard to use proxy with special vCard handling
+        if (data.vcard) {
+          data.vcard = convertS3UrlToProxyUrl(data.vcard, { isVCard: true });
+        }
+        
+        setAgent(data);
+      }
     } catch (error) {
       console.error('Error fetching agent details:', error);
       toast.error('Failed to load agent details');
@@ -116,6 +115,29 @@ export function AgentProfileDialog({ open, onOpenChange, agentId }) {
     if (url.includes('instagram')) return <Instagram className="h-4 w-4" />;
     if (url.includes('linkedin')) return <Linkedin className="h-4 w-4" />;
     return <Globe className="h-4 w-4" />;
+  };
+
+  // Add a new handler for vCard downloads
+  const handleVCardDownload = (e) => {
+    e.preventDefault();
+    
+    if (!agent.vcard) {
+      toast.error("No vCard available for this agent");
+      return;
+    }
+    
+    // Create filename from agent name
+    const fileName = `${agent.fullName.replace(/[^\w\s]/gi, "_")}.vcf`;
+    
+    // Create link and trigger download
+    const link = document.createElement("a");
+    link.href = agent.vcard;
+    link.setAttribute("download", fileName);
+    link.setAttribute("target", "_blank");
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   if (loading) {
@@ -297,14 +319,13 @@ export function AgentProfileDialog({ open, onOpenChange, agentId }) {
             {agent.vcard && (
               <div className="bg-gray-50 rounded-lg p-6 mb-6">
                 <h3 className="text-lg font-semibold mb-3 text-gray-800">Business Card</h3>
-                <a 
-                  href={agent.vcard}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button 
+                  onClick={handleVCardDownload}
                   className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium"
                 >
+                  <Download className="h-4 w-4" />
                   <span>Download vCard</span>
-                </a>
+                </button>
               </div>
             )}
           </div>

@@ -31,9 +31,12 @@ export const needsProxyConversion = (url) => {
 /**
  * Converts an S3 URL to a proxied URL that can be accessed by the frontend
  * @param {string} s3Url - The original S3 URL
+ * @param {Object} options - Additional options
+ * @param {boolean} options.useSignedUrl - Whether to use a signed URL (more secure, but temporary)
+ * @param {boolean} options.isVCard - Whether this is a vCard URL (special handling)
  * @returns {string} - The proxied URL
  */
-export const convertS3UrlToProxyUrl = (s3Url) => {
+export const convertS3UrlToProxyUrl = (s3Url, options = {}) => {
   if (!s3Url) return '';
   
   // Check if conversion is needed
@@ -42,6 +45,15 @@ export const convertS3UrlToProxyUrl = (s3Url) => {
   }
   
   try {
+    // Special handling for vCards
+    if (options.isVCard) {
+      // If it's a vCard URL, use the special vCard route
+      if (s3Url.includes('/vcards/')) {
+        const filename = s3Url.split('/').pop();
+        return `${import.meta.env.VITE_API_URL}/api/s3-proxy/vcard/${filename}`;
+      }
+    }
+    
     // If it's an S3 URL, extract the key
     if (s3Url.includes('s3.') && s3Url.includes('amazonaws.com')) {
       const url = new URL(s3Url);
@@ -61,9 +73,12 @@ export const convertS3UrlToProxyUrl = (s3Url) => {
         key = key.substring(bucketName.length + 1);
       }
       
-      console.log('Extracted S3 key:', key, 'from URL:', s3Url);
+      // Use a signed URL if requested
+      if (options.useSignedUrl) {
+        return `${import.meta.env.VITE_API_URL}/api/s3-proxy/signed-url?key=${encodeURIComponent(key)}`;
+      }
       
-      // Use the direct-key endpoint with a query parameter
+      // Otherwise use the direct-key endpoint with a query parameter
       return `${import.meta.env.VITE_API_URL}/api/s3-proxy/direct-key?key=${encodeURIComponent(key)}`;
     }
     
@@ -71,6 +86,34 @@ export const convertS3UrlToProxyUrl = (s3Url) => {
     return s3Url;
   } catch (error) {
     console.error('Error converting S3 URL to proxy URL:', error, 'URL:', s3Url);
+    return s3Url; // Return original URL if there's an error
+  }
+};
+
+/**
+ * Gets a signed URL for a given S3 URL
+ * @param {string} s3Url - The original S3 URL
+ * @returns {Promise<string>} - A promise that resolves to the signed URL
+ */
+export const getSignedUrl = async (s3Url) => {
+  if (!s3Url) return '';
+  
+  try {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/api/s3-proxy/signed-url?url=${encodeURIComponent(s3Url)}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to get signed URL: ${response.status} ${response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.success && data.signedUrl) {
+      return data.signedUrl;
+    } else {
+      throw new Error(data.error || 'Failed to get signed URL');
+    }
+  } catch (error) {
+    console.error('Error getting signed URL:', error);
     return s3Url; // Return original URL if there's an error
   }
 };
@@ -88,9 +131,10 @@ export const isS3Url = (url) => {
 /**
  * Converts all S3 URLs in an object to proxy URLs
  * @param {Object} obj - The object containing S3 URLs
+ * @param {Object} options - Additional options for conversion
  * @returns {Object} - The object with converted URLs
  */
-export const convertObjectS3UrlsToProxyUrls = (obj) => {
+export const convertObjectS3UrlsToProxyUrls = (obj, options = {}) => {
   if (!obj) return obj;
   
   const newObj = { ...obj };
@@ -99,27 +143,31 @@ export const convertObjectS3UrlsToProxyUrls = (obj) => {
   Object.keys(newObj).forEach(key => {
     const value = newObj[key];
     
+    // Special handling for vCard field
+    const isVCard = key === 'vcard';
+    const fieldOptions = { ...options, isVCard };
+    
     // If the value is a string and looks like an S3 URL
     if (typeof value === 'string' && needsProxyConversion(value)) {
-      newObj[key] = convertS3UrlToProxyUrl(value);
+      newObj[key] = convertS3UrlToProxyUrl(value, fieldOptions);
     }
     // If the value is an array, process each item
     else if (Array.isArray(value)) {
       newObj[key] = value.map(item => {
         // If the item is a string and looks like an S3 URL
         if (typeof item === 'string' && needsProxyConversion(item)) {
-          return convertS3UrlToProxyUrl(item);
+          return convertS3UrlToProxyUrl(item, fieldOptions);
         }
         // If the item is an object, recursively process it
         else if (typeof item === 'object' && item !== null) {
-          return convertObjectS3UrlsToProxyUrls(item);
+          return convertObjectS3UrlsToProxyUrls(item, fieldOptions);
         }
         return item;
       });
     }
     // If the value is an object, recursively process it
     else if (typeof value === 'object' && value !== null) {
-      newObj[key] = convertObjectS3UrlsToProxyUrls(value);
+      newObj[key] = convertObjectS3UrlsToProxyUrls(value, fieldOptions);
     }
   });
   
