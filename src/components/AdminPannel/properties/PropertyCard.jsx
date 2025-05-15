@@ -10,9 +10,15 @@ import {
   DialogClose
 } from "@/components/AdminPannel/ui/dialog";
 import { Button } from "@/components/AdminPannel/ui/button";
+import { convertS3UrlToProxyUrl } from "../../../utils/s3UrlConverter";
 
 export function PropertyCard({ property, onEdit, onDelete }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [imgError, setImgError] = useState(false);
+
+  // Process image URLs
+  const imageUrl = property.imageUrl ? convertS3UrlToProxyUrl(property.imageUrl) : '';
+  const defaultImage = `https://ui-avatars.com/api/?name=${encodeURIComponent(property.title || 'Property')}&background=random&color=fff&size=200`;
 
   // Open dialog when clicking on the card but not on the buttons
   const handleCardClick = (e) => {
@@ -56,9 +62,10 @@ export function PropertyCard({ property, onEdit, onDelete }) {
           {/* Property Image */}
           <div className="h-52 overflow-hidden">
             <img 
-              src={property.imageUrl} 
+              src={!imgError ? imageUrl : defaultImage} 
               alt={property.title} 
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+              onError={() => setImgError(true)}
             />
           </div>
           
@@ -161,9 +168,10 @@ export function PropertyCard({ property, onEdit, onDelete }) {
           {/* Property Image */}
           <div className="rounded-lg overflow-hidden h-64 mb-4">
             <img 
-              src={property.imageUrl} 
+              src={!imgError ? imageUrl : defaultImage} 
               alt={property.title} 
               className="w-full h-full object-cover"
+              onError={() => setImgError(true)}
             />
           </div>
 

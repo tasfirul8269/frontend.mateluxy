@@ -1,5 +1,6 @@
 // Simplified API constants with updated domain
 const API_URL = `https://backend-mateluxy.onrender.com/api`;
+import { processPropertyImages, processPropertiesImages } from '../utils/propertyImageConverter';
 
 // Ensure property data includes all required fields
 const ensureRequiredPropertyFields = (propertyData) => {
@@ -60,7 +61,9 @@ export const propertyApi = {
         }
       });
       if (!response.ok) throw new Error('Failed to fetch properties');
-      return response.json();
+      const data = await response.json();
+      // Process all property images to use S3 proxy
+      return processPropertiesImages(data);
     } catch (error) {
       console.error('Error fetching properties:', error);
       throw error;
@@ -72,7 +75,9 @@ export const propertyApi = {
     try {
       const response = await fetch(`${API_URL}/properties/${id}`);
       if (!response.ok) throw new Error(`Failed to fetch property with id ${id}`);
-      return response.json();
+      const data = await response.json();
+      // Process property images to use S3 proxy
+      return processPropertyImages(data);
     } catch (error) {
       console.error(`Error fetching property ${id}:`, error);
       throw error;
@@ -116,7 +121,9 @@ export const propertyApi = {
         throw new Error(errorMessage);
       }
       
-      return response.json();
+      const data = await response.json();
+      // Process property images to use S3 proxy
+      return processPropertyImages(data);
     } catch (error) {
       console.error('Error adding property:', error);
       throw error;
@@ -155,7 +162,9 @@ export const propertyApi = {
         throw new Error(errorMessage);
       }
       
-      return response.json();
+      const data = await response.json();
+      // Process property images to use S3 proxy
+      return processPropertyImages(data);
     } catch (error) {
       console.error(`Error updating property ${id}:`, error);
       throw error;
