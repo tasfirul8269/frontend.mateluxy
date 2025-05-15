@@ -4,6 +4,8 @@ import { motion } from "framer-motion"; // Import framer-motion for animations
 import { agentApi } from "@/services/agentApi";
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+// Import S3 upload utilities
+import { uploadFileToS3, uploadMultipleFilesToS3 } from '../../utils/s3Upload.js';
 
 const COUNTRY_LIST = ["UAE", "Qatar", "Saudi Arabia", "Kuwait", "Bahrain", "Oman"];
 const PROPERTY_TYPE_LIST = [
@@ -392,15 +394,13 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
     fetchAgents();
   }, [isEditing, initialData]);
 
-  // Cloudinary config from env
-  const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`;
-  const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
-
+  // Import S3 upload utilities at the top of the file
+  
   const handleInput = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
-
+  
   // Handler for media gallery upload (Buy/Rent properties)
   const handleMediaUpload = async (e) => {
     const files = Array.from(e.target.files);
@@ -409,41 +409,27 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
     setUploading(true);
     setUploadError("");
 
-    const uploadPromises = files.map(async (file) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", UPLOAD_PRESET);
+    try {
+      // Upload multiple files to S3 in the 'properties/media/' folder
+      const validUrls = await uploadMultipleFilesToS3(files, 'properties/media/');
 
-      try {
-        const res = await fetch(CLOUDINARY_URL, {
-          method: "POST",
-          body: formData,
-        });
-        const data = await res.json();
-        if (data.secure_url) {
-          return data.secure_url;
-        }
-        return null;
-      } catch (err) {
-        return null;
+      if (validUrls.length > 0) {
+        setForm(prev => ({
+          ...prev,
+          media: [...prev.media, ...validUrls]
+        }));
+      } else {
+        setUploadError("Failed to upload media. Please try again.");
       }
-    });
-
-    const uploadedUrls = await Promise.all(uploadPromises);
-    const validUrls = uploadedUrls.filter(url => url !== null);
-
-    if (validUrls.length > 0) {
-      setForm(prev => ({
-        ...prev,
-        media: [...prev.media, ...validUrls]
-      }));
-    } else {
+    } catch (error) {
+      console.error("Error uploading media files:", error);
       setUploadError("Failed to upload media. Please try again.");
     }
 
     setUploading(false);
   };
 
+  // Handler to remove a media item
   const handleRemoveMedia = (index) => {
     setForm(prev => ({
       ...prev,
@@ -451,169 +437,123 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
     }));
   };
 
-  // Existing upload functions
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploading(true);
-    setUploadError("");
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", UPLOAD_PRESET);
-    try {
-      const res = await fetch(CLOUDINARY_URL, {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.secure_url) {
-        setForm((prev) => ({ ...prev, featuredImage: data.secure_url }));
-      } else {
-        setUploadError("Upload failed. Try again.");
-      }
-    } catch (err) {
-      setUploadError("Upload failed. Try again.");
-    }
-    setUploading(false);
-  };
+// Featured image upload function
+const handleImageUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  setUploading(true);
+  setUploadError("");
+  
+  try {
+    // Upload file to S3 in the 'properties/featured/' folder
+    const fileUrl = await uploadFileToS3(file, 'properties/featured/');
+    setForm((prev) => ({ ...prev, featuredImage: fileUrl }));
+  } catch (err) {
+    console.error("Error uploading featured image:", err);
+    setUploadError("Upload failed. Try again.");
+  }
+  
+  setUploading(false);
+};
 
-  const handleRemoveImage = () => {
-    setForm((prev) => ({ ...prev, featuredImage: "" }));
-  };
+// Handle removing featured image
+const handleRemoveImage = () => {
+  setForm((prev) => ({ ...prev, featuredImage: "" }));
+  setUploadError("");
+};
 
-  // DLD QR code upload
-  const handleQrUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploadingQr(true);
-    setUploadErrorQr("");
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", UPLOAD_PRESET);
-    try {
-      const res = await fetch(CLOUDINARY_URL, {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
-      if (data.secure_url) {
-        setForm((prev) => ({ ...prev, dldQrCode: data.secure_url }));
-      } else {
-        setUploadErrorQr("Upload failed. Try again.");
-      }
-    } catch (err) {
-      setUploadErrorQr("Upload failed. Try again.");
-    }
-    setUploadingQr(false);
-  };
+// DLD QR code upload
+const handleQrUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  setUploadingQr(true);
+  setUploadErrorQr("");
+  
+  try {
+    // Upload file to S3 in the 'properties/qr/' folder
+    const fileUrl = await uploadFileToS3(file, 'properties/qr/');
+    setForm((prev) => ({ ...prev, dldQrCode: fileUrl }));
+  } catch (err) {
+    console.error("Error uploading QR code:", err);
+    setUploadErrorQr("Upload failed. Try again.");
+  }
+  
+  setUploadingQr(false);
+};
 
-  // New functions for Off Plan
+// Developer Logo upload
+const handleDeveloperLogoUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  setUploadingDeveloperLogo(true);
+  setUploadErrorDeveloperLogo("");
+  
+  try {
+    // Upload file to S3 in the 'properties/developer/' folder
+    const fileUrl = await uploadFileToS3(file, 'properties/developer/');
+    setForm((prev) => ({ ...prev, developerImage: fileUrl }));
+  } catch (err) {
+    console.error("Error uploading developer logo:", err);
+    setUploadErrorDeveloperLogo("Upload failed. Try again.");
+  }
+  
+  setUploadingDeveloperLogo(false);
+};
 
-  // Developer Logo upload
-  const handleDeveloperLogoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploadingDeveloperLogo(true);
-    setUploadErrorDeveloperLogo("");
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", UPLOAD_PRESET);
-    try {
-      const res = await fetch(CLOUDINARY_URL, { method: "POST", body: formData });
-      const data = await res.json();
-      if (data.secure_url) {
-        setForm((prev) => ({ ...prev, developerImage: data.secure_url }));
-      } else {
-        setUploadErrorDeveloperLogo("Upload failed. Try again.");
-      }
-    } catch (err) {
-      setUploadErrorDeveloperLogo("Upload failed. Try again.");
-    }
-    setUploadingDeveloperLogo(false);
-  };
+// Brochure upload
+const handleBrochureUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  setUploadingBrochure(true);
+  setUploadErrorBrochure("");
+  
+  try {
+    // Upload file to S3 in the 'properties/brochures/' folder
+    const fileUrl = await uploadFileToS3(file, 'properties/brochures/');
+    setForm((prev) => ({ ...prev, brochureFile: fileUrl }));
+  } catch (err) {
+    console.error("Error uploading brochure:", err);
+    setUploadErrorBrochure("Upload failed. Try again.");
+  }
+  
+  setUploadingBrochure(false);
+};
 
-  const handleRemoveDeveloperLogo = () => {
-    setForm((prev) => ({ ...prev, developerImage: "" }));
-  };
+// Location image upload
+const handleLocationImageUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  setUploadingLocationImage(true);
+  setUploadErrorLocationImage("");
+  
+  try {
+    // Upload file to S3 in the 'properties/locations/' folder
+    const fileUrl = await uploadFileToS3(file, 'properties/locations/');
+    setForm((prev) => ({ ...prev, locationImage: fileUrl }));
+  } catch (err) {
+    console.error("Error uploading location image:", err);
+    setUploadErrorLocationImage("Upload failed. Try again.");
+  }
+  
+  setUploadingLocationImage(false);
+};
 
-  // Brochure upload
-  const handleBrochureUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploadingBrochure(true);
-    setUploadErrorBrochure("");
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", UPLOAD_PRESET);
-    try {
-      const res = await fetch(CLOUDINARY_URL, { method: "POST", body: formData });
-      const data = await res.json();
-      if (data.secure_url) {
-        setForm((prev) => ({ ...prev, brochureFile: data.secure_url }));
-      } else {
-        setUploadErrorBrochure("Upload failed. Try again.");
-      }
-    } catch (err) {
-      setUploadErrorBrochure("Upload failed. Try again.");
-    }
-    setUploadingBrochure(false);
-  };
+// Exterior Gallery upload
+const handleExteriorGalleryUpload = async (e) => {
+  const files = Array.from(e.target.files);
+  if (files.length === 0) return;
 
-  const handleRemoveBrochure = () => {
-    setForm((prev) => ({ ...prev, brochureFile: "" }));
-  };
+  setUploadingExterior(true);
+  setUploadErrorExterior("");
 
-  // Location Image upload
-  const handleLocationImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploadingLocationImage(true);
-    setUploadErrorLocationImage("");
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", UPLOAD_PRESET);
-    try {
-      const res = await fetch(CLOUDINARY_URL, { method: "POST", body: formData });
-      const data = await res.json();
-      if (data.secure_url) {
-        setForm((prev) => ({ ...prev, locationImage: data.secure_url }));
-      } else {
-        setUploadErrorLocationImage("Upload failed. Try again.");
-      }
-    } catch (err) {
-      setUploadErrorLocationImage("Upload failed. Try again.");
-    }
-    setUploadingLocationImage(false);
-  };
-
-  const handleRemoveLocationImage = () => {
-    setForm((prev) => ({ ...prev, locationImage: "" }));
-  };
-
-  // Exterior Gallery upload
-  const handleExteriorGalleryUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
-
-    setUploadingExterior(true);
-    setUploadErrorExterior("");
-
-    const uploadPromises = files.map(async (file) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", UPLOAD_PRESET);
-
-      try {
-        const res = await fetch(CLOUDINARY_URL, { method: "POST", body: formData });
-        const data = await res.json();
-        return data.secure_url || null;
-      } catch (err) {
-        return null;
-      }
-    });
-
-    const uploadedUrls = await Promise.all(uploadPromises);
-    const validUrls = uploadedUrls.filter(url => url !== null);
+  try {
+    // Upload multiple files to S3 in the 'properties/exterior/' folder
+    const validUrls = await uploadMultipleFilesToS3(files, 'properties/exterior/');
 
     if (validUrls.length > 0) {
       setForm(prev => ({
@@ -623,41 +563,32 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
     } else {
       setUploadErrorExterior("Failed to upload images. Please try again.");
     }
+  } catch (error) {
+    console.error("Error uploading exterior images:", error);
+    setUploadErrorExterior("Failed to upload images. Please try again.");
+  }
 
-    setUploadingExterior(false);
-  };
+  setUploadingExterior(false);
+};
 
-  const handleRemoveExteriorImage = (index) => {
-    setForm(prev => ({
-      ...prev,
-      exteriorGallery: prev.exteriorGallery.filter((_, i) => i !== index)
-    }));
-  };
+const handleRemoveExteriorImage = (index) => {
+  setForm(prev => ({
+    ...prev,
+    exteriorGallery: prev.exteriorGallery.filter((_, i) => i !== index)
+  }));
+};
 
-  // Interior Gallery upload
-  const handleInteriorGalleryUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
+// Interior Gallery upload
+const handleInteriorGalleryUpload = async (e) => {
+  const files = Array.from(e.target.files);
+  if (files.length === 0) return;
 
-    setUploadingInterior(true);
-    setUploadErrorInterior("");
+  setUploadingInterior(true);
+  setUploadErrorInterior("");
 
-    const uploadPromises = files.map(async (file) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", UPLOAD_PRESET);
-
-      try {
-        const res = await fetch(CLOUDINARY_URL, { method: "POST", body: formData });
-        const data = await res.json();
-        return data.secure_url || null;
-      } catch (err) {
-        return null;
-      }
-    });
-
-    const uploadedUrls = await Promise.all(uploadPromises);
-    const validUrls = uploadedUrls.filter(url => url !== null);
+  try {
+    // Upload multiple files to S3 in the 'properties/interior/' folder
+    const validUrls = await uploadMultipleFilesToS3(files, 'properties/interior/');
 
     if (validUrls.length > 0) {
       setForm(prev => ({
@@ -667,16 +598,20 @@ export default function TabbedPropertyForm({ onSubmit, onCancel, selectedCategor
     } else {
       setUploadErrorInterior("Failed to upload images. Please try again.");
     }
+  } catch (error) {
+    console.error("Error uploading interior images:", error);
+    setUploadErrorInterior("Failed to upload images. Please try again.");
+  }
 
-    setUploadingInterior(false);
-  };
+  setUploadingInterior(false);
+};
 
-  const handleRemoveInteriorImage = (index) => {
-    setForm(prev => ({
-      ...prev,
-      interiorGallery: prev.interiorGallery.filter((_, i) => i !== index)
-    }));
-  };
+const handleRemoveInteriorImage = (index) => {
+  setForm(prev => ({
+    ...prev,
+    interiorGallery: prev.interiorGallery.filter((_, i) => i !== index)
+  }));
+};
 
   // Tag handling
   const handleAddTag = () => {

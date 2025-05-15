@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminFormDialog } from "./AdminFormDialog";
+import { convertS3UrlToProxyUrl } from "../../../utils/s3UrlConverter";
 
 export function AdminCard({ admin, onAdminUpdated, onAdminDeleted }) {
   const [imgError, setImgError] = useState(false);
@@ -49,7 +50,7 @@ export function AdminCard({ admin, onAdminUpdated, onAdminDeleted }) {
         <div className="p-5 flex items-center">
           <div className="relative">
             <img 
-              src={imgError ? defaultImage : (admin.profileImage || defaultImage)}
+              src={imgError ? defaultImage : (admin.profileImage ? convertS3UrlToProxyUrl(admin.profileImage) : defaultImage)}
               alt={admin.fullName} 
               className="w-14 h-14 rounded-full object-cover"
               onError={() => setImgError(true)}

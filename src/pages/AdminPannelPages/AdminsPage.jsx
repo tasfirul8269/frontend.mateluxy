@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/AdminPannel/ui/dropdown-menu";
 import { format, formatDistanceToNow, differenceInMinutes } from "date-fns";
+import { convertS3UrlToProxyUrl } from "../../utils/s3UrlConverter";
 
 const AdminsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -277,7 +278,7 @@ const AdminsPage = () => {
                             <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full overflow-hidden text-center flex items-center justify-center relative">
                               {admin.profileImage ? (
                                 <img 
-                                  src={admin.profileImage} 
+                                  src={convertS3UrlToProxyUrl(admin.profileImage)} 
                                   alt={admin.fullName}
                                   className="h-10 w-10 object-cover" 
                                 />

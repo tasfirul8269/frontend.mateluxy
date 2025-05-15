@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/AdminPannel/ui/select";
+import { uploadFileToS3 } from '../../../utils/s3Upload.js';
 
 // Form validation schema
 const formSchema = z.object({
@@ -222,30 +223,15 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
     }
   };
 
-  // Upload image to Cloudinary
-  const uploadToCloudinary = async (file) => {
+  // Upload image to S3
+  const uploadToS3 = async (file) => {
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
-      
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-      
-      if (!response.ok) {
-        throw new Error("Image upload failed");
-      }
-      
-      const data = await response.json();
-      return data.secure_url;
+      // Upload the file to the 'agents/' folder in S3
+      const imageUrl = await uploadFileToS3(file, 'agents/');
+      return imageUrl;
     } catch (error) {
-      console.error("Upload error:", error);
-      throw new Error("Failed to upload image");
+      console.error("Error uploading image to S3:", error);
+      throw new Error("Failed to upload image. Please try again.");
     }
   };
 
@@ -444,8 +430,8 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
     }
   };
 
-  // Upload vCard to Cloudinary
-  const uploadVCardToCloudinary = async () => {
+  // Upload vCard to S3
+  const uploadVCardToS3 = async () => {
     if (!selectedVCardFile) {
       customToast.error("Please select a PDF file first");
       return;
@@ -453,38 +439,19 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
 
     try {
       setIsUploadingVCard(true);
-      const formData = new FormData();
-      formData.append("file", selectedVCardFile);
-      formData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
       
-      customToast.info("Uploading vCard...");
+      // Upload the file to the 'vcards/' folder in S3
+      const vcardUrl = await uploadFileToS3(selectedVCardFile, 'vcards/');
       
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-      
-      if (!response.ok) {
-        throw new Error("vCard upload failed");
-      }
-      
-      const data = await response.json();
-      const vCardUrl = data.secure_url;
-      
-      // Set the vCard URL in the form
-      form.setValue("vcard", vCardUrl);
-      
-      customToast.success("vCard uploaded successfully!");
-      return vCardUrl;
+      // Update form with vCard URL
+      form.setValue('vcard', vcardUrl);
+      customToast.success("vCard uploaded successfully");
+      setSelectedVCardFile(null);
     } catch (error) {
       console.error("vCard upload error:", error);
-      customToast.error("Failed to upload vCard");
+      customToast.error("Failed to upload vCard. Please try again.");
     } finally {
       setIsUploadingVCard(false);
-      setSelectedVCardFile(null);
     }
   };
 
@@ -531,7 +498,7 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
       if (selectedFile) {
         try {
           customToast.info("Uploading image...");
-          imageUrl = await uploadToCloudinary(selectedFile);
+          imageUrl = await uploadToS3(selectedFile);
         } catch (error) {
           customToast.error("Image upload failed. Using existing image.");
           console.error("Image upload error:", error);
@@ -969,10 +936,10 @@ export function AgentFormDialog({ open, onOpenChange, onAgentAdded, agent, onAge
                         {selectedVCardFile && (
                           <Button
                             type="button"
-                            variant="ghost" 
-                            className="h-6 text-xs px-2 text-green-500 hover:text-green-700"
-                            onClick={uploadVCardToCloudinary}
-                            disabled={isUploadingVCard}
+                            size="sm"
+                            className="ml-2 bg-red-600 hover:bg-red-700 text-white"
+                            onClick={uploadVCardToS3}
+                            disabled={isUploadingVCard || !selectedVCardFile}
                           >
                             {isUploadingVCard ? (
                               <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-green-700 mr-1"></div>

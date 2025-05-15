@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../../components/Navbar/colors.css";
 import { getBannersByType } from "../../services/bannerService";
 import { Link } from "react-router-dom";
+import { convertS3UrlToProxyUrl } from "../../utils/s3UrlConverter";
 
 const OffPlanBanner = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -63,6 +64,17 @@ const OffPlanBanner = () => {
   // Handle manual navigation
   const goToSlide = (index) => {
     setCurrentSlide(index);
+  };
+
+  // Helper function to get the correct image URL
+  const getImageUrl = (imageUrl) => {
+    // Check if it's a base64 image
+    if (imageUrl && imageUrl.startsWith('data:')) {
+      return imageUrl;
+    }
+    
+    // Otherwise convert S3 URL to proxy URL
+    return convertS3UrlToProxyUrl(imageUrl);
   };
 
   // Shimmer loading animation component
@@ -152,7 +164,7 @@ const OffPlanBanner = () => {
             >
               <div 
                 className="w-full h-full bg-cover bg-center"
-                style={{ backgroundImage: `url(${slide.image})` }}
+                style={{ backgroundImage: `url(${getImageUrl(slide.image)})` }}
               ></div>
               
               {/* Dark overlay for better text readability */}

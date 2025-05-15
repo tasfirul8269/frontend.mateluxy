@@ -13,6 +13,7 @@ import {
   X 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { convertS3UrlToProxyUrl } from '../../../utils/s3UrlConverter';
 
 const HeroBanner = ({ property }) => {
   // Create images array from property data
@@ -21,7 +22,7 @@ const HeroBanner = ({ property }) => {
     
     if (property?.propertyFeaturedImage) {
       images.push({
-        src: property.propertyFeaturedImage,
+        src: processImageUrl(property.propertyFeaturedImage),
         alt: property.propertyTitle || 'Property image'
       });
     }
@@ -29,13 +30,24 @@ const HeroBanner = ({ property }) => {
     if (property?.media?.length > 0) {
       property.media.forEach(img => {
         images.push({
-          src: img,
+          src: processImageUrl(img),
           alt: property.propertyTitle || 'Property image'
         });
       });
     }
 
     return images.length > 0 ? images : null;
+  };
+
+  // Helper function to process image URLs
+  const processImageUrl = (url) => {
+    // Check if it's a base64 image
+    if (url && url.startsWith('data:')) {
+      return url;
+    }
+    
+    // Otherwise convert S3 URL to proxy URL
+    return convertS3UrlToProxyUrl(url);
   };
 
   const images = getImages();

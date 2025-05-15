@@ -30,6 +30,8 @@ import {
 } from "@/components/AdminPannel/ui/select";
 import { toast } from "sonner";
 import { User, Phone, Languages, X, Plus, Globe, MessageSquare, MapPin, XCircle } from "lucide-react";
+// Import S3 upload utility
+import { uploadFileToS3 } from '../../utils/s3Upload.js';
 
 // Form validation schema
 const formSchema = z.object({
@@ -173,30 +175,15 @@ export function AgentEditForm({ open, onOpenChange, agent, onAgentUpdated }) {
     fileInputRef.current.click();
   };
 
-  // Upload image to Cloudinary
-  const uploadToCloudinary = async (file) => {
+  // Upload image to S3
+  const uploadToS3 = async (file) => {
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
-      
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-      
-      if (!response.ok) {
-        throw new Error("Image upload failed");
-      }
-      
-      const data = await response.json();
-      return data.secure_url;
+      // Upload the file to the 'agents/' folder in S3
+      const imageUrl = await uploadFileToS3(file, 'agents/');
+      return imageUrl;
     } catch (error) {
-      console.error("Upload error:", error);
-      throw new Error("Failed to upload image");
+      console.error("Error uploading image to S3:", error);
+      throw new Error("Failed to upload image. Please try again.");
     }
   };
 
@@ -208,7 +195,7 @@ export function AgentEditForm({ open, onOpenChange, agent, onAgentUpdated }) {
       // Upload image if a new one was selected
       let profileImageUrl = previewUrl;
       if (selectedFile) {
-        profileImageUrl = await uploadToCloudinary(selectedFile);
+        profileImageUrl = await uploadToS3(selectedFile);
       }
       
       // Prepare the updated agent data
@@ -646,7 +633,7 @@ export function AgentEditForm({ open, onOpenChange, agent, onAgentUpdated }) {
                       <Button
                         type="button"
                         onClick={handleAddSocialLink}
-                        className="bg-blue-600 hover:bg-blue-700"
+                        className="bg-red-600 hover:bg-red-700 text-white"
                         size="sm"
                       >
                         Add Link

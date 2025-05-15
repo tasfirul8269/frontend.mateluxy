@@ -3,6 +3,7 @@ import { Mail, Phone, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AgentFormDialog } from "./AgentFormDialog";
 import { AgentProfileDialog } from "./AgentProfileDialog";
+import { convertS3UrlToProxyUrl } from "../../../utils/s3UrlConverter";
 
 export function AgentCard({ agent, onAgentUpdated, onAgentDeleted }) {
   const [imgError, setImgError] = useState(false);
@@ -77,7 +78,7 @@ export function AgentCard({ agent, onAgentUpdated, onAgentDeleted }) {
           <div className="mb-4">
             <div className="w-24 h-24 relative rounded-full overflow-hidden border-4 border-white shadow-sm">
               <img
-                src={imgError ? defaultImage : (agent.profileImage || defaultImage)}
+                src={imgError ? defaultImage : (agent.profileImage ? convertS3UrlToProxyUrl(agent.profileImage) : defaultImage)}
                 alt={agent.fullName}
                 className="w-full h-full object-cover"
                 onError={() => setImgError(true)}

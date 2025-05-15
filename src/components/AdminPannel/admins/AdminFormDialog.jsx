@@ -29,6 +29,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/AdminPannel/ui/select";
+// Import the S3 upload utility
+import { uploadFileToS3 } from '../../../utils/s3Upload.js';
+import { convertS3UrlToProxyUrl } from '../../../utils/s3UrlConverter.js';
 
 const SOCIAL_PLATFORMS = [
   { value: 'facebook', label: 'Facebook', icon: '📘' },
@@ -175,29 +178,14 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
     }
   };
 
-  const uploadToCloudinary = async (file) => {
+  const uploadToS3 = async (file) => {
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET);
-      
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${import.meta.env.VITE_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-      
-      if (!response.ok) {
-        throw new Error("Image upload failed");
-      }
-      
-      const data = await response.json();
-      return data.secure_url;
+      // Upload the file to the 'admins/' folder in S3
+      const imageUrl = await uploadFileToS3(file, 'admins/');
+      return imageUrl;
     } catch (error) {
-      console.error("Upload error:", error);
-      throw new Error("Failed to upload image");
+      console.error("Error uploading image to S3:", error);
+      throw new Error("Failed to upload image. Please try again.");
     }
   };
 
@@ -374,10 +362,13 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
         >
           {previewUrl ? (
             <img
-              src={previewUrl}
+              src={convertS3UrlToProxyUrl(previewUrl)}
               alt="Profile"
               className="h-full w-full object-cover"
-              onError={() => setPreviewUrl("")}
+              onError={(e) => {
+                console.error('Error loading image:', e);
+                setPreviewUrl("");
+              }}
             />
           ) : (
             <div className="flex flex-col items-center justify-center text-gray-400 text-sm">
@@ -422,11 +413,10 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
 
     setIsSubmitting(true);
     try {
-      let imageUrl = values.profileImage;
+      let imageUrl = admin?.profileImage || "";
       if (selectedFile) {
         try {
-          toast.info("Uploading image...");
-          imageUrl = await uploadToCloudinary(selectedFile);
+          imageUrl = await uploadToS3(selectedFile);
         } catch (error) {
           toast.error("Image upload failed. Using existing image.");
           console.error("Image upload error:", error);
@@ -509,16 +499,20 @@ export function AdminFormDialog({ open, onOpenChange, onAdminAdded, admin, onAdm
         // Handle various response formats
         const responseData = data._doc || data || {};
 
-      const updatedAdmin = {
-          id: responseData._id || admin?.id || 'temp-' + Date.now(),
-          fullName: responseData.fullName || adminData.fullName,
-          email: responseData.email || adminData.email,
-          username: responseData.username || adminData.username,
-          profileImage: responseData.profileImage || adminData.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminData.fullName)}&background=random`,
-          lastLogin: responseData.lastLogin ? new Date(responseData.lastLogin) : new Date(),
-          adminId: responseData.adminId || `ADM${Math.floor(1000 + Math.random() * 9000)}`,
-          createdAt: responseData.createdAt ? new Date(responseData.createdAt) : new Date(),
-      };
+      // Store the original S3 URL in the database but use the proxy URL for display
+    const originalProfileImage = responseData.profileImage || adminData.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(adminData.fullName)}&background=random`;
+    
+    const updatedAdmin = {
+        id: responseData._id || admin?.id || 'temp-' + Date.now(),
+        fullName: responseData.fullName || adminData.fullName,
+        email: responseData.email || adminData.email,
+        username: responseData.username || adminData.username,
+        profileImage: originalProfileImage, // Store the original URL
+        profileImageProxy: convertS3UrlToProxyUrl(originalProfileImage), // Add a proxy URL for display
+        lastLogin: responseData.lastLogin ? new Date(responseData.lastLogin) : new Date(),
+        adminId: responseData.adminId || `ADM${Math.floor(1000 + Math.random() * 9000)}`,
+        createdAt: responseData.createdAt ? new Date(responseData.createdAt) : new Date(),
+    };
 
       if (isEditing && onAdminUpdated) {
         onAdminUpdated(updatedAdmin);

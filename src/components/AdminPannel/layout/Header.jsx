@@ -22,6 +22,8 @@ import { Label } from "@/components/AdminPannel/ui/label";
 import { Input } from "@/components/AdminPannel/ui/input";
 import { logout } from "@/utils/isLoggedIn";
 import { motion } from "framer-motion";
+import { uploadFileToS3 } from "@/utils/s3Upload.js";
+import { convertS3UrlToProxyUrl } from "@/utils/s3UrlConverter.js";
 
 export function Header({ searchPlaceholder, onSearch }) {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -42,7 +44,9 @@ export function Header({ searchPlaceholder, onSearch }) {
     username: "",
     password: "",
     confirmPassword: "",
-    profileImage: ""
+    profileImage: "",
+    previewImage: "",
+    selectedFile: null
   });
   
   // Add notification filter state
@@ -234,7 +238,9 @@ export function Header({ searchPlaceholder, onSearch }) {
             username: adminDetails.username || '',
             password: '',
             confirmPassword: '',
-            profileImage: adminDetails.profileImage || ''
+            profileImage: adminDetails.profileImage || '',
+            previewImage: null,
+            selectedFile: null
           });
         } else {
           throw new Error('Invalid response format');
@@ -248,6 +254,18 @@ export function Header({ searchPlaceholder, onSearch }) {
           email: "admin@example.com",
           role: "Administrator",
           profileImage: ""
+        });
+        
+        // Also set form data with defaults
+        setFormData({
+          fullName: "Admin User",
+          email: "admin@example.com",
+          username: "admin",
+          password: '',
+          confirmPassword: '',
+          profileImage: '',
+          previewImage: null,
+          selectedFile: null
         });
       } finally {
         setIsLoadingAdminData(false);
@@ -482,14 +500,29 @@ export function Header({ searchPlaceholder, onSearch }) {
   };
 
   // Handle profile image change
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Show a temporary preview
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, profileImage: reader.result }));
+        setFormData(prev => ({ ...prev, previewImage: reader.result }));
       };
       reader.readAsDataURL(file);
+      
+      try {
+        // Upload the file to S3
+        const imageUrl = await uploadFileToS3(file, 'admins/');
+        setFormData(prev => ({ 
+          ...prev, 
+          profileImage: imageUrl,
+          selectedFile: file
+        }));
+        console.log("Image uploaded to S3:", imageUrl);
+      } catch (error) {
+        console.error("Error uploading image to S3:", error);
+        toast.error("Failed to upload image. Please try again.");
+      }
     }
   };
 
@@ -953,42 +986,50 @@ export function Header({ searchPlaceholder, onSearch }) {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="h-10 w-10 rounded-full flex items-center justify-center transition-all ring-offset-2 hover:ring-2 hover:ring-blue-200 hover:shadow-md overflow-hidden">
-              {adminData?.profileImage ? (
+            <Button variant="ghost" className="relative h-10 w-10 rounded-full border border-gray-200 p-0">
+              {!isLoadingAdminData && adminData?.profileImage ? (
                 <img 
-                  src={adminData.profileImage} 
-                  alt={adminData.fullName} 
-                  className="h-full w-full object-cover"
+                  src={convertS3UrlToProxyUrl(adminData.profileImage)} 
+                  alt={adminData?.fullName || 'Admin'} 
+                  className="rounded-full object-cover w-full h-full"
+                  onError={(e) => {
+                    console.error("Error loading admin image:", e);
+                    e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(adminData?.firstName || 'A')}&background=random`;
+                  }}
                 />
               ) : (
-                <div className="h-full w-full bg-gradient-to-r from-blue-100 to-blue-50 flex items-center justify-center">
-                  <User size={20} className="text-blue-600" />
-                </div>
-              )}
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="mr-4 w-72 p-0 overflow-hidden shadow-xl border border-gray-100 rounded-xl bg-white">
-            <div className="px-6 py-5 border-b border-gray-100">
-              <div className="flex items-center">
-                <div className="h-14 w-14 rounded-xl overflow-hidden bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center mr-4 border-2 border-white shadow text-white">
-                  {adminData?.firstName ? (
-                    <img src={adminData.profileImage} alt={adminData.fullName} className="h-full w-full object-cover" />
+                <span className="flex h-full w-full items-center justify-center rounded-full bg-blue-100 text-blue-600 font-medium">
+                  {isLoadingAdminData ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
                   ) : (
-                    <User size={24} />
+                    adminData?.firstName?.[0]?.toUpperCase() || 'A'
                   )}
+                </span>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56 bg-white rounded-md p-0 overflow-hidden" align="end">
+            <div className="flex items-center gap-4 p-4 border-b border-gray-100">
+              <div className="h-12 w-12 rounded-full overflow-hidden border">
+                {adminData?.profileImage ? (
+                  <img 
+                    src={convertS3UrlToProxyUrl(adminData.profileImage)} 
+                    alt={adminData.fullName} 
+                    className="h-full w-full object-cover"
+                    onError={(e) => {
+                      console.error("Error loading admin image:", e);
+                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(adminData.firstName || 'A')}&background=random`;
+                    }}
+                  />
+                ) : (
+                  <div className="h-full w-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium">
+                    {adminData?.firstName?.[0]?.toUpperCase() || 'A'}
+                  </div>
+                )}
               </div>
-              <div className="flex flex-col">
-                  <span className="font-semibold text-gray-800 text-lg">
-                    {adminData?.fullName || 'Admin User'}
-                  </span>
-                  <span className="text-xs text-gray-500 mt-0.5">
-                    {adminData?.email || 'admin@example.com'}
-                  </span>
-                  <span className="inline-flex items-center mt-2 text-xs font-medium text-blue-600 bg-blue-100 px-2.5 py-0.5 rounded-full">
-                    <span className="w-2 h-2 bg-blue-600 rounded-full mr-1"></span>
-                    {adminData?.role || 'Administrator'}
-                  </span>
-                </div>
+              <div className="flex flex-col space-y-0.5">
+                <p className="text-sm font-medium">{adminData?.fullName || 'Admin User'}</p>
+                <p className="text-xs text-gray-500">{adminData?.email || 'admin@example.com'}</p>
               </div>
             </div>
             
@@ -1026,9 +1067,9 @@ export function Header({ searchPlaceholder, onSearch }) {
           <form onSubmit={handleUpdateProfile} className="grid gap-4 py-4">
             <div className="flex justify-center mb-2">
               <div className="relative h-24 w-24 rounded-full overflow-hidden border-2 border-gray-200">
-                {formData.profileImage ? (
+                {(formData.previewImage || formData.profileImage) ? (
                   <img 
-                    src={formData.profileImage} 
+                    src={formData.previewImage || (formData.profileImage ? convertS3UrlToProxyUrl(formData.profileImage) : '')} 
                     alt="Profile" 
                     className="h-full w-full object-cover"
                   />

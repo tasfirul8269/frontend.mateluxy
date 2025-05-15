@@ -3,6 +3,8 @@ import { FiPlus, FiEdit2, FiTrash2, FiImage } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { toast } from '@/components/AdminPannel/ui/sonner';
 import { getAllBanners, createBanner, updateBanner, deleteBanner } from '../../services/bannerService';
+import { uploadFileToS3 } from '../../utils/s3Upload';
+import { convertS3UrlToProxyUrl } from '../../utils/s3UrlConverter';
 
 const BannerPage = () => {
   const [banners, setBanners] = useState([]);
@@ -24,6 +26,7 @@ const BannerPage = () => {
   });
   const [imagePreview, setImagePreview] = useState('');
   const [imageFile, setImageFile] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     fetchBanners();
@@ -49,19 +52,36 @@ const BannerPage = () => {
     });
   };
 
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
+      try {
+        setUploadingImage(true);
+        setImageFile(file);
+        
+        // Create a temporary preview
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreview(reader.result);
+        };
+        reader.readAsDataURL(file);
+        
+        // Upload file to S3
+        const fileUrl = await uploadFileToS3(file, 'banners/');
+        
+        // Update form data with the S3 URL
         setFormData({
           ...formData,
-          image: reader.result
+          image: fileUrl
         });
-      };
-      reader.readAsDataURL(file);
+        
+        toast.success('Image uploaded successfully');
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        toast.error('Failed to upload image');
+      } finally {
+        setUploadingImage(false);
+      }
     }
   };
 
@@ -81,7 +101,7 @@ const BannerPage = () => {
         order: banner.order,
         active: banner.active
       });
-      setImagePreview(banner.image);
+      setImagePreview(banner.image.startsWith('data:') ? banner.image : convertS3UrlToProxyUrl(banner.image));
     } else {
       setEditingBanner(null);
       setFormData({
@@ -316,6 +336,11 @@ const BannerPage = () => {
                           >
                             &times;
                           </button>
+                        </div>
+                      )}
+                      {uploadingImage && (
+                        <div className="ml-2 text-sm text-blue-600">
+                          Uploading image...
                         </div>
                       )}
                     </div>
